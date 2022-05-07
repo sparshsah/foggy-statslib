@@ -146,8 +146,8 @@ def smooth(
         * +0.5 -> scale up by horizon**0.5 (motivated by CLT -- STD of avg scales with inverse of N);
         * ....
     """
-    est_avg = _get_est_avg(y=r, window_kind=window_kind, horizon=horizon, avg_kind=avg_kind)
-    smoothed = est_avg * window**scale_up_pow
+    est_avg = _get_est_avg(y=r, est_window_kind=window_kind, est_horizon=horizon, avg_kind=avg_kind)
+    smoothed = est_avg * horizon**scale_up_pow
     return smoothed
 
 
