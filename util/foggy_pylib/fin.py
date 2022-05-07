@@ -112,7 +112,7 @@ def get_vol_targeted(xr: FloatSeries, tgt_vol: float=DEFAULT_VOL) -> FloatSeries
     return levered_xr_at_t
 
 
-def get_hedged(base_xr: FloatSeries, hedge_xr: FloatSeries) -> FloatSeries:
+def get_hedged(base_xr: FloatSeries, hedge_xr: FloatSeries, est_window_kind: str="ewm") -> FloatSeries:
     """(Implementably) short out base asset's exposure to hedge asset.
 
     Inputs should be excess-of-cash returns:
@@ -121,7 +121,7 @@ def get_hedged(base_xr: FloatSeries, hedge_xr: FloatSeries) -> FloatSeries:
         It's simplistic to assume the funding rate is the same as the deposit interest rate, but ok.
     """
     # at the end of each day, we submit an order to short this much `out`
-    est_beta = get_est_beta(of=base_xr, on=hedge_xr)
+    est_beta = get_est_beta(of=base_xr, on=hedge_xr, est_window_kind=est_window_kind)
     # this is weight as $ notional / $ NAV
     hedge_pos_at_t = -est_beta.shift(IMPL_LAG)
     hedge_xpnl_at_t = hedge_pos_at_t * hedge_xr
