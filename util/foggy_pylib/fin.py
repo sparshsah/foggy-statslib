@@ -177,11 +177,11 @@ def _get_window(
 
 def _get_est_avg(
         y: FloatSeries,
-        window_kind: str=DEFAULT_WINDOW_KIND,
+        est_window_kind: str=DEFAULT_WINDOW_KIND,
         horizon: int=DEFAULT_EST_HORIZON,
         avg_kind: str=DEFAULT_AVG_KIND
     ) -> Floatlike:
-    window = _get_window(y, kind=window_kind, horizon=horizon)
+    window = _get_window(y, kind=est_window_kind, horizon=horizon)
     if avg_kind == "mean":
         est_avg = window.mean()
     elif avg_kind == "median":
@@ -195,10 +195,11 @@ def _get_est_avg(
 def _get_est_deviations(
         y: FloatSeries,
         de_avg_kind: Optional[str]=None,
-        window_kind: str=DEFAULT_WINDOW_KIND,
+        est_window_kind: str=DEFAULT_WINDOW_KIND,
         horizon: int=DEFAULT_EST_HORIZON,
     ) -> FloatSeries:
-    avg = 0 if de_avg_kind is None else _get_est_avg(y=y, window_kind=window_kind, horizon=horizon, avg_kind=de_avg_kind)
+    avg = 0 if de_avg_kind is None else \
+        _get_est_avg(y=y, est_window_kind=est_window_kind, horizon=horizon, avg_kind=de_avg_kind)
     est_deviations = y - avg
     return est_deviations
 
@@ -230,7 +231,7 @@ def get_est_cov(
         lambda col: _get_est_deviations(
             col,
             de_avg_kind=de_avg_kind,
-            window_kind=est_window_kind,
+            est_window_kind=est_window_kind,
             horizon=est_horizon
         )
     )
@@ -248,8 +249,8 @@ def get_est_cov(
     return ann_est_cov
 
 
-def _get_est_std(y: pd.Series, window_kind: str=DEFAULT_WINDOW_KIND, de_avg_kind: Optional[str]=None) -> Floatlike:
-    est_var = get_est_cov(y=y, x=y, window_kind=window_kind, de_avg_kind=de_avg_kind)
+def _get_est_std(y: pd.Series, est_window_kind: str=DEFAULT_WINDOW_KIND, de_avg_kind: Optional[str]=None) -> Floatlike:
+    est_var = get_est_cov(y=y, x=y, est_window_kind=est_window_kind, de_avg_kind=de_avg_kind)
     est_std = est_var **0.5
     return est_std
 
@@ -257,12 +258,12 @@ def _get_est_std(y: pd.Series, window_kind: str=DEFAULT_WINDOW_KIND, de_avg_kind
 def get_est_corr(
         y: pd.Series,
         x: pd.Series,
-        window_kind: str=DEFAULT_WINDOW_KIND,
+        est_window_kind: str=DEFAULT_WINDOW_KIND,
         de_avg_kind: Optional[str]=DEFAULT_AVG_KIND
     ) -> Floatlike:
-    est_cov = get_est_cov(y=y, x=x, window_kind=window_kind, de_avg_kind=de_avg_kind)
-    est_y_std = _get_est_std(y=y, window_kind=window_kind, de_avg_kind=de_avg_kind)
-    est_x_std = _get_est_std(y=x, window_kind=window_kind, de_avg_kind=de_avg_kind)
+    est_cov = get_est_cov(y=y, x=x, est_window_kind=est_window_kind, de_avg_kind=de_avg_kind)
+    est_y_std = _get_est_std(y=y, est_window_kind=est_window_kind, de_avg_kind=de_avg_kind)
+    est_x_std = _get_est_std(y=x, est_window_kind=est_window_kind, de_avg_kind=de_avg_kind)
     est_corr = est_cov / (est_y_std * est_x_std)
     return est_corr
 
@@ -271,26 +272,30 @@ def get_est_corr(
 ## FINANCIAL EVALUATIONS ###############################################################################################
 ########################################################################################################################
 
-def get_est_er(r: FloatSeries, window_kind: str=DEFAULT_WINDOW_KIND, annualizer: int=DAYCOUNTS["BY"]) -> Floatlike:
-    est_avg = _get_est_avg(y=r, window_kind=window_kind)
+def get_est_er(r: FloatSeries, est_window_kind: str=DEFAULT_WINDOW_KIND, annualizer: int=DAYCOUNTS["BY"]) -> Floatlike:
+    est_avg = _get_est_avg(y=r, est_window_kind=est_window_kind)
     est_er = est_avg * annualizer
     return est_er
 
 
 def get_est_vol(
         r: FloatSeries,
-        window_kind: str=DEFAULT_WINDOW_KIND,
+        est_window_kind: str=DEFAULT_WINDOW_KIND,
         de_avg_kind: Optional[str]=None,
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
-    est_std = _get_est_std(y=r, window_kind=window_kind, de_avg_kind=de_avg_kind)
+    est_std = _get_est_std(y=r, est_window_kind=est_window_kind, de_avg_kind=de_avg_kind)
     est_vol = est_std * annualizer**0.5
     return est_vol
 
 
-def get_est_sharpe(r: FloatSeries, window_kind: str=DEFAULT_WINDOW_KIND, de_avg_kind: Optional[str]=None) -> Floatlike:
-    est_er = get_est_er(r=r, window_kind=window_kind)
-    est_vol = get_est_vol(r=r, window_kind=window_kind, de_avg_kind=de_avg_kind)
+def get_est_sharpe(
+        r: FloatSeries,
+        est_window_kind: str=DEFAULT_WINDOW_KIND,
+        de_avg_kind: Optional[str]=None
+    ) -> Floatlike:
+    est_er = get_est_er(r=r, est_window_kind=est_window_kind)
+    est_vol = get_est_vol(r=r, est_window_kind=est_window_kind, de_avg_kind=de_avg_kind)
     est_sharpe = est_er / est_vol
     return est_sharpe
 
@@ -298,12 +303,12 @@ def get_est_sharpe(r: FloatSeries, window_kind: str=DEFAULT_WINDOW_KIND, de_avg_
 def get_est_beta(
         of: FloatSeries,
         on: FloatSeries,
-        window_kind: str=DEFAULT_WINDOW_KIND,
+        est_window_kind: str=DEFAULT_WINDOW_KIND,
         de_avg_kind: Optional[str]=None
     ) -> Floatlike:
-    est_corr = get_est_corr(y=of, x=on, window_kind=window_kind, de_avg_kind=de_avg_kind)
-    est_of_std = _get_est_std(y=of, window_kind=window_kind, de_avg_kind=de_avg_kind)
-    est_on_std = _get_est_std(y=on, window_kind=window_kind, de_avg_kind=de_avg_kind)
+    est_corr = get_est_corr(y=of, x=on, est_window_kind=est_window_kind, de_avg_kind=de_avg_kind)
+    est_of_std = _get_est_std(y=of, est_window_kind=est_window_kind, de_avg_kind=de_avg_kind)
+    est_on_std = _get_est_std(y=on, est_window_kind=est_window_kind, de_avg_kind=de_avg_kind)
     est_beta = est_corr * (est_of_std / est_on_std)
     return est_beta
 
