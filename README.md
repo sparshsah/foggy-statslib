@@ -1,2 +1,2 @@
-# foggy-lib
+# foggyLIB
 utility libraries
