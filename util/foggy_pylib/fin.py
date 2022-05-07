@@ -178,10 +178,10 @@ def _get_window(
 def _get_est_avg(
         y: FloatSeries,
         est_window_kind: str=DEFAULT_WINDOW_KIND,
-        horizon: int=DEFAULT_EST_HORIZON,
+        est_horizon: int=DEFAULT_EST_HORIZON,
         avg_kind: str=DEFAULT_AVG_KIND
     ) -> Floatlike:
-    window = _get_window(y, kind=est_window_kind, horizon=horizon)
+    window = _get_window(y, kind=est_window_kind, horizon=est_horizon)
     if avg_kind == "mean":
         est_avg = window.mean()
     elif avg_kind == "median":
