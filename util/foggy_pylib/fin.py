@@ -100,7 +100,7 @@ def get_vol_targeted(r: FloatSeries, tgt_vol: float=DEFAULT_VOL) -> FloatSeries:
         Whereas if you uplever, you must pay a funding rate.
         It's simplistic to assume the funding rate is the same as the deposit interest rate, but ok.
     """
-    est_vol = get_est_vol(r=r, kind="ewm")
+    est_vol = get_est_vol(r=r, est_window_kind="ewm")
     # at the end of each session, we check the data,
     # then trade up or down to hit this much leverage...
     est_required_leverage = tgt_vol / est_vol
@@ -161,7 +161,7 @@ def _get_window(
         horizon: int=HORIZONS["sweet"],
         min_periods: Optional[int]=None
     ) -> pd.core.window.Window:
-    fc.maybe(min_periods, ow=int(horizon/2))
+    min_periods = fc.maybe(min_periods, ow=int(horizon/2))
     if kind == "full":
         window = ser
     elif kind == "expanding":
@@ -196,10 +196,10 @@ def _get_est_deviations(
         y: FloatSeries,
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_WINDOW_KIND,
-        horizon: int=DEFAULT_EST_HORIZON,
+        est_horizon: int=DEFAULT_EST_HORIZON,
     ) -> FloatSeries:
     avg = 0 if de_avg_kind is None else \
-        _get_est_avg(y=y, est_window_kind=est_window_kind, horizon=horizon, avg_kind=de_avg_kind)
+        _get_est_avg(y=y, est_window_kind=est_window_kind, est_horizon=est_horizon, avg_kind=de_avg_kind)
     est_deviations = y - avg
     return est_deviations
 
@@ -232,7 +232,7 @@ def get_est_cov(
             col,
             de_avg_kind=de_avg_kind,
             est_window_kind=est_window_kind,
-            horizon=est_horizon
+            est_horizon=est_horizon
         )
     )
     smoothed_est_deviations = est_deviations.apply(
