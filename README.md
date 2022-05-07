@@ -1,2 +1,2 @@
 # foggyLIB
-utility libraries
+utility libraries, templates, and scripts
