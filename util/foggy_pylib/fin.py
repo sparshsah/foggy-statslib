@@ -108,6 +108,7 @@ def get_vol_targeted(xr: FloatSeries, tgt_vol: float=DEFAULT_VOL) -> FloatSeries
     # (based on yesterday's estimate of required leverage)
     leverage_at_t = est_required_leverage.shift(IMPL_LAG)
     levered_xr_at_t = leverage_at_t * xr
+    levered_xr_at_t = levered_xr_at_t.rename(levered_xr_at_t.name)
     return levered_xr_at_t
 
 
@@ -125,6 +126,7 @@ def get_hedged(base_xr: FloatSeries, hedge_xr: FloatSeries) -> FloatSeries:
     hedge_pos_at_t = -est_beta.shift(IMPL_LAG)
     hedge_xpnl_at_t = hedge_pos_at_t * hedge_xr
     hedged_base_xr_at_t = base_xr + hedge_xpnl_at_t
+    hedged_base_xr_at_t = hedged_base_xr_at_t.rename(base_xr.name)
     return hedged_base_xr_at_t
 
 
