@@ -108,7 +108,7 @@ def get_vol_targeted(xr: FloatSeries, tgt_vol: float=DEFAULT_VOL) -> FloatSeries
     # (based on yesterday's estimate of required leverage)
     leverage_at_t = est_required_leverage.shift(IMPL_LAG)
     levered_xr_at_t = leverage_at_t * xr
-    levered_xr_at_t = levered_xr_at_t.rename(levered_xr_at_t.name)
+    levered_xr_at_t = levered_xr_at_t.rename(xr.name)
     return levered_xr_at_t
 
 
