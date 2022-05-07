@@ -92,7 +92,7 @@ def get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     return cum_r
 
 
-def get_vol_targeted(r: FloatSeries, tgt_vol: float=DEFAULT_VOL) -> FloatSeries:
+def get_vol_targeted(xr: FloatSeries, tgt_vol: float=DEFAULT_VOL) -> FloatSeries:
     """(Implementably) modulate volatility.
 
     Input should be excess-of-cash returns:
@@ -100,19 +100,19 @@ def get_vol_targeted(r: FloatSeries, tgt_vol: float=DEFAULT_VOL) -> FloatSeries:
         Whereas if you uplever, you must pay a funding rate.
         It's simplistic to assume the funding rate is the same as the deposit interest rate, but ok.
     """
-    est_vol = get_est_vol(r=r, est_window_kind="ewm")
+    est_vol = get_est_vol(r=xr, est_window_kind="ewm")
     # at the end of each session, we check the data,
     # then trade up or down to hit this much leverage...
     est_required_leverage = tgt_vol / est_vol
     # ... thence, over the next session, we earn this much return
     # (based on yesterday's estimate of required leverage)
     leverage_at_t = est_required_leverage.shift(IMPL_LAG)
-    levered_r_at_t = leverage_at_t * r
-    return levered_r_at_t
+    levered_xr_at_t = leverage_at_t * xr
+    return levered_xr_at_t
 
 
-def get_hedged(base: FloatSeries, out: FloatSeries) -> FloatSeries:
-    """(Implementably) short out `base`'s exposure to `out`.
+def get_hedged(base_xr: FloatSeries, hedge_xr: FloatSeries) -> FloatSeries:
+    """(Implementably) short out base asset's exposure to hedge asset.
 
     Inputs should be excess-of-cash returns:
         If you delever, you can deposit the excess cash in the bank and earn interest;
@@ -120,12 +120,12 @@ def get_hedged(base: FloatSeries, out: FloatSeries) -> FloatSeries:
         It's simplistic to assume the funding rate is the same as the deposit interest rate, but ok.
     """
     # at the end of each day, we submit an order to short this much `out`
-    est_beta = get_est_beta(of=base, on=out)
+    est_beta = get_est_beta(of=base_xr, on=hedge_xr)
     # this is weight as $ notional / $ NAV
-    hedge_pos_at_t = est_beta.shift(IMPL_LAG)
-    hedge_r_at_t = hedge_pos_at_t * out
-    hedged_base_r_at_t = base - hedge_r_at_t
-    return hedged_base_r_at_t
+    hedge_pos_at_t = -est_beta.shift(IMPL_LAG)
+    hedge_xpnl_at_t = hedge_pos_at_t * hedge_xr
+    hedged_base_xr_at_t = base_xr + hedge_xpnl_at_t
+    return hedged_base_xr_at_t
 
 
 def smooth(
