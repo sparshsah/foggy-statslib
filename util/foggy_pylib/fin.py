@@ -3,7 +3,7 @@
 author: [@sparshsah](https://github.com/sparshsah)
 """
 
-from typing import Union, Optional
+from typing import Dict, Union, Optional
 from collections import OrderedDict
 import pandas as pd
 import numpy as np
@@ -16,14 +16,14 @@ FloatDF = pd.DataFrame
 Floatlike = Union[float, FloatSeries, FloatDF]
 
 # calendar, business
-DAYCOUNTS = {
+DAYCOUNTS: Dict[str, int] = {
     "d": 1, "Bd": 1,
     "W": 7, "BW": 5,
     "Cm": 30,"Bm": 21,
     "CQ": 91, "BQ": 65,
     "CY": 365, "BY": 261
 }
-HORIZONS = {
+HORIZONS: Dict[str, int] = {
     "micro": 3,
     "mini": DAYCOUNTS["BW"],
     "short": DAYCOUNTS["Bm"],
