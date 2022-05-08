@@ -29,7 +29,7 @@ DAYCOUNTS: Dict[str, int] = {
 # observe info at `t`, trade on it the course of `t+1`, earn at `t+2`
 IMPL_LAG: int = 2
 
-# choices that we do control
+# analytical or portfolio-construction choices that we do control
 DEFAULT_R_KIND: str = "log"
 DEFAULT_AVG_KIND: str = "mean"
 # nice standard number to target
