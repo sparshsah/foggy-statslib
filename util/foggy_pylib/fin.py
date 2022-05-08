@@ -365,8 +365,8 @@ def get_est_perf_stats(r: FloatSeries) -> FloatSeries:
         ("First valid timestep", r.first_valid_index()),
         ("Last valid timestep", r.last_valid_index()),
         ("Last timestep", r.index[-1]),
-        ("Total timesteps", len(r.index)),
-        ("Total valid timesteps", r.notna().sum())
+        ("Total valid timesteps", r.notna().sum()),
+        ("Total timesteps", len(r.index))
     ]
     perf_stats = OrderedDict(perf_stats)
     perf_stats = pd.Series(perf_stats)
