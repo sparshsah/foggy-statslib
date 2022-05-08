@@ -101,7 +101,11 @@ def get_xr(r: FloatSeries, cash_r: FloatSeries) -> FloatSeries:
     return xr
 
 
-def get_vol_targeted(xr: FloatSeries, tgt_vol: float=DEFAULT_VOL) -> FloatSeries:
+def get_vol_targeted(
+        xr: FloatSeries,
+        tgt_vol: float=DEFAULT_VOL,
+        est_window_kind: str=DEFAULT_EST_WINDOW_KIND
+    ) -> FloatSeries:
     """(Implementably) modulate volatility.
 
     Input should be excess-of-cash returns:
@@ -110,7 +114,7 @@ def get_vol_targeted(xr: FloatSeries, tgt_vol: float=DEFAULT_VOL) -> FloatSeries
         It's simplistic to assume the funding rate is the same as the deposit interest rate
         (it will usually be higher, since your default risk is greater than the bank's), but ok.
     """
-    est_vol = get_est_vol(r=xr, est_window_kind=DEFAULT_EST_WINDOW_KIND)
+    est_vol = get_est_vol(r=xr, est_window_kind=est_window_kind)
     # at the end of each session, we check the data,
     # then trade up or down to hit this much leverage...
     est_required_leverage = tgt_vol / est_vol
@@ -122,7 +126,11 @@ def get_vol_targeted(xr: FloatSeries, tgt_vol: float=DEFAULT_VOL) -> FloatSeries
     return levered_xr_at_t
 
 
-def get_hedged(base_xr: FloatSeries, hedge_xr: FloatSeries, est_window_kind: str=DEFAULT_EST_WINDOW_KIND) -> FloatSeries:
+def get_hedged(
+        base_xr: FloatSeries,
+        hedge_xr: FloatSeries,
+        est_window_kind: str=DEFAULT_EST_WINDOW_KIND
+    ) -> FloatSeries:
     """(Implementably) short out base asset's exposure to hedge asset.
 
     Inputs should be excess-of-cash returns:
@@ -262,7 +270,11 @@ def get_est_cov(
     return ann_est_cov
 
 
-def _get_est_std(y: pd.Series, de_avg_kind: Optional[str]=None, est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND) -> Floatlike:
+def _get_est_std(
+        y: pd.Series,
+        de_avg_kind: Optional[str]=None,
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
+    ) -> Floatlike:
     est_var = get_est_cov(y=y, x=y, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_std = est_var **0.5
     return est_std
