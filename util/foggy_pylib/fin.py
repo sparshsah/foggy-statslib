@@ -122,7 +122,7 @@ def get_vol_targeted(xr: FloatSeries, tgt_vol: float=DEFAULT_VOL) -> FloatSeries
     return levered_xr_at_t
 
 
-def get_hedged(base_xr: FloatSeries, hedge_xr: FloatSeries, est_window_kind: str="ewm") -> FloatSeries:
+def get_hedged(base_xr: FloatSeries, hedge_xr: FloatSeries, est_window_kind: str=DEFAULT_EST_WINDOW_KIND) -> FloatSeries:
     """(Implementably) short out base asset's exposure to hedge asset.
 
     Inputs should be excess-of-cash returns:
