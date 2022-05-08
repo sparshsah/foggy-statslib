@@ -15,6 +15,9 @@ FloatSeries = pd.Series
 FloatDF = pd.DataFrame
 Floatlike = Union[float, FloatSeries, FloatDF]
 
+# market facts that we can't control
+# approx duration of a 10Y US treasury note in a "normal" rates climate
+DEFAULT_BOND_DUR: float = 7
 # calendar, business
 DAYCOUNTS: Dict[str, int] = {
     "d": 1, "Bd": 1,
@@ -23,6 +26,16 @@ DAYCOUNTS: Dict[str, int] = {
     "CQ": 91, "BQ": 65,
     "CY": 365, "BY": 261
 }
+# observe info at `t`, trade on it the course of `t+1`, earn at `t+2`
+IMPL_LAG: int = 2
+
+# choices that we do control
+DEFAULT_R_KIND: str = "log"
+DEFAULT_AVG_KIND: str = "mean"
+# nice standard number to target
+DEFAULT_VOL: float = 0.10
+
+# smoothing, estimation, evaluation, etc
 HORIZONS: Dict[str, int] = {
     "micro": 3,
     "mini": DAYCOUNTS["BW"],
@@ -32,21 +45,14 @@ HORIZONS: Dict[str, int] = {
     "long": DAYCOUNTS["BY"],
     "ultra": 5 * DAYCOUNTS["BY"]
 }
-
-DEFAULT_R_KIND: str = "log"
-DEFAULT_AVG_KIND: str = "mean"
-DEFAULT_WINDOW_KIND: str = "full"
+# smoothing e.g. to account for international trading-session async
 DEFAULT_SMOOTHING_WINDOW_KIND: str = "rolling"
 DEFAULT_SMOOTHING_HORIZON: int = HORIZONS["micro"]
+# reality of market data-generating process is that it's non-stationary
+DEFAULT_EST_WINDOW_KIND: str = "ewm"
 DEFAULT_EST_HORIZON: int = HORIZONS["sweet"]
-
-# approx duration of a 10Y US treasury note in a "normal" rates climate
-DEFAULT_BOND_DUR: float = 7
-# nice standard number to target
-DEFAULT_VOL: float = 0.10
-# observe info at `t`, trade on it the course of `t+1`, earn at `t+2`
-IMPL_LAG: int = 2
-
+# evaluation, no need to specify horizon
+DEFAULT_EVAL_WINDOW_KIND: str = "full"
 
 ########################################################################################################################
 ## RETURN MANIPULATIONS ################################################################################################
@@ -164,7 +170,7 @@ def smooth(
 
 def _get_window(
         ser: pd.Series,
-        kind: str=DEFAULT_WINDOW_KIND,
+        kind: str=DEFAULT_EVAL_WINDOW_KIND,
         horizon: int=HORIZONS["sweet"],
         min_periods: Optional[int]=None
     ) -> pd.core.window.Window:
@@ -184,7 +190,7 @@ def _get_window(
 
 def _get_est_avg(
         y: FloatSeries,
-        est_window_kind: str=DEFAULT_WINDOW_KIND,
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EST_HORIZON,
         avg_kind: str=DEFAULT_AVG_KIND
     ) -> Floatlike:
@@ -202,7 +208,7 @@ def _get_est_avg(
 def _get_est_deviations(
         y: FloatSeries,
         de_avg_kind: Optional[str]=None,
-        est_window_kind: str=DEFAULT_WINDOW_KIND,
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EST_HORIZON,
     ) -> FloatSeries:
     avg = 0 if de_avg_kind is None else \
@@ -218,7 +224,7 @@ def get_est_cov(
         smoothing_horizon: int=DEFAULT_SMOOTHING_HORIZON,
         smoothing_avg_kind: str=DEFAULT_AVG_KIND,
         de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
-        est_window_kind: str=DEFAULT_WINDOW_KIND,
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EST_HORIZON,
         # want this to be general (not necessarily finance-first)
         annualizer: int=1
@@ -256,7 +262,7 @@ def get_est_cov(
     return ann_est_cov
 
 
-def _get_est_std(y: pd.Series, est_window_kind: str=DEFAULT_WINDOW_KIND, de_avg_kind: Optional[str]=None) -> Floatlike:
+def _get_est_std(y: pd.Series, est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND, de_avg_kind: Optional[str]=None) -> Floatlike:
     est_var = get_est_cov(y=y, x=y, est_window_kind=est_window_kind, de_avg_kind=de_avg_kind)
     est_std = est_var **0.5
     return est_std
@@ -265,7 +271,7 @@ def _get_est_std(y: pd.Series, est_window_kind: str=DEFAULT_WINDOW_KIND, de_avg_
 def get_est_corr(
         y: pd.Series,
         x: pd.Series,
-        est_window_kind: str=DEFAULT_WINDOW_KIND,
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         de_avg_kind: Optional[str]=DEFAULT_AVG_KIND
     ) -> Floatlike:
     est_cov = get_est_cov(y=y, x=x, est_window_kind=est_window_kind, de_avg_kind=de_avg_kind)
@@ -279,7 +285,7 @@ def get_est_corr(
 ## FINANCIAL EVALUATIONS ###############################################################################################
 ########################################################################################################################
 
-def get_est_er(r: FloatSeries, est_window_kind: str=DEFAULT_WINDOW_KIND, annualizer: int=DAYCOUNTS["BY"]) -> Floatlike:
+def get_est_er(r: FloatSeries, est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND, annualizer: int=DAYCOUNTS["BY"]) -> Floatlike:
     est_avg = _get_est_avg(y=r, est_window_kind=est_window_kind)
     est_er = est_avg * annualizer
     return est_er
@@ -287,7 +293,7 @@ def get_est_er(r: FloatSeries, est_window_kind: str=DEFAULT_WINDOW_KIND, annuali
 
 def get_est_vol(
         r: FloatSeries,
-        est_window_kind: str=DEFAULT_WINDOW_KIND,
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         de_avg_kind: Optional[str]=None,
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
@@ -298,7 +304,7 @@ def get_est_vol(
 
 def get_est_sharpe(
         r: FloatSeries,
-        est_window_kind: str=DEFAULT_WINDOW_KIND,
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         de_avg_kind: Optional[str]=None
     ) -> Floatlike:
     est_er = get_est_er(r=r, est_window_kind=est_window_kind)
@@ -310,7 +316,7 @@ def get_est_sharpe(
 def get_est_beta(
         of: FloatSeries,
         on: FloatSeries,
-        est_window_kind: str=DEFAULT_WINDOW_KIND,
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         de_avg_kind: Optional[str]=None
     ) -> Floatlike:
     est_corr = get_est_corr(y=of, x=on, est_window_kind=est_window_kind, de_avg_kind=de_avg_kind)
