@@ -50,7 +50,7 @@ DEFAULT_SMOOTHING_WINDOW_KIND: str = "rolling"
 DEFAULT_SMOOTHING_HORIZON: int = HORIZONS["micro"]
 # reality of market data-generating process is that it's non-stationary
 DEFAULT_EST_WINDOW_KIND: str = "ewm"
-DEFAULT_EST_HORIZON: int = HORIZONS["sweet"]
+DEFAULT_EST_HORIZON: int = HORIZONS["med"]
 # evaluation, no need to specify horizon
 DEFAULT_EVAL_WINDOW_KIND: str = "full"
 
