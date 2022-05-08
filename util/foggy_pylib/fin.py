@@ -241,6 +241,27 @@ def get_est_cov(
 
     The estimate at time `t` incorporates information up to and including `t`.
 
+    By the way, you'll often hear that a financial risk model should
+    use a slightly longer-than-MSE-optimal estimation horizon, because:
+    ----
+    (a) Asset returns are kurtotic (susceptible to huge shocks), so
+        using a longer lookback acts like a "floor" during periods of low volatility,
+        reducing the risk of blowup in a tail event by
+        "remembering" that markets weren't always so calm.
+        \-> This is valid, since we often cop out of directly modeling kurtosis.
+    |
+    ~~~ BUT ALSO ~~~
+    |
+    (b) You don't want to constantly trade up and down to relever a
+        volatility-targeted portfolio in response to
+        the vacillations of your risk model.
+        \-> This is stupid: If you don't want to be overly sensitive to
+            short-term market fluctuations, use tcost aversion or turnover controls.
+            Market noise isn't very informative to asset ER's, so
+            it's good to filter it out when constructing trading signals;
+            But when estimating risk, it's a different story:
+            Volatility is, by definition, market noise!
+
     sources
     -------
     https://github.com/sparshsah/foggy-demo/blob/main/demo/stats/bias-variance-risk.ipynb.pdf
