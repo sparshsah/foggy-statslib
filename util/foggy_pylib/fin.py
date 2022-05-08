@@ -101,7 +101,7 @@ def get_vol_targeted(xr: FloatSeries, tgt_vol: float=DEFAULT_VOL) -> FloatSeries
         If you delever, you can deposit the excess cash in the bank and earn interest;
         Whereas if you uplever, you must pay a funding rate.
         It's simplistic to assume the funding rate is the same as the deposit interest rate
-        (it will usually be greater, since your default risk is higher than the bank's), but ok.
+        (it will usually be higher, since your default risk is greater than the bank's), but ok.
     """
     est_vol = get_est_vol(r=xr, est_window_kind="ewm")
     # at the end of each session, we check the data,
@@ -122,7 +122,7 @@ def get_hedged(base_xr: FloatSeries, hedge_xr: FloatSeries, est_window_kind: str
         If you delever, you can deposit the excess cash in the bank and earn interest;
         Whereas if you uplever, you must pay a funding rate.
         It's simplistic to assume the funding rate is the same as the deposit interest rate
-        (it will usually be greater, since your default risk is higher than the bank's), but ok.
+        (it will usually be higher, since your default risk is greater than the bank's), but ok.
     """
     # at the end of each day, we submit an order to short this much `out`
     est_beta = get_est_beta(of=base_xr, on=hedge_xr, est_window_kind=est_window_kind)
