@@ -260,7 +260,7 @@ def get_est_cov(
             Market noise isn't very informative to asset ER's, so
             it's good to filter it out when constructing trading signals;
             But when estimating risk, it's a different story:
-            Volatility is, by definition, market noise!
+            Volatility is, by definition, "just" market noise!
 
     sources
     -------
