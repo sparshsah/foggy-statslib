@@ -110,7 +110,7 @@ def get_vol_targeted(xr: FloatSeries, tgt_vol: float=DEFAULT_VOL) -> FloatSeries
         It's simplistic to assume the funding rate is the same as the deposit interest rate
         (it will usually be higher, since your default risk is greater than the bank's), but ok.
     """
-    est_vol = get_est_vol(r=xr, est_window_kind="ewm")
+    est_vol = get_est_vol(r=xr, est_window_kind=DEFAULT_EST_WINDOW_KIND)
     # at the end of each session, we check the data,
     # then trade up or down to hit this much leverage...
     est_required_leverage = tgt_vol / est_vol
