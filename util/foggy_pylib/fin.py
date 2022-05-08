@@ -51,6 +51,18 @@ IMPL_LAG: int = 2
 ## RETURN MANIPULATIONS ################################################################################################
 ########################################################################################################################
 
+def get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+    if kind == "arith":
+        cum_r = r.cumsum()
+    elif kind == "log":
+        cum_r = r.cumsum()
+    elif kind == "geom":
+        cum_r = (1+r).cumprod() - 1
+    else:
+        raise ValueError(kind)
+    return cum_r
+
+
 def get_r_from_px(px: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     if kind == "arith":
         r = px.diff()
@@ -80,18 +92,6 @@ def get_xr(r: FloatSeries, cash_r: FloatSeries) -> FloatSeries:
     cash_r = cash_r.reindex(index=r.index).rename(r.name)
     xr = r - cash_r
     return xr
-
-
-def get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
-    if kind == "arith":
-        cum_r = r.cumsum()
-    elif kind == "log":
-        cum_r = r.cumsum()
-    elif kind == "geom":
-        cum_r = (1+r).cumprod() - 1
-    else:
-        raise ValueError(kind)
-    return cum_r
 
 
 def get_vol_targeted(xr: FloatSeries, tgt_vol: float=DEFAULT_VOL) -> FloatSeries:
