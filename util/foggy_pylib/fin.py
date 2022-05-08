@@ -375,7 +375,7 @@ def get_est_perf_stats(r: FloatSeries, rounded: bool=True) -> FloatSeries:
     perf_stats = OrderedDict(perf_stats)
     perf_stats = pd.Series(perf_stats)
     if rounded:
-        round_dps = {"Sharpe": 4, "ER": 4, "Vol": 4, "t-stat": 2, "Frac valid timesteps": 3}
+        round_dps = {"Sharpe": 2, "ER": 4, "Vol": 4, "t-stat": 2, "Frac valid timesteps": 3}
         for (k, dps) in round_dps.items():
             perf_stats.loc[k] = np.round(perf_stats.loc[k], dps)
     return perf_stats
