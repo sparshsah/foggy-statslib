@@ -40,7 +40,7 @@ DEFAULT_SMOOTHING_WINDOW_KIND: str = "rolling"
 DEFAULT_SMOOTHING_HORIZON: int = HORIZONS["micro"]
 DEFAULT_EST_HORIZON: int = HORIZONS["sweet"]
 
-# approx duration of a 10Y US treasury note
+# approx duration of a 10Y US treasury note in a "normal" rates climate
 DEFAULT_BOND_DUR: float = 7
 # nice standard number to target
 DEFAULT_VOL: float = 0.10
