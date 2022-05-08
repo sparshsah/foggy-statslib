@@ -1,4 +1,7 @@
-"""Financial programming utilities."""
+"""Financial programming utilities.
+
+author: [@sparshsah](https://github.com/sparshsah)
+"""
 
 from audioop import avg
 from lib2to3.pgen2.token import OP
