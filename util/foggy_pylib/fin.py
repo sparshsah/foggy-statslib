@@ -143,9 +143,9 @@ def get_hedged(base_xr: FloatSeries, hedge_xr: FloatSeries, est_window_kind: str
 
 def smooth(
         r: FloatSeries,
+        avg_kind=DEFAULT_AVG_KIND,
         window_kind: str=DEFAULT_SMOOTHING_WINDOW_KIND,
         horizon: int=DEFAULT_SMOOTHING_HORIZON,
-        avg_kind=DEFAULT_AVG_KIND,
         scale_up_pow: float=0.5
     ) -> FloatSeries:
     """Smooth returns, e.g. to account for international trading-session async.
