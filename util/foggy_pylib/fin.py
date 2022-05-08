@@ -41,8 +41,8 @@ DEFAULT_SMOOTHING_HORIZON: int = HORIZONS["micro"]
 DEFAULT_EST_HORIZON: int = HORIZONS["sweet"]
 
 DEFAULT_VOL: float = 0.10
-# approx duration of a 2Y US treasury note
-DEFAULT_BOND_DUR: float = 1.93
+# approx duration of a 10Y US treasury note
+DEFAULT_BOND_DUR: float = 7
 # observe info at `t`, trade on it the course of `t+1`, earn at `t+2`
 IMPL_LAG: int = 2
 
