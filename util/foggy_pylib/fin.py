@@ -154,7 +154,7 @@ def smooth(
         avg_kind: str=DEFAULT_AVG_KIND,
         window_kind: str=DEFAULT_SMOOTHING_WINDOW_KIND,
         horizon: int=DEFAULT_SMOOTHING_HORIZON,
-        scale_up_pow: float=0.5
+        scale_up_pow: float=0
     ) -> FloatSeries:
     """Smooth returns, e.g. to account for international trading-session async.
 
@@ -261,7 +261,9 @@ def get_est_cov(
             r=col,
             avg_kind=smoothing_avg_kind,
             window_kind=smoothing_window_kind,
-            horizon=smoothing_horizon
+            horizon=smoothing_horizon,
+            # account for CLT -> get the same STD
+            scale_up_pow=0.5
         )
     )
     est_co_deviations = smoothed_est_deviations["y"] * smoothed_est_deviations["x"]
