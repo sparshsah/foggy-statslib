@@ -266,8 +266,8 @@ def _get_est_deviations_of_r(
     return est_deviations
 
 
-def get_est_cov_of_data(
-        y: FloatSeries, x: FloatSeries,
+def get_est_cov_of_r(
+        r_a: FloatSeries, r_b: FloatSeries,
         de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
         smoothing_avg_kind: str=DEFAULT_AVG_KIND,
         smoothing_window_kind: str=DEFAULT_SMOOTHING_WINDOW_KIND,
@@ -308,8 +308,8 @@ def get_est_cov_of_data(
     https://github.com/sparshsah/foggy-demo/blob/main/demo/stats/bias-variance-risk.ipynb.pdf
     https://faculty.fuqua.duke.edu/~charvey/Research/Published_Papers/P135_The_impact_of.pdf
     """
-    df = pd.DataFrame(OrderedDict([("y", y), ("x", x)]))
-    del x, y
+    df = pd.DataFrame(OrderedDict([("a", r_a), ("b", r_b)]))
+    del r_b, r_a
     est_deviations = df.apply(
         lambda col: _get_est_deviations_of_r(
             col,
@@ -328,7 +328,7 @@ def get_est_cov_of_data(
             scale_up_pow=0.5
         )
     )
-    est_co_deviations = smoothed_est_deviations["y"] * smoothed_est_deviations["x"]
+    est_co_deviations = smoothed_est_deviations["a"] * smoothed_est_deviations["b"]
     est_cov = _get_window(est_co_deviations, kind=est_window_kind, horizon=est_horizon).mean()
     ann_est_cov = est_cov * annualizer
     return ann_est_cov
@@ -339,7 +339,7 @@ def _get_est_std_of_data(
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    est_var = get_est_cov_of_data(y=y, x=y, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_var = get_est_cov_of_r(r_a=y, r_b=y, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_std = est_var **0.5
     return est_std
 
@@ -350,7 +350,7 @@ def get_est_corr(
         de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    est_cov = get_est_cov_of_data(y=y, x=x, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_cov = get_est_cov_of_r(r_a=y, r_b=x, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_y_std = _get_est_std_of_data(y, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_x_std = _get_est_std_of_data(x, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_corr = est_cov / (est_y_std * est_x_std)
