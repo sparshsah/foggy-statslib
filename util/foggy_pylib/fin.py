@@ -382,7 +382,7 @@ def get_est_vol_of_r(
     return est_vol
 
 
-def get_est_sharpe(
+def get_est_sharpe_of_r(
         r: FloatSeries,
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
@@ -394,13 +394,13 @@ def get_est_sharpe(
     return est_sharpe
 
 
-def get_t_stat(
+def get_t_stat_of_r(
         r: FloatSeries,
         de_avg_kind: Optional[str]=None,
         window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
     # https://web.stanford.edu/~wfsharpe/art/sr/sr.htm
-    granular_est_sharpe = get_est_sharpe(r=r, de_avg_kind=de_avg_kind, est_window_kind=window_kind, annualizer=1)
+    granular_est_sharpe = get_est_sharpe_of_r(r=r, de_avg_kind=de_avg_kind, est_window_kind=window_kind, annualizer=1)
     valid_timesteps = r.notna().sum()
     t_stat = granular_est_sharpe * valid_timesteps**0.5
     return t_stat
@@ -421,8 +421,8 @@ def get_est_beta(
 
 def get_est_perf_stats(r: FloatSeries, rounded: bool=True) -> FloatSeries:
     perf_stats = [
-        ("Sharpe", get_est_sharpe(r=r)),
-        ("t-stat", get_t_stat(r=r)),
+        ("Sharpe", get_est_sharpe_of_r(r=r)),
+        ("t-stat", get_t_stat_of_r(r=r)),
         ("ER", get_est_er_of_r(r=r)),
         ("Vol", get_est_vol_of_r(r=r)),
         (
