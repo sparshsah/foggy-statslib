@@ -185,7 +185,7 @@ def _get_exante_cov_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatDF
 
 
 def get_exante_vol_of_w(w: FloatSeries, cov_matrix: FloatDF) -> float:
-    exante_var = _get_exante_cov_of_w(w_a=of, w_b=of, cov_matrix=cov_matrix)
+    exante_var = _get_exante_cov_of_w(w_a=w, w_b=w, cov_matrix=cov_matrix)
     exante_vol = exante_var **0.5
     return exante_vol
 
