@@ -419,7 +419,7 @@ def get_est_beta_of_r(
     return est_beta
 
 
-def get_est_perf_stats(r: FloatSeries, rounded: bool=True) -> FloatSeries:
+def get_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> FloatSeries:
     perf_stats = [
         ("Sharpe", get_est_sharpe_of_r(r=r)),
         ("t-stat", get_t_stat_of_r(r=r)),
@@ -452,6 +452,6 @@ def get_est_perf_stats(r: FloatSeries, rounded: bool=True) -> FloatSeries:
 def chart_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> None:
     cum_r = get_cum_r(r=r)
     fc.plot(cum_r, ypct=True, title=f"{r.name} {kind} CumRets")
-    est_perf_stats = get_est_perf_stats(r=r)
+    est_perf_stats = get_est_perf_stats_of_r(r=r)
     print(est_perf_stats)
     # return est_perf_stats
