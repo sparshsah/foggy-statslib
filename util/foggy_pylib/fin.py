@@ -227,7 +227,7 @@ def _get_est_deviations(
 
 def get_est_cov(
         y: FloatSeries, x: FloatSeries,
-        de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,    
+        de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
         smoothing_avg_kind: str=DEFAULT_AVG_KIND,
         smoothing_window_kind: str=DEFAULT_SMOOTHING_WINDOW_KIND,
         # pass `1` if you don't want to smooth
