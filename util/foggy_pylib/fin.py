@@ -382,9 +382,9 @@ def get_est_beta(
 def get_est_perf_stats(r: FloatSeries, rounded: bool=True) -> FloatSeries:
     perf_stats = [
         ("Sharpe", get_est_sharpe(r=r)),
+        ("t-stat", get_t_stat(r=r)),
         ("ER", get_est_er(r=r)),
         ("Vol", get_est_vol(r=r)),
-        ("t-stat", get_t_stat(r=r)),
         (
             "Frac valid timesteps",
             r.notna().sum() / len(r.index)
