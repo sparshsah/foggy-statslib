@@ -116,7 +116,7 @@ def get_vol_targeted_xr(
         It's simplistic to assume the funding rate is the same as the deposit interest rate
         (it will usually be higher, since your default risk is greater than the bank's), but ok.
     """
-    est_vol = get_est_vol(r=xr, est_window_kind=est_window_kind)
+    est_vol = get_est_vol_of_r(r=xr, est_window_kind=est_window_kind)
     # at the end of each session, we check the data,
     # then trade up or down to hit this much leverage...
     est_required_leverage = tgt_vol / est_vol
@@ -361,7 +361,7 @@ def get_est_corr_of_r(
 ## FINANCIAL EVALUATIONS ###############################################################################################
 ########################################################################################################################
 
-def get_est_er(
+def get_est_er_of_r(
         r: FloatSeries,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         annualizer: int=DAYCOUNTS["BY"]
@@ -371,7 +371,7 @@ def get_est_er(
     return est_er
 
 
-def get_est_vol(
+def get_est_vol_of_r(
         r: FloatSeries,
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
@@ -388,8 +388,8 @@ def get_est_sharpe(
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
-    est_er = get_est_er(r=r, est_window_kind=est_window_kind, annualizer=annualizer)
-    est_vol = get_est_vol(r=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind, annualizer=annualizer)
+    est_er = get_est_er_of_r(r=r, est_window_kind=est_window_kind, annualizer=annualizer)
+    est_vol = get_est_vol_of_r(r=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind, annualizer=annualizer)
     est_sharpe = est_er / est_vol
     return est_sharpe
 
@@ -423,8 +423,8 @@ def get_est_perf_stats(r: FloatSeries, rounded: bool=True) -> FloatSeries:
     perf_stats = [
         ("Sharpe", get_est_sharpe(r=r)),
         ("t-stat", get_t_stat(r=r)),
-        ("ER", get_est_er(r=r)),
-        ("Vol", get_est_vol(r=r)),
+        ("ER", get_est_er_of_r(r=r)),
+        ("Vol", get_est_vol_of_r(r=r)),
         (
             "Frac valid timesteps",
             r.notna().sum() / len(r.index)
