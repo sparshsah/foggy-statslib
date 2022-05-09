@@ -142,7 +142,7 @@ def get_hedged_xr(
         (it will usually be higher, since your default risk is greater than the bank's), but ok.
     """
     # at the end of each day, we submit an order to short this much `out`
-    est_beta = get_est_beta(of=base_xr, on=hedge_xr, est_window_kind=est_window_kind)
+    est_beta = get_est_beta_of_r(of_r=base_xr, on_r=hedge_xr, est_window_kind=est_window_kind)
     # this is weight as $ notional / $ NAV
     hedge_pos_at_t = -est_beta.shift(IMPL_LAG)
     hedge_xpnl_at_t = hedge_pos_at_t * hedge_xr
@@ -406,15 +406,15 @@ def get_t_stat_of_r(
     return t_stat
 
 
-def get_est_beta(
-        of: FloatSeries,
-        on: FloatSeries,
+def get_est_beta_of_r(
+        of_r: FloatSeries,
+        on_r: FloatSeries,
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    est_corr = get_est_corr_of_r(r_a=of, r_b=on, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_of_std = _get_est_std_of_r(r=of, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_on_std = _get_est_std_of_r(r=on, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_corr = get_est_corr_of_r(r_a=of_r, r_b=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_of_std = _get_est_std_of_r(r=of_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_on_std = _get_est_std_of_r(r=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_beta = est_corr * (est_of_std / est_on_std)
     return est_beta
 
