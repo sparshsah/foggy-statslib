@@ -266,7 +266,7 @@ def _get_est_deviations_of_data(
     return est_deviations
 
 
-def get_est_cov(
+def get_est_cov_of_data(
         y: FloatSeries, x: FloatSeries,
         de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
         smoothing_avg_kind: str=DEFAULT_AVG_KIND,
@@ -339,7 +339,7 @@ def _get_est_std(
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    est_var = get_est_cov(y=y, x=y, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_var = get_est_cov_of_data(y=y, x=y, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_std = est_var **0.5
     return est_std
 
@@ -350,7 +350,7 @@ def get_est_corr(
         de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    est_cov = get_est_cov(y=y, x=x, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_cov = get_est_cov_of_data(y=y, x=x, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_y_std = _get_est_std(y, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_x_std = _get_est_std(x, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_corr = est_cov / (est_y_std * est_x_std)
