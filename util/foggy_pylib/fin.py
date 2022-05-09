@@ -344,16 +344,16 @@ def _get_est_std_of_r(
     return est_std
 
 
-def get_est_corr(
-        y: pd.Series,
-        x: pd.Series,
+def get_est_corr_of_r(
+        r_a: pd.Series,
+        r_b: pd.Series,
         de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    est_cov = get_est_cov_of_r(r_a=y, r_b=x, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_y_std = _get_est_std_of_r(r=y, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_x_std = _get_est_std_of_r(r=x, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_corr = est_cov / (est_y_std * est_x_std)
+    est_cov = get_est_cov_of_r(r_a=r_a, r_b=r_b, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_a_std = _get_est_std_of_r(r=r_a, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_b_std = _get_est_std_of_r(r=r_b, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_corr = est_cov / (est_a_std * est_b_std)
     return est_corr
 
 
@@ -412,7 +412,7 @@ def get_est_beta(
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    est_corr = get_est_corr(y=of, x=on, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_corr = get_est_corr_of_r(r_a=of, r_b=on, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_of_std = _get_est_std_of_r(r=of, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_on_std = _get_est_std_of_r(r=on, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_beta = est_corr * (est_of_std / est_on_std)
