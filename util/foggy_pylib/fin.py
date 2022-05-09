@@ -61,7 +61,7 @@ DEFAULT_EVAL_WINDOW_KIND: str = "full"
 ## RETURN MANIPULATIONS ################################################################################################
 ########################################################################################################################
 
-def get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+def _get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     if kind == "arith":
         cum_r = r.cumsum()
     elif kind == "log":
@@ -73,7 +73,7 @@ def get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     return cum_r
 
 
-def get_r_from_px(px: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+def _get_r_from_px(px: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     if kind == "arith":
         r = px.diff()
     elif kind == "log":
@@ -87,7 +87,7 @@ def get_r_from_px(px: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     return r
 
 
-def get_r_from_yld(yld: FloatSeries, dur: float=DEFAULT_BOND_DUR, annualizer: int=DAYCOUNTS["BY"]) -> FloatSeries:
+def _get_r_from_yld(yld: FloatSeries, dur: float=DEFAULT_BOND_DUR, annualizer: int=DAYCOUNTS["BY"]) -> FloatSeries:
     """Approximation for a constant-duration bond, assuming log yields."""
     single_day_carry_exposed_return = yld.shift() / annualizer
     # remember: duration is in years, so we must use annualized yields
@@ -97,14 +97,14 @@ def get_r_from_yld(yld: FloatSeries, dur: float=DEFAULT_BOND_DUR, annualizer: in
     return r
 
 
-def get_xr(r: FloatSeries, cash_r: FloatSeries) -> FloatSeries:
+def _get_xr(r: FloatSeries, cash_r: FloatSeries) -> FloatSeries:
     """Excess-of-cash returns."""
     cash_r = cash_r.reindex(index=r.index).rename(r.name)
     xr = r - cash_r
     return xr
 
 
-def get_vol_targeted_xr(
+def _get_vol_targeted_xr(
         xr: FloatSeries,
         tgt_vol: float=DEFAULT_VOL,
         est_window_kind: str=DEFAULT_EST_WINDOW_KIND
@@ -129,7 +129,7 @@ def get_vol_targeted_xr(
     return levered_xr_at_t
 
 
-def get_hedged_xr(
+def _get_hedged_xr(
         base_xr: FloatSeries,
         hedge_xr: FloatSeries,
         est_window_kind: str=DEFAULT_EST_WINDOW_KIND
@@ -152,7 +152,7 @@ def get_hedged_xr(
     return hedged_base_xr_at_t
 
 
-def smooth(
+def _smooth(
         r: FloatSeries,
         avg_kind: str=DEFAULT_AVG_KIND,
         window_kind: str=DEFAULT_SMOOTHING_WINDOW_KIND,
@@ -180,34 +180,34 @@ def smooth(
 ## PORTFOLIO MATH ######################################################################################################
 ########################################################################################################################
 
-def _get_exante_cov_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatDF) -> float:
+def __get_exante_cov_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatDF) -> float:
     exante_cov = w_a @ cov_matrix @ w_b
     return exante_cov
 
 
-def get_exante_vol_of_w(w: FloatSeries, cov_matrix: FloatDF) -> float:
-    exante_var = _get_exante_cov_of_w(w_a=w, w_b=w, cov_matrix=cov_matrix)
+def _get_exante_vol_of_w(w: FloatSeries, cov_matrix: FloatDF) -> float:
+    exante_var = __get_exante_cov_of_w(w_a=w, w_b=w, cov_matrix=cov_matrix)
     exante_vol = exante_var **0.5
     return exante_vol
 
 
-def get_exante_corr_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatDF) -> float:
-    exante_cov = _get_exante_cov_of_w(w_a=w_a, w_b=w_b, cov_matrix=cov_matrix)
-    exante_a_vol = get_exante_vol_of_w(w=w_a, cov_matrix=cov_matrix)
-    exante_b_vol = get_exante_vol_of_w(w=w_b, cov_matrix=cov_matrix)
+def _get_exante_corr_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatDF) -> float:
+    exante_cov = __get_exante_cov_of_w(w_a=w_a, w_b=w_b, cov_matrix=cov_matrix)
+    exante_a_vol = _get_exante_vol_of_w(w=w_a, cov_matrix=cov_matrix)
+    exante_b_vol = _get_exante_vol_of_w(w=w_b, cov_matrix=cov_matrix)
     exante_corr = exante_cov / (exante_a_vol * exante_b_vol)
     return exante_corr
 
 
-def get_exante_beta_of_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: FloatDF) -> float:
-    exante_corr = get_exante_corr_of_w(w_a=of_w, w_b=on_w, cov_matrix=cov_matrix)
-    exante_of_vol = get_exante_vol_of_w(w=of_w, cov_matrix=cov_matrix)
-    exante_on_vol = get_exante_vol_of_w(w=on_w, cov_matrix=cov_matrix)
+def _get_exante_beta_of_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: FloatDF) -> float:
+    exante_corr = _get_exante_corr_of_w(w_a=of_w, w_b=on_w, cov_matrix=cov_matrix)
+    exante_of_vol = _get_exante_vol_of_w(w=of_w, cov_matrix=cov_matrix)
+    exante_on_vol = _get_exante_vol_of_w(w=on_w, cov_matrix=cov_matrix)
     exante_beta = exante_corr * (exante_of_vol / exante_on_vol)
     return exante_beta
 
 
-def get_pnl(w: FloatSeries, r: FloatSeries, impl_lag: int=IMPL_LAG, agg: bool=True) -> Floatlike:
+def _get_pnl(w: FloatSeries, r: FloatSeries, impl_lag: int=IMPL_LAG, agg: bool=True) -> Floatlike:
     w_ = w.shift(impl_lag)
     pnl = r @ w_
     pnl = pnl.sum() if agg else pnl
@@ -320,7 +320,7 @@ def get_est_cov_of_r(
         )
     )
     smoothed_est_deviations = est_deviations.apply(
-        lambda col: smooth(
+        lambda col: _smooth(
             r=col,
             avg_kind=smoothing_avg_kind,
             window_kind=smoothing_window_kind,
@@ -451,7 +451,7 @@ def get_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> FloatSeries:
 ########################################################################################################################
 
 def chart_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> None:
-    cum_r = get_cum_r(r=r)
+    cum_r = _get_cum_r(r=r)
     fc.plot(cum_r, ypct=True, title=f"{r.name} {kind} CumRets")
     est_perf_stats = get_est_perf_stats_of_r(r=r)
     print(est_perf_stats)
