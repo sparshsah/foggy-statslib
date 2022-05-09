@@ -411,7 +411,7 @@ def get_est_perf_stats(r: FloatSeries, rounded: bool=True) -> FloatSeries:
 ## VISUALIZATION #######################################################################################################
 ########################################################################################################################
 
-def chart(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> None:
+def chart_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> None:
     cum_r = get_cum_r(r=r)
     fc.plot(cum_r, ypct=True, title=f"{r.name} {kind} CumRets")
     est_perf_stats = get_est_perf_stats(r=r)
