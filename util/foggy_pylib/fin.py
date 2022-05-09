@@ -334,7 +334,7 @@ def get_est_cov_of_data(
     return ann_est_cov
 
 
-def _get_est_std(
+def _get_est_std_of_data(
         y: pd.Series,
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
@@ -351,8 +351,8 @@ def get_est_corr(
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
     est_cov = get_est_cov_of_data(y=y, x=x, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_y_std = _get_est_std(y, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_x_std = _get_est_std(x, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_y_std = _get_est_std_of_data(y, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_x_std = _get_est_std_of_data(x, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_corr = est_cov / (est_y_std * est_x_std)
     return est_corr
 
@@ -377,7 +377,7 @@ def get_est_vol(
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
-    est_std = _get_est_std(y=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_std = _get_est_std_of_data(y=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_vol = est_std * annualizer**0.5
     return est_vol
 
@@ -413,8 +413,8 @@ def get_est_beta(
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
     est_corr = get_est_corr(y=of, x=on, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_of_std = _get_est_std(of, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_on_std = _get_est_std(on, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_of_std = _get_est_std_of_data(of, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_on_std = _get_est_std_of_data(on, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_beta = est_corr * (est_of_std / est_on_std)
     return est_beta
 
