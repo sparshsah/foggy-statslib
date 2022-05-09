@@ -254,15 +254,15 @@ def _get_est_avg_of_r(
     return est_avg
 
 
-def _get_est_deviations_of_data(
-        y: FloatSeries,
+def _get_est_deviations_of_r(
+        r: FloatSeries,
         de_avg_kind: Optional[str]=None,
         avg_est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         avg_est_horizon: int=DEFAULT_EST_HORIZON,
     ) -> FloatSeries:
     avg = 0 if de_avg_kind is None else \
-        _get_est_avg_of_r(r=y, avg_kind=de_avg_kind, est_window_kind=avg_est_window_kind, est_horizon=avg_est_horizon)
-    est_deviations = y - avg
+        _get_est_avg_of_r(r=r, avg_kind=de_avg_kind, est_window_kind=avg_est_window_kind, est_horizon=avg_est_horizon)
+    est_deviations = r - avg
     return est_deviations
 
 
@@ -311,7 +311,7 @@ def get_est_cov_of_data(
     df = pd.DataFrame(OrderedDict([("y", y), ("x", x)]))
     del x, y
     est_deviations = df.apply(
-        lambda col: _get_est_deviations_of_data(
+        lambda col: _get_est_deviations_of_r(
             col,
             de_avg_kind=de_avg_kind,
             avg_est_window_kind=est_window_kind,
