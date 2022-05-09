@@ -170,7 +170,7 @@ def smooth(
             motivated by CLT: STD of avg scales with inverse of sqrt(N)
         * ....
     """
-    est_avg = _get_est_avg_of_data(y=r, avg_kind=avg_kind, est_window_kind=window_kind, est_horizon=horizon)
+    est_avg = _get_est_avg_of_r(r=r, avg_kind=avg_kind, est_window_kind=window_kind, est_horizon=horizon)
     scaled = est_avg * horizon**scale_up_pow
     return scaled
 
@@ -237,13 +237,13 @@ def _get_window(
     return window
 
 
-def _get_est_avg_of_data(
-        y: FloatSeries,
+def _get_est_avg_of_r(
+        r: FloatSeries,
         avg_kind: str=DEFAULT_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EST_HORIZON
     ) -> Floatlike:
-    window = _get_window(y, kind=est_window_kind, horizon=est_horizon)
+    window = _get_window(r, kind=est_window_kind, horizon=est_horizon)
     if avg_kind == "mean":
         est_avg = window.mean()
     elif avg_kind == "median":
@@ -261,7 +261,7 @@ def _get_est_deviations_of_data(
         avg_est_horizon: int=DEFAULT_EST_HORIZON,
     ) -> FloatSeries:
     avg = 0 if de_avg_kind is None else \
-        _get_est_avg_of_data(y=y, avg_kind=de_avg_kind, est_window_kind=avg_est_window_kind, est_horizon=avg_est_horizon)
+        _get_est_avg_of_r(r=y, avg_kind=de_avg_kind, est_window_kind=avg_est_window_kind, est_horizon=avg_est_horizon)
     est_deviations = y - avg
     return est_deviations
 
@@ -366,7 +366,7 @@ def get_est_er(
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
-    est_avg = _get_est_avg_of_data(y=r, est_window_kind=est_window_kind)
+    est_avg = _get_est_avg_of_r(r=r, est_window_kind=est_window_kind)
     est_er = est_avg * annualizer
     return est_er
 
