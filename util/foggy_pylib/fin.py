@@ -103,7 +103,7 @@ def get_xr(r: FloatSeries, cash_r: FloatSeries) -> FloatSeries:
     return xr
 
 
-def get_vol_targeted(
+def get_vol_targeted_xr(
         xr: FloatSeries,
         tgt_vol: float=DEFAULT_VOL,
         est_window_kind: str=DEFAULT_EST_WINDOW_KIND
@@ -128,7 +128,7 @@ def get_vol_targeted(
     return levered_xr_at_t
 
 
-def get_hedged(
+def get_hedged_xr(
         base_xr: FloatSeries,
         hedge_xr: FloatSeries,
         est_window_kind: str=DEFAULT_EST_WINDOW_KIND
