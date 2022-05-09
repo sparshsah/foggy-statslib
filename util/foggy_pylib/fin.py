@@ -254,7 +254,7 @@ def _get_est_avg_of_data(
     return est_avg
 
 
-def _get_est_deviations(
+def _get_est_deviations_of_data(
         y: FloatSeries,
         de_avg_kind: Optional[str]=None,
         avg_est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
@@ -311,7 +311,7 @@ def get_est_cov(
     df = pd.DataFrame(OrderedDict([("y", y), ("x", x)]))
     del x, y
     est_deviations = df.apply(
-        lambda col: _get_est_deviations(
+        lambda col: _get_est_deviations_of_data(
             col,
             de_avg_kind=de_avg_kind,
             avg_est_window_kind=est_window_kind,
