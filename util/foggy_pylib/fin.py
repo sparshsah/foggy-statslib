@@ -117,7 +117,7 @@ def _get_vol_targeted_xr(
         It's simplistic to assume the funding rate is the same as the deposit interest rate
         (it will usually be higher, since your default risk is greater than the bank's), but ok.
     """
-    est_vol = get_est_vol_of_r(r=xr, est_window_kind=est_window_kind)
+    est_vol = _get_est_vol_of_r(r=xr, est_window_kind=est_window_kind)
     # at the end of each session, we check the data,
     # then trade up or down to hit this much leverage...
     est_required_leverage = tgt_vol / est_vol
@@ -143,7 +143,7 @@ def _get_hedged_xr(
         (it will usually be higher, since your default risk is greater than the bank's), but ok.
     """
     # at the end of each day, we submit an order to short this much `out`
-    est_beta = get_est_beta_of_r(of_r=base_xr, on_r=hedge_xr, est_window_kind=est_window_kind)
+    est_beta = _get_est_beta_of_r(of_r=base_xr, on_r=hedge_xr, est_window_kind=est_window_kind)
     # this is weight as $ notional / $ NAV
     hedge_pos_at_t = -est_beta.shift(IMPL_LAG)
     hedge_xpnl_at_t = hedge_pos_at_t * hedge_xr
@@ -171,7 +171,7 @@ def _smooth(
             motivated by CLT: STD of avg scales with inverse of sqrt(N)
         * ....
     """
-    est_avg = _get_est_avg_of_r(r=r, avg_kind=avg_kind, est_window_kind=window_kind, est_horizon=horizon)
+    est_avg = __get_est_avg_of_r(r=r, avg_kind=avg_kind, est_window_kind=window_kind, est_horizon=horizon)
     scaled = est_avg * horizon**scale_up_pow
     return scaled
 
@@ -218,7 +218,7 @@ def _get_pnl(w: FloatSeries, r: FloatSeries, impl_lag: int=IMPL_LAG, agg: bool=T
 ## STATISTICAL CALCULATIONS ############################################################################################
 ########################################################################################################################
 
-def _get_window(
+def ___get_window(
         ser: pd.Series,
         kind: str=DEFAULT_EVAL_WINDOW_KIND,
         horizon: int=HORIZONS["sweet"],
@@ -238,13 +238,13 @@ def _get_window(
     return window
 
 
-def _get_est_avg_of_r(
+def __get_est_avg_of_r(
         r: FloatSeries,
         avg_kind: str=DEFAULT_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EST_HORIZON
     ) -> Floatlike:
-    window = _get_window(r, kind=est_window_kind, horizon=est_horizon)
+    window = ___get_window(r, kind=est_window_kind, horizon=est_horizon)
     if avg_kind == "mean":
         est_avg = window.mean()
     elif avg_kind == "median":
@@ -255,19 +255,19 @@ def _get_est_avg_of_r(
     return est_avg
 
 
-def _get_est_deviations_of_r(
+def __get_est_deviations_of_r(
         r: FloatSeries,
         de_avg_kind: Optional[str]=None,
         avg_est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         avg_est_horizon: int=DEFAULT_EST_HORIZON,
     ) -> FloatSeries:
     avg = 0 if de_avg_kind is None else \
-        _get_est_avg_of_r(r=r, avg_kind=de_avg_kind, est_window_kind=avg_est_window_kind, est_horizon=avg_est_horizon)
+        __get_est_avg_of_r(r=r, avg_kind=de_avg_kind, est_window_kind=avg_est_window_kind, est_horizon=avg_est_horizon)
     est_deviations = r - avg
     return est_deviations
 
 
-def get_est_cov_of_r(
+def _get_est_cov_of_r(
         r_a: FloatSeries, r_b: FloatSeries,
         de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
         smoothing_avg_kind: str=DEFAULT_AVG_KIND,
@@ -312,7 +312,7 @@ def get_est_cov_of_r(
     df = pd.DataFrame(OrderedDict([("a", r_a), ("b", r_b)]))
     del r_b, r_a
     est_deviations = df.apply(
-        lambda col: _get_est_deviations_of_r(
+        lambda col: __get_est_deviations_of_r(
             col,
             de_avg_kind=de_avg_kind,
             avg_est_window_kind=est_window_kind,
@@ -330,30 +330,30 @@ def get_est_cov_of_r(
         )
     )
     est_co_deviations = smoothed_est_deviations["a"] * smoothed_est_deviations["b"]
-    est_cov = _get_window(est_co_deviations, kind=est_window_kind, horizon=est_horizon).mean()
+    est_cov = ___get_window(est_co_deviations, kind=est_window_kind, horizon=est_horizon).mean()
     ann_est_cov = est_cov * annualizer
     return ann_est_cov
 
 
-def _get_est_std_of_r(
+def __get_est_std_of_r(
         r: pd.Series,
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    est_var = get_est_cov_of_r(r_a=r, r_b=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_var = _get_est_cov_of_r(r_a=r, r_b=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_std = est_var **0.5
     return est_std
 
 
-def get_est_corr_of_r(
+def _get_est_corr_of_r(
         r_a: pd.Series,
         r_b: pd.Series,
         de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    est_cov = get_est_cov_of_r(r_a=r_a, r_b=r_b, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_a_std = _get_est_std_of_r(r=r_a, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_b_std = _get_est_std_of_r(r=r_b, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_cov = _get_est_cov_of_r(r_a=r_a, r_b=r_b, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_a_std = __get_est_std_of_r(r=r_a, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_b_std = __get_est_std_of_r(r=r_b, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_corr = est_cov / (est_a_std * est_b_std)
     return est_corr
 
@@ -362,70 +362,70 @@ def get_est_corr_of_r(
 ## FINANCIAL EVALUATIONS ###############################################################################################
 ########################################################################################################################
 
-def get_est_er_of_r(
+def _get_est_er_of_r(
         r: FloatSeries,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
-    est_avg = _get_est_avg_of_r(r=r, est_window_kind=est_window_kind)
+    est_avg = __get_est_avg_of_r(r=r, est_window_kind=est_window_kind)
     est_er = est_avg * annualizer
     return est_er
 
 
-def get_est_vol_of_r(
+def _get_est_vol_of_r(
         r: FloatSeries,
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
-    est_std = _get_est_std_of_r(r=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_std = __get_est_std_of_r(r=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_vol = est_std * annualizer**0.5
     return est_vol
 
 
-def get_est_sharpe_of_r(
+def _get_est_sharpe_of_r(
         r: FloatSeries,
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
-    est_er = get_est_er_of_r(r=r, est_window_kind=est_window_kind, annualizer=annualizer)
-    est_vol = get_est_vol_of_r(r=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind, annualizer=annualizer)
+    est_er = _get_est_er_of_r(r=r, est_window_kind=est_window_kind, annualizer=annualizer)
+    est_vol = _get_est_vol_of_r(r=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind, annualizer=annualizer)
     est_sharpe = est_er / est_vol
     return est_sharpe
 
 
-def get_t_stat_of_r(
+def _get_t_stat_of_r(
         r: FloatSeries,
         de_avg_kind: Optional[str]=None,
         window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
     # https://web.stanford.edu/~wfsharpe/art/sr/sr.htm
-    granular_est_sharpe = get_est_sharpe_of_r(r=r, de_avg_kind=de_avg_kind, est_window_kind=window_kind, annualizer=1)
+    granular_est_sharpe = _get_est_sharpe_of_r(r=r, de_avg_kind=de_avg_kind, est_window_kind=window_kind, annualizer=1)
     valid_timesteps = r.notna().sum()
     t_stat = granular_est_sharpe * valid_timesteps**0.5
     return t_stat
 
 
-def get_est_beta_of_r(
+def _get_est_beta_of_r(
         of_r: FloatSeries,
         on_r: FloatSeries,
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    est_corr = get_est_corr_of_r(r_a=of_r, r_b=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_of_std = _get_est_std_of_r(r=of_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_on_std = _get_est_std_of_r(r=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_corr = _get_est_corr_of_r(r_a=of_r, r_b=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_of_std = __get_est_std_of_r(r=of_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_on_std = __get_est_std_of_r(r=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_beta = est_corr * (est_of_std / est_on_std)
     return est_beta
 
 
-def get_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> FloatSeries:
+def _get_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> FloatSeries:
     perf_stats = [
-        ("Sharpe", get_est_sharpe_of_r(r=r)),
-        ("t-stat", get_t_stat_of_r(r=r)),
-        ("ER", get_est_er_of_r(r=r)),
-        ("Vol", get_est_vol_of_r(r=r)),
+        ("Sharpe", _get_est_sharpe_of_r(r=r)),
+        ("t-stat", _get_t_stat_of_r(r=r)),
+        ("ER", _get_est_er_of_r(r=r)),
+        ("Vol", _get_est_vol_of_r(r=r)),
         (
             "Frac valid timesteps",
             r.notna().sum() / len(r.index)
@@ -450,9 +450,9 @@ def get_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> FloatSeries:
 ## VISUALIZATION #######################################################################################################
 ########################################################################################################################
 
-def chart_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> None:
+def _chart_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> None:
     cum_r = _get_cum_r(r=r)
     fc.plot(cum_r, ypct=True, title=f"{r.name} {kind} CumRets")
-    est_perf_stats = get_est_perf_stats_of_r(r=r)
+    est_perf_stats = _get_est_perf_stats_of_r(r=r)
     print(est_perf_stats)
     # return est_perf_stats
