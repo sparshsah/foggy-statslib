@@ -9,7 +9,6 @@ from typing import Dict, Union, Optional
 from collections import OrderedDict
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
 import foggy_pylib.core as fc
 
