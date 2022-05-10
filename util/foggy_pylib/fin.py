@@ -118,10 +118,10 @@ def _get_xr(r: FloatSeries, cash_r: FloatSeries) -> FloatSeries:
     return xr
 
 
-def _get_vol_targeted_xr(
+def _get_est_vol_targeted_xr(
         xr: FloatSeries,
-        tgt_vol: float=DEFAULT_VOL,
-        est_window_kind: str=DEFAULT_EST_WINDOW_KIND
+        est_window_kind: str=DEFAULT_EST_WINDOW_KIND,
+        tgt_vol: float=DEFAULT_VOL
     ) -> FloatSeries:
     """(Implementably) modulate volatility.
 
@@ -143,7 +143,7 @@ def _get_vol_targeted_xr(
     return levered_xr_at_t
 
 
-def _get_hedged_xr(
+def _get_est_hedged_xr(
         base_xr: FloatSeries,
         hedge_xr: FloatSeries,
         est_window_kind: str=DEFAULT_EST_WINDOW_KIND
@@ -194,6 +194,14 @@ def _smooth(
 ## PORTFOLIO MATH ######################################################################################################
 ########################################################################################################################
 
+def _get_exante_vol_targeted_w(w: FloatSeries, cov_matrix: FloatDF, tgt_vol: float=DEFAULT_VOL) -> FloatSeries:
+    raise NotImplementedError
+
+
+def _get_exante_hedged_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: FloatDF) -> FloatSeries:
+    raise NotImplementedError
+
+
 def __get_exante_cov_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatDF) -> float:
     exante_cov = w_a @ cov_matrix @ w_b
     return exante_cov
@@ -214,6 +222,10 @@ def _get_exante_corr_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatD
 
 
 def _get_exante_beta_of_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: FloatDF) -> float:
+    """
+    To get the beta of `of_w` on a single asset, pass
+        `on_w=pd.Series({on_asset_name: 1})`.
+    """
     exante_corr = _get_exante_corr_of_w(w_a=of_w, w_b=on_w, cov_matrix=cov_matrix)
     exante_of_vol = _get_exante_vol_of_w(w=of_w, cov_matrix=cov_matrix)
     exante_on_vol = _get_exante_vol_of_w(w=on_w, cov_matrix=cov_matrix)
