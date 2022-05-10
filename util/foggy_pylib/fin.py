@@ -118,54 +118,6 @@ def _get_xr(r: FloatSeries, cash_r: FloatSeries) -> FloatSeries:
     return xr
 
 
-def _get_est_vol_targeted_xr(
-        xr: FloatSeries,
-        est_window_kind: str=DEFAULT_EST_WINDOW_KIND,
-        tgt_vol: float=DEFAULT_VOL
-    ) -> FloatSeries:
-    """(Implementably) modulate volatility.
-
-    Input should be excess-of-cash returns:
-        If you delever, you can deposit the excess cash in the bank and earn interest;
-        Whereas if you uplever, you must pay a funding rate.
-        It's simplistic to assume the funding rate is the same as the deposit interest rate
-        (it will usually be higher, since your default risk is greater than the bank's), but ok.
-    """
-    est_vol = _get_est_vol_of_r(r=xr, est_window_kind=est_window_kind)
-    # at the end of each session, we check the data,
-    # then trade up or down to hit this much leverage...
-    est_required_leverage = tgt_vol / est_vol
-    # ... thence, over the next session, we earn this much return
-    # (based on yesterday's estimate of required leverage)
-    leverage_at_t = est_required_leverage.shift(IMPL_LAG)
-    levered_xr_at_t = leverage_at_t * xr
-    levered_xr_at_t = levered_xr_at_t.rename(xr.name)
-    return levered_xr_at_t
-
-
-def _get_est_hedged_xr(
-        base_xr: FloatSeries,
-        hedge_xr: FloatSeries,
-        est_window_kind: str=DEFAULT_EST_WINDOW_KIND
-    ) -> FloatSeries:
-    """(Implementably) short out base asset's exposure to hedge asset.
-
-    Inputs should be excess-of-cash returns:
-        If you delever, you can deposit the excess cash in the bank and earn interest;
-        Whereas if you uplever, you must pay a funding rate.
-        It's simplistic to assume the funding rate is the same as the deposit interest rate
-        (it will usually be higher, since your default risk is greater than the bank's), but ok.
-    """
-    # at the end of each day, we submit an order to short this much `out`
-    est_beta = _get_est_beta_of_r(of_r=base_xr, on_r=hedge_xr, est_window_kind=est_window_kind)
-    # this is weight as $ notional / $ NAV
-    hedge_pos_at_t = -est_beta.shift(IMPL_LAG)
-    hedge_xpnl_at_t = hedge_pos_at_t * hedge_xr
-    hedged_base_xr_at_t = base_xr + hedge_xpnl_at_t
-    hedged_base_xr_at_t = hedged_base_xr_at_t.rename(base_xr.name)
-    return hedged_base_xr_at_t
-
-
 def _smooth(
         r: FloatSeries,
         avg_kind: str=DEFAULT_AVG_KIND,
@@ -444,6 +396,54 @@ def _get_est_beta_of_r(
     est_on_std = __get_est_std_of_r(r=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_beta = est_corr * (est_of_std / est_on_std)
     return est_beta
+
+
+def _get_est_vol_targeted_xr(
+        xr: FloatSeries,
+        est_window_kind: str=DEFAULT_EST_WINDOW_KIND,
+        tgt_vol: float=DEFAULT_VOL
+    ) -> FloatSeries:
+    """(Implementably) modulate volatility.
+
+    Input should be excess-of-cash returns:
+        If you delever, you can deposit the excess cash in the bank and earn interest;
+        Whereas if you uplever, you must pay a funding rate.
+        It's simplistic to assume the funding rate is the same as the deposit interest rate
+        (it will usually be higher, since your default risk is greater than the bank's), but ok.
+    """
+    est_vol = _get_est_vol_of_r(r=xr, est_window_kind=est_window_kind)
+    # at the end of each session, we check the data,
+    # then trade up or down to hit this much leverage...
+    est_required_leverage = tgt_vol / est_vol
+    # ... thence, over the next session, we earn this much return
+    # (based on yesterday's estimate of required leverage)
+    leverage_at_t = est_required_leverage.shift(IMPL_LAG)
+    levered_xr_at_t = leverage_at_t * xr
+    levered_xr_at_t = levered_xr_at_t.rename(xr.name)
+    return levered_xr_at_t
+
+
+def _get_est_hedged_xr(
+        base_xr: FloatSeries,
+        hedge_xr: FloatSeries,
+        est_window_kind: str=DEFAULT_EST_WINDOW_KIND
+    ) -> FloatSeries:
+    """(Implementably) short out base asset's exposure to hedge asset.
+
+    Inputs should be excess-of-cash returns:
+        If you delever, you can deposit the excess cash in the bank and earn interest;
+        Whereas if you uplever, you must pay a funding rate.
+        It's simplistic to assume the funding rate is the same as the deposit interest rate
+        (it will usually be higher, since your default risk is greater than the bank's), but ok.
+    """
+    # at the end of each day, we submit an order to short this much `out`
+    est_beta = _get_est_beta_of_r(of_r=base_xr, on_r=hedge_xr, est_window_kind=est_window_kind)
+    # this is weight as $ notional / $ NAV
+    hedge_pos_at_t = -est_beta.shift(IMPL_LAG)
+    hedge_xpnl_at_t = hedge_pos_at_t * hedge_xr
+    hedged_base_xr_at_t = base_xr + hedge_xpnl_at_t
+    hedged_base_xr_at_t = hedged_base_xr_at_t.rename(base_xr.name)
+    return hedged_base_xr_at_t
 
 
 def _get_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> FloatSeries:
