@@ -4,6 +4,21 @@ v0.1.1 alpha: API MAY (IN FACT, CERTAINLY WILL) BREAK AT ANY TIME!
 
 author: [@sparshsah](https://github.com/sparshsah)
 
+
+Notes
+-----
+
+* Each `get_exante_{whatever}_of_w()` function calculates its
+    specified portfolio stat taking as ground truth the given market params.
+
+* Each `get_est_{whatever}_of_r()` function estimates its
+    specified market param based on the given data sample.
+** Currently, each estimator adheres to a frequentist paradigm,
+     using the ex-post sample stat directly as its point estimate of the parameter.
+     But, in the future, we could implement a more Bayesian approach,
+     using the data to instead inform our posterior distribution for the parameter.
+
+
 TODO: add DF versions of all these functions
 """
 
