@@ -293,6 +293,18 @@ def get_common_subsample(df: pd.DataFrame) -> pd.DataFrame:
     return df.loc[first:last]
 
 
+def get_diag_of_df(df: pd.DataFrame) -> pd.DataFrame:
+    diag_df = np.diag(df)
+    diag_df = pd.DataFrame(diag_df, index=df.index, columns=df.columns)
+    return diag_df
+
+
+def get_inv_of_df(df: pd.DataFrame) -> pd.DataFrame:
+    inv_df = np.linalg.inv(df)
+    inv_df = pd.DataFrame(inv_df, index=df.index, columns=df.columns)
+    return inv_df
+
+
 ############
 #### DB ####
 ############
