@@ -130,13 +130,6 @@ def _smooth(
     return scaled
 
 
-def _get_pnl(w: FloatSeries, r: FloatSeries, impl_lag: int=IMPL_LAG, agg: bool=True) -> Floatlike:
-    w_ = w.shift(impl_lag)
-    pnl = r @ w_
-    pnl = pnl.sum() if agg else pnl
-    return pnl
-
-
 def _get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     if kind == "arith":
         cum_r = r.cumsum()
@@ -147,6 +140,13 @@ def _get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     else:
         raise ValueError(kind)
     return cum_r
+
+
+def _get_pnl(w: FloatSeries, r: FloatSeries, impl_lag: int=IMPL_LAG, agg: bool=True) -> Floatlike:
+    w_ = w.shift(impl_lag)
+    pnl = r @ w_
+    pnl = pnl.sum() if agg else pnl
+    return pnl
 
 
 ########################################################################################################################
