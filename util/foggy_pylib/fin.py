@@ -142,6 +142,13 @@ def _smooth(
     return scaled
 
 
+def _get_pnl(w: FloatSeries, r: FloatSeries, impl_lag: int=IMPL_LAG, agg: bool=True) -> Floatlike:
+    w_ = w.shift(impl_lag)
+    pnl = r @ w_
+    pnl = pnl.sum() if agg else pnl
+    return pnl
+
+
 ########################################################################################################################
 ## PORTFOLIO MATH ######################################################################################################
 ########################################################################################################################
@@ -183,13 +190,6 @@ def _get_exante_beta_of_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: Floa
     exante_on_vol = _get_exante_vol_of_w(w=on_w, cov_matrix=cov_matrix)
     exante_beta = exante_corr * (exante_of_vol / exante_on_vol)
     return exante_beta
-
-
-def _get_pnl(w: FloatSeries, r: FloatSeries, impl_lag: int=IMPL_LAG, agg: bool=True) -> Floatlike:
-    w_ = w.shift(impl_lag)
-    pnl = r @ w_
-    pnl = pnl.sum() if agg else pnl
-    return pnl
 
 
 ########################################################################################################################
