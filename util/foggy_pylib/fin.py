@@ -150,49 +150,6 @@ def _get_pnl(w: FloatSeries, r: FloatSeries, impl_lag: int=IMPL_LAG, agg: bool=T
 
 
 ########################################################################################################################
-## PORTFOLIO MATH ######################################################################################################
-########################################################################################################################
-
-def __get_exante_cov_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatDF) -> float:
-    exante_cov = w_a @ cov_matrix @ w_b
-    return exante_cov
-
-
-def _get_exante_vol_of_w(w: FloatSeries, cov_matrix: FloatDF) -> float:
-    exante_var = __get_exante_cov_of_w(w_a=w, w_b=w, cov_matrix=cov_matrix)
-    exante_vol = exante_var **0.5
-    return exante_vol
-
-
-def _get_exante_corr_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatDF) -> float:
-    exante_cov = __get_exante_cov_of_w(w_a=w_a, w_b=w_b, cov_matrix=cov_matrix)
-    exante_a_vol = _get_exante_vol_of_w(w=w_a, cov_matrix=cov_matrix)
-    exante_b_vol = _get_exante_vol_of_w(w=w_b, cov_matrix=cov_matrix)
-    exante_corr = exante_cov / (exante_a_vol * exante_b_vol)
-    return exante_corr
-
-
-def _get_exante_beta_of_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: FloatDF) -> float:
-    """
-    To get the beta of `of_w` on a single asset, pass
-        `on_w=pd.Series({on_asset_name: 1})`.
-    """
-    exante_corr = _get_exante_corr_of_w(w_a=of_w, w_b=on_w, cov_matrix=cov_matrix)
-    exante_of_vol = _get_exante_vol_of_w(w=of_w, cov_matrix=cov_matrix)
-    exante_on_vol = _get_exante_vol_of_w(w=on_w, cov_matrix=cov_matrix)
-    exante_beta = exante_corr * (exante_of_vol / exante_on_vol)
-    return exante_beta
-
-
-def _get_exante_vol_targeted_w(w: FloatSeries, cov_matrix: FloatDF, tgt_vol: float=DEFAULT_VOL) -> FloatSeries:
-    raise NotImplementedError
-
-
-def _get_exante_hedged_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: FloatDF) -> FloatSeries:
-    raise NotImplementedError
-
-
-########################################################################################################################
 ## STATISTICAL CALCULATIONS ############################################################################################
 ########################################################################################################################
 
@@ -444,6 +401,49 @@ def _get_est_hedged_xr(
     hedged_base_xr_at_t = base_xr + hedge_xpnl_at_t
     hedged_base_xr_at_t = hedged_base_xr_at_t.rename(base_xr.name)
     return hedged_base_xr_at_t
+
+
+########################################################################################################################
+## PORTFOLIO MATH ######################################################################################################
+########################################################################################################################
+
+def __get_exante_cov_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatDF) -> float:
+    exante_cov = w_a @ cov_matrix @ w_b
+    return exante_cov
+
+
+def _get_exante_vol_of_w(w: FloatSeries, cov_matrix: FloatDF) -> float:
+    exante_var = __get_exante_cov_of_w(w_a=w, w_b=w, cov_matrix=cov_matrix)
+    exante_vol = exante_var **0.5
+    return exante_vol
+
+
+def _get_exante_corr_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatDF) -> float:
+    exante_cov = __get_exante_cov_of_w(w_a=w_a, w_b=w_b, cov_matrix=cov_matrix)
+    exante_a_vol = _get_exante_vol_of_w(w=w_a, cov_matrix=cov_matrix)
+    exante_b_vol = _get_exante_vol_of_w(w=w_b, cov_matrix=cov_matrix)
+    exante_corr = exante_cov / (exante_a_vol * exante_b_vol)
+    return exante_corr
+
+
+def _get_exante_beta_of_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: FloatDF) -> float:
+    """
+    To get the beta of `of_w` on a single asset, pass
+        `on_w=pd.Series({on_asset_name: 1})`.
+    """
+    exante_corr = _get_exante_corr_of_w(w_a=of_w, w_b=on_w, cov_matrix=cov_matrix)
+    exante_of_vol = _get_exante_vol_of_w(w=of_w, cov_matrix=cov_matrix)
+    exante_on_vol = _get_exante_vol_of_w(w=on_w, cov_matrix=cov_matrix)
+    exante_beta = exante_corr * (exante_of_vol / exante_on_vol)
+    return exante_beta
+
+
+def _get_exante_vol_targeted_w(w: FloatSeries, cov_matrix: FloatDF, tgt_vol: float=DEFAULT_VOL) -> FloatSeries:
+    raise NotImplementedError
+
+
+def _get_exante_hedged_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: FloatDF) -> FloatSeries:
+    raise NotImplementedError
 
 
 ########################################################################################################################
