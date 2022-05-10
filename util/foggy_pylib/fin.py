@@ -153,14 +153,6 @@ def _get_pnl(w: FloatSeries, r: FloatSeries, impl_lag: int=IMPL_LAG, agg: bool=T
 ## PORTFOLIO MATH ######################################################################################################
 ########################################################################################################################
 
-def _get_exante_vol_targeted_w(w: FloatSeries, cov_matrix: FloatDF, tgt_vol: float=DEFAULT_VOL) -> FloatSeries:
-    raise NotImplementedError
-
-
-def _get_exante_hedged_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: FloatDF) -> FloatSeries:
-    raise NotImplementedError
-
-
 def __get_exante_cov_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatDF) -> float:
     exante_cov = w_a @ cov_matrix @ w_b
     return exante_cov
@@ -190,6 +182,14 @@ def _get_exante_beta_of_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: Floa
     exante_on_vol = _get_exante_vol_of_w(w=on_w, cov_matrix=cov_matrix)
     exante_beta = exante_corr * (exante_of_vol / exante_on_vol)
     return exante_beta
+
+
+def _get_exante_vol_targeted_w(w: FloatSeries, cov_matrix: FloatDF, tgt_vol: float=DEFAULT_VOL) -> FloatSeries:
+    raise NotImplementedError
+
+
+def _get_exante_hedged_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: FloatDF) -> FloatSeries:
+    raise NotImplementedError
 
 
 ########################################################################################################################
