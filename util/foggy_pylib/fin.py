@@ -75,18 +75,6 @@ DEFAULT_EVAL_WINDOW_KIND: str = "full"
 ## RETURN MANIPULATIONS ################################################################################################
 ########################################################################################################################
 
-def _get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
-    if kind == "arith":
-        cum_r = r.cumsum()
-    elif kind == "log":
-        cum_r = r.cumsum()
-    elif kind == "geom":
-        cum_r = (1+r).cumprod() - 1
-    else:
-        raise ValueError(kind)
-    return cum_r
-
-
 def _get_r_from_px(px: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     if kind == "arith":
         r = px.diff()
@@ -140,6 +128,18 @@ def _smooth(
     est_avg = __get_est_avg_of_r(r=r, avg_kind=avg_kind, est_window_kind=window_kind, est_horizon=horizon)
     scaled = est_avg * horizon**scale_up_pow
     return scaled
+
+
+def _get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+    if kind == "arith":
+        cum_r = r.cumsum()
+    elif kind == "log":
+        cum_r = r.cumsum()
+    elif kind == "geom":
+        cum_r = (1+r).cumprod() - 1
+    else:
+        raise ValueError(kind)
+    return cum_r
 
 
 def _get_pnl(w: FloatSeries, r: FloatSeries, impl_lag: int=IMPL_LAG, agg: bool=True) -> Floatlike:
