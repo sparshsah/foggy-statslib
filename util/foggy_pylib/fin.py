@@ -407,6 +407,30 @@ def _get_est_hedged_xr(
 ## PORTFOLIO MATH ######################################################################################################
 ########################################################################################################################
 
+def __get_w_from_vw(vw: FloatSeries, vol_vector: FloatSeries) -> FloatSeries:
+    """Get portfolio (notional) weights from portfolio risk (i.e. volatility) weights.
+
+    inputs
+    ------
+    vw: FloatSeries, the portfolio's risk weight on each passive asset, e.g.
+        `pd.Series({"US10Y": +10%, "CDX.NA.IG": -8%, "SPX": 0%})`.
+    vol_vector: FloatSeries, volatility of each passive asset.
+
+    output
+    ------
+    w: FloatSeries, the portfolio's implied notional weight on each passive asset.
+    """
+    w = vw / vol_vector
+    return w
+
+
+def _get_w_from_vw(vw: FloatSeries, cov_matrix: FloatDF) -> FloatSeries:
+    var_vector = fc.get_diag_of_df(df=cov_matrix)
+    vol_vector = var_vector **0.5
+    w = __get_w_from_vw(vw=vw, vol_vector=vol_vector)
+    return w
+
+
 def __get_exante_cov_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatDF) -> float:
     exante_cov = w_a @ cov_matrix @ w_b
     return exante_cov
@@ -436,6 +460,17 @@ def _get_exante_beta_of_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: Floa
     exante_on_vol = _get_exante_vol_of_w(w=on_w, cov_matrix=cov_matrix)
     exante_beta = exante_corr * (exante_of_vol / exante_on_vol)
     return exante_beta
+
+
+def _get_uncon_mvo_w(
+        er_vector: FloatSeries,
+        cov_matrix: FloatDF,
+        vol_shkg_to_avg: float=0,
+        corr_shkg_to_zero: float=0,
+        vol_tgt: float=DEFAULT_VOL
+    ) -> FloatSeries:
+    # (\lambda \Sigma)^{-1} \mu
+    raise NotImplementedError
 
 
 def _get_exante_vol_targeted_w(w: FloatSeries, cov_matrix: FloatDF, tgt_vol: float=DEFAULT_VOL) -> FloatSeries:
