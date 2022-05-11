@@ -378,7 +378,7 @@ def __get_exante_vol_targeted_xr(
     return levered_xr
 
 
-def _get_est_vol_targeted_xr(
+def _get_fcast_vol_targeted_xr(
         xr: FloatSeries,
         est_window_kind: str=DEFAULT_EST_WINDOW_KIND,
         impl_lag: int=IMPL_LAG,
@@ -429,7 +429,7 @@ def __get_exante_hedged_xr(
     return hedged_base_xr
 
 
-def _get_est_hedged_xr(
+def _get_fcast_hedged_xr(
         base_xr: FloatSeries,
         hedge_xr: FloatSeries,
         est_window_kind: str=DEFAULT_EST_WINDOW_KIND,
