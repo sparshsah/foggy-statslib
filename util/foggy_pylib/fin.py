@@ -8,6 +8,12 @@ author: [@sparshsah](https://github.com/sparshsah)
 Notes
 -----
 
+* `r` refers to passive-asset returns, `pnl` refers to active-portfolio returns.
+
+* In general, an unqualified statistic name like `vol` refers to passive asset(s).
+    If we want to refer to active portfolio weights,
+    we'll explicitly write something like `vol_of_w`.
+
 * Each `get_est_{whatever}_of_r()` function estimates its
     specified market param based on the given data sample.
 ** Currently, each estimator adheres to a frequentist paradigm,
@@ -215,8 +221,10 @@ def __get_est_cov_of_r(
         annualizer: int=1
     ) -> Floatlike:
     """Simple GARCH estimate of covariance.
-
     The estimate at time `t` incorporates information up to and including `t`.
+
+    You can get a "robust" estimate by setting smoothing_avg_kind = "median",
+        which will tend to "filter out" highly-influential one-off outliers.
 
     By the way, you'll often hear that a financial risk model should
     use a slightly longer-than-MSE-optimal estimation horizon, because:
@@ -355,9 +363,25 @@ def _get_est_beta_of_r(
     return est_beta
 
 
+def __get_exante_vol_targeted_xr(
+        xr: FloatSeries,
+        vol: FloatSeries,
+        tgt_vol: float=DEFAULT_VOL
+    ) -> FloatSeries:
+    """Volatility-target the asset,
+    treating `vol[t]` aa its ground-truth volatility at time t.
+    """
+    # this is portfolio leverage as $ notional / $ NAV
+    req_leverage = tgt_vol / vol
+    levered_xr = req_leverage * xr
+    levered_xr = levered_xr.rename(xr.name)
+    return levered_xr
+
+
 def _get_est_vol_targeted_xr(
         xr: FloatSeries,
         est_window_kind: str=DEFAULT_EST_WINDOW_KIND,
+        impl_lag: int=IMPL_LAG,
         tgt_vol: float=DEFAULT_VOL
     ) -> FloatSeries:
     """(Implementably) modulate volatility.
@@ -367,23 +391,49 @@ def _get_est_vol_targeted_xr(
         Whereas if you uplever, you must pay a funding rate.
         It's simplistic to assume the funding rate is the same as the deposit interest rate
         (it will usually be higher, since your default risk is greater than the bank's), but ok.
+
+    With default settings, you get a implementably-vol-targeted version of the xr, i.e.
+        you could actually estimate its volatility then submit trades to lever it accordingly.
+        On the other hand, if you pass est_window_kind = "full" and impl_lag = 0,
+        you'll just get an expost-perfectly-vol-targeted version of `base_xr`,
+        whose realized sample volatility will be exactly equal to `tgt_vol`.
     """
     est_vol = _get_est_vol_of_r(r=xr, est_window_kind=est_window_kind)
-    # at the end of each session, we check the data,
-    # then trade up or down to hit this much leverage...
-    est_required_leverage = tgt_vol / est_vol
-    # ... thence, over the next session, we earn this much return
-    # (based on yesterday's estimate of required leverage)
-    leverage_at_t = est_required_leverage.shift(IMPL_LAG)
-    levered_xr_at_t = leverage_at_t * xr
-    levered_xr_at_t = levered_xr_at_t.rename(xr.name)
-    return levered_xr_at_t
+    '''
+    At the end of each session (t), we review the data,
+    then trade up or down over the next session (t+1) to hit this much leverage,
+    finally earning the corresponding return over the next-next session (t+2).
+    Under this model, you get no execution during t+1, until the close when
+    you get all the execution at once. This seems pretty unrealistic,
+    but it's actually conservative: The alternative is to assume you trade fast
+    and start earning the return intraday during t+1.
+    '''
+    exante_vol = est_vol.shift(impl_lag)
+    levered_xr = __get_exante_vol_targeted_xr(xr=xr, vol=exante_vol, tgt_vol=tgt_vol)
+    return levered_xr
+
+
+def __get_exante_hedged_xr(
+        base_xr: FloatSeries,
+        hedge_xr: FloatSeries,
+        beta: FloatSeries,
+    ) -> FloatSeries:
+    """Hedge out exposure to the hedge asset, treating `beta[t]` as the
+    ground-truth beta of the base asset on the hedge asset at time t.
+    """
+    # this is portfolio weight as $ notional / $ NAV
+    hedge_pos = -beta
+    hedge_xpnl = hedge_pos * hedge_xr
+    hedged_base_xr = base_xr + hedge_xpnl
+    hedged_base_xr = hedged_base_xr.rename(base_xr.name)
+    return hedged_base_xr
 
 
 def _get_est_hedged_xr(
         base_xr: FloatSeries,
         hedge_xr: FloatSeries,
-        est_window_kind: str=DEFAULT_EST_WINDOW_KIND
+        est_window_kind: str=DEFAULT_EST_WINDOW_KIND,
+        impl_lag: int=IMPL_LAG
     ) -> FloatSeries:
     """(Implementably) short out base asset's exposure to hedge asset.
 
@@ -392,15 +442,18 @@ def _get_est_hedged_xr(
         Whereas if you uplever, you must pay a funding rate.
         It's simplistic to assume the funding rate is the same as the deposit interest rate
         (it will usually be higher, since your default risk is greater than the bank's), but ok.
+
+    With default settings, you get a implementably-hedged version of the base xr, i.e.
+        you could actually estimate the beta then submit trades to short it out.
+        On the other hand, if you pass est_window_kind = "full" and impl_lag = 0,
+        you'll just get an expost-perfectly-hedged version of `base_xr`,
+        whose realized sample beta will be exactly zero.
     """
-    # at the end of each day, we submit an order to short this much `out`
+    # at the end of each day, we submit an order to short this much of the hedge asset
     est_beta = _get_est_beta_of_r(of_r=base_xr, on_r=hedge_xr, est_window_kind=est_window_kind)
-    # this is weight as $ notional / $ NAV
-    hedge_pos_at_t = -est_beta.shift(IMPL_LAG)
-    hedge_xpnl_at_t = hedge_pos_at_t * hedge_xr
-    hedged_base_xr_at_t = base_xr + hedge_xpnl_at_t
-    hedged_base_xr_at_t = hedged_base_xr_at_t.rename(base_xr.name)
-    return hedged_base_xr_at_t
+    exante_beta = est_beta.shift(impl_lag)
+    hedged_xr = __get_exante_hedged_xr(base_xr=base_xr, hedge_xr=hedge_xr, beta=exante_beta)
+    return hedged_xr
 
 
 ########################################################################################################################
