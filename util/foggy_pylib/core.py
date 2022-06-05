@@ -8,12 +8,12 @@ author: [@sparshsah](https://github.com/sparshsah)
 
 # syntax utils
 from typing import Tuple, List, Iterable, Callable, Union, Optional, Any
+import operator
 # data structures
 import pandas as pd
 # calculations
-import itertools
-import operator
 import numpy as np
+import itertools
 # sys
 import os
 from warnings import warn
