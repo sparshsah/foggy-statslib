@@ -50,7 +50,7 @@ def maybe_date(
     if date is not None:
         return date
     else:
-        ow = dt.today() + pd.offsets.BDay(ow_lags)
+        ow = dt.now() + pd.offsets.BDay(ow_lags)
         del ow_lags
         ow = strfdate(ow, granular=granular)
         ow = ow if as_str else pd.to_datetime(ow)
@@ -105,7 +105,7 @@ def _get_qualified_ext(qualifier: str="", ext: str=".txt") -> str:
 def _gen_tmp_filename(ext: str=".txt") -> str:
     ext = _validate_ext(ext=ext)
     # timestamp
-    t = strfdate(dt.datetime.today(), granular=True)
+    t = maybe_date(granular=True, as_str=True)
     # random seq of 16 capital letters
     alphabet = [chr(ascii_code) for ascii_code in range(65, 65 + 26)]
     seq = [random.choice(alphabet) for _ in range (16)]
@@ -380,7 +380,8 @@ def strfccy(amt: float, ccy: str="$") -> str:
     return f"{ccy}{round(amt, 2):.2f}"
 
 
-def strfdate(date: Datelike, granular: bool=False) -> str:
+def strfdate(date: Datelike="now", granular: bool=False) -> str:
+    date = dt.now() if date == "now" else date
     date = pd.to_datetime(date)
     fmt = "%Y-%m-%d"
     fmt = fmt + "-%H-%M-%S" if granular else fmt
