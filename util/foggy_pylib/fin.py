@@ -192,7 +192,6 @@ def __get_est_avg_of_r(
         est_avg = window.median()
     else:
         raise ValueError(avg_kind)
-    est_avg = est_avg
     return est_avg
 
 
