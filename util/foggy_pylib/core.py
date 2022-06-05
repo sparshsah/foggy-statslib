@@ -6,26 +6,26 @@ v1.0 beta: API probably won't dramatically change, but
 author: [@sparshsah](https://github.com/sparshsah)
 """
 
+# syntax utils
 from typing import Tuple, List, Iterable, Callable, Union, Optional, Any
-# sys
-import os
 # data structures
 import pandas as pd
-# data i/o
-import datetime as dt
-import random
-import pickle
 # calculations
 import itertools
 import operator
 import numpy as np
+# sys
+import os
+from warnings import warn
+# data i/o
+import datetime as dt
+import random
+import pickle
 # visualization
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plt_ticker
 from matplotlib.axes import Axes as PlotAxes
 import seaborn as sns; sns.set()
-# noise-making
-from warnings import warn
 
 T = Any
 Datelike = Union[dt.datetime, str]
