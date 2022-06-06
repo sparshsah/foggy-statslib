@@ -46,6 +46,7 @@ Example 2: `fun: Any -> Any` accepts any type, returning some unspecified type;
     But, `fun: T -> T` accepts any type, returning the SAME type.
 '''
 T = Any
+T_ = Any
 Datelike = Union[dt.datetime, str]
 Data = Union[pd.Series, pd.DataFrame]
 
@@ -57,7 +58,7 @@ LEGEND_LOC = (1.04, 0.08)  # x, y
 FIGSIZE = (16, 8)  # width (x), height (y)
 
 
-def maybe(v: Any=None, ow: Any=None) -> Any:
+def maybe(v: T=None, ow: T_=None) -> Union[T, T_]:
     """Maybe some value, otherwise some fill-in value."""
     return ow if v is None else v
 
