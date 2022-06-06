@@ -58,21 +58,22 @@ FIGSIZE = (16, 8)  # width (x), height (y)
 
 
 def maybe(v: Any=None, ow: Any=None) -> Any:
+    """Maybe some value, otherwise some fill-in value."""
     return ow if v is None else v
 
 
 def maybe_date(
-        date: Datelike, ow_lags: int=0,
+        date: Datelike=None, ow_lags: int=0,
         granular: bool=False, as_str: bool=False
     ) -> Datelike:
-    if date is not None:
-        return date
-    else:
+    if date is None:
         ow = dt.now() + pd.offsets.BDay(ow_lags)
         del ow_lags
         ow = strfdate(ow, granular=granular)
         ow = ow if as_str else pd.to_datetime(ow)
         return ow
+    else:
+        return date
 
 
 ##################
