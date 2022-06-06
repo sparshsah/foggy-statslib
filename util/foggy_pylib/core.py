@@ -231,11 +231,9 @@ def flatten(lst: List[List[T]]) -> List[T]:
     >>> flatten(lst)
     ["A0", "A1", "B", "C0"]
     """
-    """
-    sum(lst, start=[]) is so pretty but
-    works only if every element is a list...
-    so fails on the docstring example :(
-    """
+    # sum(lst, start=[]) is so pretty but
+    # works only if every element is a list...
+    # so fails on the docstring example :(
     return list(itertools.chain(*lst))
 
 
