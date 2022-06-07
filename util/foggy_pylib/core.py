@@ -237,12 +237,12 @@ def flatten(lst: List[List[T]]) -> List[T]:
     return list(itertools.chain(*lst))
 
 
-def _rep_it_to_ln(it: Iterable, ln: int) -> Iterable:
+def _rep_it_to_len(it: Iterable, len_: int) -> Iterable:
     """Repeat an iterable until it reaches the given length.
     E.g. [a, b], 5 -> [a, b, a, b, a].
     """
-    num_reps = 1 + int(ln *1./ len(it))
-    return (it * num_reps)[:ln]
+    num_reps = 1 + int(len_ *1./ len(it))
+    return (it * num_reps)[:len_]
 
 
 def get_chunks(
@@ -551,9 +551,9 @@ def plot(
     ## horizontal
     axline_locs = axhline_locs
     num_axlines = len(axline_locs)
-    axline_zs = _rep_it_to_ln(it=axhline_zs, ln=num_axlines)
-    axline_styles = _rep_it_to_ln(it=axhline_styles, ln=num_axlines)
-    axline_colors = _rep_it_to_ln(it=axhline_colors, ln=num_axlines)
+    axline_zs = _rep_it_to_len(it=axhline_zs, len_=num_axlines)
+    axline_styles = _rep_it_to_len(it=axhline_styles, len_=num_axlines)
+    axline_colors = _rep_it_to_len(it=axhline_colors, len_=num_axlines)
     for n in range(num_axlines):
         ax.axhline(
             axline_locs[n], zorder=axline_zs[n],
@@ -564,9 +564,9 @@ def plot(
     ## vertical
     axline_locs = axvline_locs
     num_axlines = len(axline_locs)
-    axline_zs = _rep_it_to_ln(it=axvline_zs, ln=num_axlines)
-    axline_styles = _rep_it_to_ln(it=axvline_styles, ln=num_axlines)
-    axline_colors = _rep_it_to_ln(it=axvline_colors, ln=num_axlines)
+    axline_zs = _rep_it_to_len(it=axvline_zs, len_=num_axlines)
+    axline_styles = _rep_it_to_len(it=axvline_styles, len_=num_axlines)
+    axline_colors = _rep_it_to_len(it=axvline_colors, len_=num_axlines)
     for n in range(num_axlines):
         ax.axvline(
             axline_locs[n], zorder=axline_zs[n],
