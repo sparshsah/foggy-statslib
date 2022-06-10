@@ -537,7 +537,7 @@ def _get_exante_hedged_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: Float
 ## VISUALIZATION #######################################################################################################
 ########################################################################################################################
 
-def _get_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> FloatSeries:
+def _get_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> pd.Series:
     perf_stats = [
         ("Sharpe", _get_est_sharpe_of_r(r=r)),
         ("t-stat", _get_t_stat_of_r(r=r)),
@@ -563,9 +563,15 @@ def _get_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> FloatSeries:
     return perf_stats
 
 
-def _chart_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> None:
+def get_est_perf_stats_of_r(r: FloatDF, rounded: bool=True) -> pd.DataFrame:
+    est_perf_stats = r.apply(_get_est_perf_stats_of_r, axis="index")
+    return est_perf_stats
+
+
+def _chart_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, print_: bool=False) -> pd.Series:
     cum_r = _get_cum_r(r=r)
     fc.plot(cum_r, ypct=True, title=f"{r.name} {kind} CumRets")
     est_perf_stats = _get_est_perf_stats_of_r(r=r)
-    print(est_perf_stats)
-    # return est_perf_stats
+    if print_:
+        print(est_perf_stats)
+    return est_perf_stats
