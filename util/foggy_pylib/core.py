@@ -68,7 +68,7 @@ def maybe_date(
         granular: bool=False, as_str: bool=False
     ) -> Datelike:
     if date is None:
-        ow = dt.now() + pd.offsets.BDay(ow_lags)
+        ow = dt.datetime.now() + pd.offsets.BDay(ow_lags)
         del ow_lags
         ow = strfdate(ow, granular=granular)
         ow = ow if as_str else pd.to_datetime(ow)
@@ -399,7 +399,7 @@ def strfccy(amt: float, ccy: str="$") -> str:
 
 
 def strfdate(date: Datelike="now", granular: bool=False) -> str:
-    date = dt.now() if date == "now" else date
+    date = dt.datetime.now() if date == "now" else date
     date = pd.to_datetime(date)
     fmt = "%Y-%m-%d"
     fmt = fmt + "-%H-%M-%S" if granular else fmt
