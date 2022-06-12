@@ -293,6 +293,9 @@ def _get_est_corr_of_r(
         de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
+    common_period = r_a.dropna().index.intersection(r_b.dropna().index)
+    r_a = r_a.loc[common_period]
+    r_b = r_b.loc[common_period]
     est_cov = __get_est_cov_of_r(r_a=r_a, r_b=r_b, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_a_std = __get_est_std_of_r(r=r_a, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_b_std = __get_est_std_of_r(r=r_b, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
