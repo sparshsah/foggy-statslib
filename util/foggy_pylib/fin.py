@@ -25,8 +25,6 @@ Notes
     specified portfolio stat taking as ground truth the given market params.
 """
 
-# TODO(sparshsah): add DF versions of all these functions
-
 from typing import Dict, Union, Optional
 from collections import OrderedDict
 import pandas as pd
@@ -278,7 +276,7 @@ def __get_est_cov_of_r(
 
 
 def __get_est_std_of_r(
-        r: pd.Series,
+        r: FloatSeries,
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
@@ -288,11 +286,11 @@ def __get_est_std_of_r(
 
 
 def _get_est_corr_of_r(
-        r_a: pd.Series,
-        r_b: pd.Series,
+        r_a: FloatSeries, r_b: FloatSeries,
         de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
+    # important, else vol's could be calc'ed over inconsistent periods (violating nonnegative-definiteness)
     common_period = r_a.dropna().index.intersection(r_b.dropna().index)
     r_a = r_a.loc[common_period]
     r_b = r_b.loc[common_period]
@@ -303,9 +301,29 @@ def _get_est_corr_of_r(
     return est_corr
 
 
+def get_est_corr_of_r(
+        r: FloatDF,
+        de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
+    ) -> FloatDF:
+    est_corr = {
+        a: {
+            b: _get_est_corr_of_r(
+                r_a=r_a, r_b=r_b,
+                de_avg_kind=de_avg_kind,
+                est_window_kind=est_window_kind
+            )
+        for (b, r_b) in r.iteritems()}
+    for (a, r_a) in r.iteritems()}
+    est_corr = pd.DataFrame(est_corr).T
+    return est_corr
+
+
 ########################################################################################################################
 ## FINANCIAL EVALUATIONS ###############################################################################################
 ########################################################################################################################
+
+# BACKWARD-LOOKING STUFF
 
 def _get_est_er_of_r(
         r: FloatSeries,
@@ -364,6 +382,37 @@ def _get_est_beta_of_r(
     est_beta = est_corr * (est_of_std / est_on_std)
     return est_beta
 
+
+def _get_alpha_t_stat_of_r(
+        of_r: FloatSeries,
+        on_r: FloatSeries,
+        de_avg_kind: Optional[str]=None,
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
+    ) -> Floatlike:
+    _ = of_r, on_r, de_avg_kind, est_window_kind
+    return np.nan
+
+
+def get_alpha_t_stat_of_r(
+        r: FloatDF,
+        de_avg_kind: Optional[str]=None,
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
+    ) -> FloatDF:
+    alpha_t_stat = {
+        of_name: {
+            on_name: _get_alpha_t_stat_of_r(
+                of_r=of_r, on_r=on_r,
+                de_avg_kind=de_avg_kind,
+                est_window_kind=est_window_kind
+            )
+        for (on_name, on_r) in r.iteritems()}
+    for (of_name, of_r) in r.iteritems()}
+    # we want "of" in rows and "on" in columns, so transpose output of DF constructor
+    alpha_t_stat = pd.DataFrame(alpha_t_stat).T
+    return alpha_t_stat
+
+
+# FORWARD-LOOKING STUFF
 
 def __get_exante_vol_targeted_xr(
         xr: FloatSeries,
@@ -566,9 +615,29 @@ def _get_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> pd.Series:
     return perf_stats
 
 
-def get_est_perf_stats_of_r(r: FloatDF, rounded: bool=True) -> pd.DataFrame:
-    est_perf_stats = r.apply(_get_est_perf_stats_of_r, axis="index")
-    return est_perf_stats
+def get_est_perf_stats_of_r(
+        r: FloatDF, over_common_subsample: bool=True,
+        rounded: bool=True
+    ) -> Dict[str, pd.DataFrame]:
+    """
+    `{
+        'standalone': ...,
+        'alpha_t': t-stat of alpha of {row} over {column},
+        'corr': ...,
+    }`.
+    """
+    r = fc.get_common_subsample(r) if over_common_subsample else r
+    est_standalone_stats = r.apply(_get_est_perf_stats_of_r, axis="index", rounded=rounded)
+    alpha_t_stat = get_alpha_t_stat_of_r(r=r)
+    est_corr = get_est_corr_of_r(r=r)
+    ####
+    collected_stats = [
+        ("standalone", est_standalone_stats),
+        ("alpha_t", alpha_t_stat),
+        ("corr", est_corr)
+    ]
+    collected_stats = OrderedDict(collected_stats)
+    return collected_stats
 
 
 def _chart_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, print_: bool=False) -> pd.Series:
@@ -578,3 +647,12 @@ def _chart_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, print_: bool=False) -> pd
     if print_:
         print(est_perf_stats)
     return est_perf_stats
+
+
+def chart_r(r: FloatDF):
+    # plot cumrets
+    # plot rolling sr, er/vol
+    # table alpha t-stats by third, then full-sample
+    # table corr by third, then full-sample
+    _ = r
+    raise NotImplementedError
