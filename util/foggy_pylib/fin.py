@@ -34,7 +34,8 @@ import foggy_pylib.core as fc  # type: ignore
 
 FloatSeries = pd.Series
 FloatDF = pd.DataFrame
-Floatlike = Union[float, FloatSeries, FloatDF]
+FloatSeriesOrDF = Union[FloatSeries, FloatDF]
+Floatlike = Union[float, FloatSeriesOrDF]
 
 # market facts that we can't control
 # approx duration of a 10Y US treasury note in a "normal" rates climate
@@ -623,14 +624,16 @@ def _get_metadata_of_r(r: FloatSeries) -> pd.Series:
     return metadata
 
 
-def _get_est_perf_stats_of_r(r: FloatSeries) -> FloatSeries:
+def _get_est_perf_stats_of_r(r: FloatSeries, est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND) -> FloatSeriesOrDF:
     est_perf_stats = [
-        ("Sharpe", _get_est_sharpe_of_r(r=r)),
-        ("t-stat", _get_t_stat_of_r(r=r)),
-        ("ER", _get_est_er_of_r(r=r)),
-        ("Vol", _get_est_vol_of_r(r=r))
+        ("Sharpe", _get_est_sharpe_of_r(r=r, est_window_kind=est_window_kind)),
+        ("t-stat", _get_t_stat_of_r(r=r, est_window_kind=est_window_kind)),
+        ("ER", _get_est_er_of_r(r=r, est_window_kind=est_window_kind)),
+        ("Vol", _get_est_vol_of_r(r=r, est_window_kind=est_window_kind))
     ]
-    est_perf_stats = fc.get_series(est_perf_stats)
+    # whether est_window_kind is e.g. 'full' (True) or 'ewm' (False)
+    values_are_scalars = isinstance(est_perf_stats[0][1], float)
+    est_perf_stats = fc.get_series(est_perf_stats) if values_are_scalars else fc.get_df(est_perf_stats)
     return est_perf_stats
 
 
