@@ -157,6 +157,12 @@ def _get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     return cum_r
 
 
+def get_cum_r(r: FloatDF, kind: str=DEFAULT_R_KIND) -> FloatDF:
+    # ty duck typing
+    cum_r = _get_cum_r(r=r, kind=kind)
+    return cum_r
+
+
 def _get_pnl(w: FloatSeries, r: FloatSeries, impl_lag: int=IMPL_LAG, agg: bool=True) -> Floatlike:
     w_ = w.shift(impl_lag)
     pnl = r @ w_
@@ -736,19 +742,26 @@ def table_est_perf_stats_of_r(
     return collected_stats
 
 
+def plot_cum_r(r: FloatSeriesOrDF, kind: str=DEFAULT_R_KIND, title: str="") -> fc.PlotAxes:
+    cum_r = _get_cum_r(r=r, kind=kind)
+    return fc.plot(
+        cum_r,
+        xlim=(r.index[0], r.index[-1]),
+        ypct=True,
+        title=f"{title} {kind} CumRets"
+    )
+
+
 def _chart_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, print_: bool=False) -> pd.Series:
-    cum_r = _get_cum_r(r=r)
-    fc.plot(cum_r, ypct=True, title=f"{r.name} {kind} CumRets")
+    plot_cum_r(r=r, kind=kind, title=r.name)
     est_perf_stats = _get_est_perf_stats_of_r(r=r)
     if print_:
         print(est_perf_stats)
     return est_perf_stats
 
 
-def chart_r(r: FloatDF):
-    # plot cumrets
+def chart_r(r: FloatDF, kind: str=DEFAULT_R_KIND, title: str=""):
+    plot_cum_r(r=r, kind=kind, title=title)
     # plot rolling sr, er/vol
     # table alpha t-stats by third, then full-sample
     # table corr by third, then full-sample
-    _ = r
-    raise NotImplementedError
