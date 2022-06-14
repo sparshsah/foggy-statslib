@@ -672,7 +672,15 @@ def get_est_perf_stats_of_r(r: FloatDF, est_window_kind: str=DEFAULT_EVAL_WINDOW
         # this is either a FloatSeries (e.g. if 'full' window) or a FloatDF (e.g. if 'ewm' window)
         _get_est_perf_stats_of_r(r=col, est_window_kind=est_window_kind)
     ) for (colname, col) in r.items()]
+    ####
     est_perf_stats = fc.get_df(est_perf_stats)
+    # if each value was a DF, we'll get MultiIndex columns and want to flip stat names up to top-level
+    if isinstance(est_perf_stats.columns, pd.MultiIndex):
+        est_perf_stats = est_perf_stats.swaplevel(axis="columns")
+    # otherwise, we'll get regular columns and want to flip stat names up to columns
+    else:
+        est_perf_stats = est_perf_stats.T
+    est_perf_stats = est_perf_stats.sort_index(axis="columns")
     return est_perf_stats
 
 
