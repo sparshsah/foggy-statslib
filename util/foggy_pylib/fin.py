@@ -674,13 +674,18 @@ def get_est_perf_stats_of_r(r: FloatDF, est_window_kind: str=DEFAULT_EVAL_WINDOW
     ) for (colname, col) in r.items()]
     ####
     est_perf_stats = fc.get_df(est_perf_stats)
-    # if each value was a DF, we'll get MultiIndex columns and want to flip stat names up to top-level
+    # want to sort stat names in my preferred order, then datacolnames in given order, but handling depends:
+    # a) if each value was a DF, we'll get MultiIndex columns and want to flip stat names up to top-level
     if isinstance(est_perf_stats.columns, pd.MultiIndex):
         est_perf_stats = est_perf_stats.swaplevel(axis="columns")
-    # otherwise, we'll get regular columns and want to flip stat names up to columns
+    # b) otherwise, we'll get regular columns and want to flip stat names up to columns
     else:
         est_perf_stats = est_perf_stats.T
-    est_perf_stats = est_perf_stats.sort_index(axis="columns")
+        est_perf_stats = est_perf_stats.sort_index(
+            axis="columns",
+            key=lambda statnames:
+                statnames.apply(ROUND_DPS.index.get_loc)
+        )
     return est_perf_stats
 
 
