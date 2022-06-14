@@ -796,6 +796,11 @@ def _chart_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, print_: bool=False) -> pd
 def chart_r(r: FloatDF, kind: str=DEFAULT_R_KIND, title: str="") -> None:
     #### plot cum r
     plot_cum_r(r=r, kind=kind, title=title)
+    #### tables
+    # TODO(sparshsah): split by early-mid-late third's then fullsample
+    tables = table_est_perf_stats_of_r(r=r)
+    # TODO(sparshsah): plot alpha t stat heatmap
+    fc.plot_corr_heatmap(tables["corr"], title="corr")
     #### plot rolling sr, er/vol
     fullsample_est_perf_stats = get_est_perf_stats_of_r(r=r)
     moving_est_perf_stats = get_est_perf_stats_of_r(r=r, est_window_kind="rolling", est_horizon=HORIZONS["long"])
@@ -810,10 +815,5 @@ def chart_r(r: FloatDF, kind: str=DEFAULT_R_KIND, title: str="") -> None:
     )
     plt.suptitle(moving_est_perf_stats.name, y=0.91)
     plt.show()
-    #### tables
-    # TODO(sparshsah): split by early-mid-late third's then fullsample
-    tables = table_est_perf_stats_of_r(r=r)
-    for statgroup, table in tables.items():
-        print(statgroup)
-        print(table)
-        print("#"*80)
+    #### diagnostic
+    print(tables["standalone"])
