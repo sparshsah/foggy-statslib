@@ -658,7 +658,15 @@ def _get_est_perf_stats_of_r(r: FloatSeries, est_window_kind: str=DEFAULT_EVAL_W
     return est_perf_stats
 
 
-
+def get_est_perf_stats_of_r(r: FloatDF, est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND) -> FloatDF:
+    est_perf_stats = [(
+        # this is a key, like 'SPY' or 'AQMNX' or 'ARF'
+        colname,
+        # this is either a FloatSeries (e.g. if 'full' window) or a FloatDF (e.g. if 'ewm' window)
+        _get_est_perf_stats_of_r(r=col, est_window_kind=est_window_kind)
+    ) for (colname, col) in r.items()]
+    est_perf_stats = fc.get_df(est_perf_stats)
+    return est_perf_stats
 
 
 def _round_perf_stats(perf_stats: pd.Series, round_: bool=True) -> pd.Series:
