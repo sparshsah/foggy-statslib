@@ -612,13 +612,24 @@ def _get_metadata_of_r(r: FloatSeries) -> pd.Series:
         (
             "Frac valid timesteps",
             r.notna().sum() / len(r.index)
-        ),
-        ("Total valid timesteps", r.notna().sum()),
-        ("Total timesteps", len(r.index)),
-        ("First timestep", r.index[0]),
-        ("First valid timestep", r.first_valid_index()),
-        ("Last valid timestep", r.last_valid_index()),
-        ("Last timestep", r.index[-1])
+        ), (
+            "Total valid timesteps",
+            r.notna().sum()
+        ), (
+            "Total timesteps",
+            len(r.index)
+        ), (
+            "First timestep",
+            r.index[0]
+        ), (
+            "First valid timestep",
+            r.first_valid_index()
+        ), (
+            "Last valid timestep",
+            r.last_valid_index()
+        ), (
+            "Last timestep", r.index[-1]
+        )
     ]
     metadata = fc.get_series(metadata)
     return metadata
@@ -626,12 +637,21 @@ def _get_metadata_of_r(r: FloatSeries) -> pd.Series:
 
 def _get_est_perf_stats_of_r(r: FloatSeries, est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND) -> FloatSeriesOrDF:
     est_perf_stats = [
-        ("Sharpe", _get_est_sharpe_of_r(r=r, est_window_kind=est_window_kind)),
-        ("t-stat", _get_t_stat_of_r(r=r, est_window_kind=est_window_kind)),
-        ("ER", _get_est_er_of_r(r=r, est_window_kind=est_window_kind)),
-        ("Vol", _get_est_vol_of_r(r=r, est_window_kind=est_window_kind))
+        (
+            "Sharpe",
+            _get_est_sharpe_of_r(r=r, est_window_kind=est_window_kind)
+        ), (
+            "t-stat",
+            _get_t_stat_of_r(r=r, est_window_kind=est_window_kind)
+        ), (
+            "ER",
+            _get_est_er_of_r(r=r, est_window_kind=est_window_kind)
+        ), (
+            "Vol",
+            _get_est_vol_of_r(r=r, est_window_kind=est_window_kind)
+        )
     ]
-    # whether est_window_kind is e.g. 'full' (True) or 'ewm' (False)
+    # whether est_window_kind is e.g. 'full' (True) or 'ewm' (False) determines type of container needed
     values_are_scalars = isinstance(est_perf_stats[0][1], float)
     est_perf_stats = fc.get_series(est_perf_stats) if values_are_scalars else fc.get_df(est_perf_stats)
     return est_perf_stats
