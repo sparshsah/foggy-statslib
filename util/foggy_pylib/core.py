@@ -77,146 +77,6 @@ def maybe_date(
         return date
 
 
-##################
-#### DATA I/O ####
-##################
-
-def _validate_dirpath(dirpath: str, raise_: bool=False) -> str:
-    if not dirpath.endswith("/"):
-        msg = f"Directory path '{dirpath}' doesn't end with '/'!"
-        if raise_:
-            raise ValueError(msg)
-        else:
-            warn(msg)
-    return dirpath
-
-
-def _validate_ext(ext: str, raise_: bool=False) -> str:
-    if not ext.startswith("."):
-        msg = f"Extension '{ext}' doesn't start with '.'!"
-        if raise_:
-            raise ValueError(msg)
-        else:
-           warn(msg)
-    return ext
-
-
-def _extract_ext(fpath: str, validate: bool=True) -> str:
-    """E.g. 'path/to/data.csv' -> '.csv'."""
-    # everything after the last dot
-    ext = fpath.split(".")[-1]
-    ext = f".{ext}"
-    if validate:
-        ext = _validate_ext(ext=ext)
-    return ext
-
-
-def _get_qualified_ext(qualifier: str="", ext: str=".txt") -> str:
-    """E.g.
-    >>> _get_qualified_ext('some_description', '.csv')
-    # this is now ready to be prefixed with e.g. a timestamp 't2019-01-26'
-    '_some_description.csv'
-    """
-    ext = _validate_ext(ext=ext)
-    ext = f"_{qualifier}{ext}"
-    return ext
-
-
-def _gen_tmp_filename(ext: str=".txt") -> str:
-    ext = _validate_ext(ext=ext)
-    # timestamp
-    t = maybe_date(granular=True, as_str=True)
-    # random seq of 16 capital letters
-    alphabet = [chr(ascii_code) for ascii_code in range(65, 65 + 26)]
-    seq = [random.choice(alphabet) for _ in range (16)]
-    seq = "".join(seq)
-    # hopefully, the timestamp plus the random sequence
-    # are entropic enough to avoid collisions
-    fname = f"t{t}_{seq}{ext}"
-    return fname
-
-
-def gen_tmp_filepath(dirpath: str="data/", ext: str=".txt") -> str:
-    dirpath = _validate_dirpath(dirpath)
-    ext = _validate_ext(ext=ext)
-    fname = _gen_tmp_filename(ext=ext)
-    fpath = os.path.join([dirpath, fname])
-    return fpath
-
-
-def _from_pickle(fpath: str, **kwargs) -> Any:
-    ext = _extract_ext(fpath=fpath)
-    if ext in (".pkl", ".pickle"):
-        with open(fpath, "rb") as pkl:
-            data = pickle.load(pkl)
-    elif ext == ".csv":
-        data = pd.read_csv(fpath, **kwargs)
-    elif ext in (".xls", ".xlsx"):
-        data = pd.read_excel(fpath, **kwargs)
-    else:
-        raise NotImplementedError(ext)
-    return data
-
-
-def from_pickle(
-        description: str="data",
-        dirpath: str="data/", ext: str=".pkl",
-        **kwargs
-    ) -> Any:
-    """Convenience function to find and load
-    the most recent pickle (or CSV, etc)
-    of the specified kind in the given folder.
-    Assumes that filenames contain timestamps.
-
-    E.g.
-    >>> from_pickle()
-    <some object loaded from './data/t2019-01-26_data.pkl'>
-    """
-    dirpath = _validate_dirpath(dirpath=dirpath)
-    ext = _validate_ext(ext=ext)
-    ext = _get_qualified_ext(qualifier=description, ext=ext)
-    pkls = os.listdir(dirpath)
-    pkls = [pkl for pkl in pkls if pkl.endswith(ext)]
-    if not len(pkls):
-        raise RuntimeError(
-            f"from_pickle: dir '{dirpath}' contains no such files '*.{ext}'!"
-        )
-    # if you pre- or suf-fixed by timestamp, here's your payoff
-    pkls = sorted(pkls)
-    pkl = pkls[-1]
-    pkl = os.path.join(dirpath, pkl)
-    return _from_pickle(fpath=pkl, **kwargs)
-
-
-def _to_pickle(data: T, fpath: str) -> T:
-    """`fpath` is e.g. 'path/to/file.csv'."""
-    ext = _extract_ext(fpath=fpath)
-    if ext in (".pkl", ".pickle"):
-        with open(fpath, "wb") as pkl:
-            pickle.dump(data, pkl, pickle.HIGHEST_PROTOCOL)
-    elif ext == ".csv":
-        data.to_csv(fpath)
-    elif ext in (".xls", ".xlsx"):
-        data.to_excel(fpath)
-    else:
-        raise NotImplementedError(ext)
-    return data
-
-
-def to_pickle(
-        data: T, description: str="data",
-        dirpath: str="data/", ext: str=".pkl",
-        **kwargs
-    ) -> T:
-    ext = _validate_ext(ext=ext)
-    ext = _get_qualified_ext(qualifier=description, ext=ext)
-    fpath = gen_tmp_filepath(dirpath=dirpath, ext=ext)
-    _ = _to_pickle(data=data, fpath=fpath)
-    # just in case you want to validate that this worked
-    data = _from_pickle(fpath=fpath, **kwargs)
-    return data
-
-
 ########################
 #### DATA WRANGLING ####
 ########################
@@ -405,6 +265,146 @@ def strfdate(date: Datelike="now", granular: bool=False) -> str:
     fmt = fmt + "-%H-%M-%S" if granular else fmt
     out = date.strftime(fmt)
     return out
+
+
+##################
+#### DATA I/O ####
+##################
+
+def _validate_dirpath(dirpath: str, raise_: bool=False) -> str:
+    if not dirpath.endswith("/"):
+        msg = f"Directory path '{dirpath}' doesn't end with '/'!"
+        if raise_:
+            raise ValueError(msg)
+        else:
+            warn(msg)
+    return dirpath
+
+
+def _validate_ext(ext: str, raise_: bool=False) -> str:
+    if not ext.startswith("."):
+        msg = f"Extension '{ext}' doesn't start with '.'!"
+        if raise_:
+            raise ValueError(msg)
+        else:
+           warn(msg)
+    return ext
+
+
+def _extract_ext(fpath: str, validate: bool=True) -> str:
+    """E.g. 'path/to/data.csv' -> '.csv'."""
+    # everything after the last dot
+    ext = fpath.split(".")[-1]
+    ext = f".{ext}"
+    if validate:
+        ext = _validate_ext(ext=ext)
+    return ext
+
+
+def _get_qualified_ext(qualifier: str="", ext: str=".txt") -> str:
+    """E.g.
+    >>> _get_qualified_ext('some_description', '.csv')
+    # this is now ready to be prefixed with e.g. a timestamp 't2019-01-26'
+    '_some_description.csv'
+    """
+    ext = _validate_ext(ext=ext)
+    ext = f"_{qualifier}{ext}"
+    return ext
+
+
+def _gen_tmp_filename(ext: str=".txt") -> str:
+    ext = _validate_ext(ext=ext)
+    # timestamp
+    t = maybe_date(granular=True, as_str=True)
+    # random seq of 16 capital letters
+    alphabet = [chr(ascii_code) for ascii_code in range(65, 65 + 26)]
+    seq = [random.choice(alphabet) for _ in range (16)]
+    seq = "".join(seq)
+    # hopefully, the timestamp plus the random sequence
+    # are entropic enough to avoid collisions
+    fname = f"t{t}_{seq}{ext}"
+    return fname
+
+
+def gen_tmp_filepath(dirpath: str="data/", ext: str=".txt") -> str:
+    dirpath = _validate_dirpath(dirpath)
+    ext = _validate_ext(ext=ext)
+    fname = _gen_tmp_filename(ext=ext)
+    fpath = os.path.join([dirpath, fname])
+    return fpath
+
+
+def _from_pickle(fpath: str, **kwargs) -> Any:
+    ext = _extract_ext(fpath=fpath)
+    if ext in (".pkl", ".pickle"):
+        with open(fpath, "rb") as pkl:
+            data = pickle.load(pkl)
+    elif ext == ".csv":
+        data = pd.read_csv(fpath, **kwargs)
+    elif ext in (".xls", ".xlsx"):
+        data = pd.read_excel(fpath, **kwargs)
+    else:
+        raise NotImplementedError(ext)
+    return data
+
+
+def from_pickle(
+        description: str="data",
+        dirpath: str="data/", ext: str=".pkl",
+        **kwargs
+    ) -> Any:
+    """Convenience function to find and load
+    the most recent pickle (or CSV, etc)
+    of the specified kind in the given folder.
+    Assumes that filenames contain timestamps.
+
+    E.g.
+    >>> from_pickle()
+    <some object loaded from './data/t2019-01-26_data.pkl'>
+    """
+    dirpath = _validate_dirpath(dirpath=dirpath)
+    ext = _validate_ext(ext=ext)
+    ext = _get_qualified_ext(qualifier=description, ext=ext)
+    pkls = os.listdir(dirpath)
+    pkls = [pkl for pkl in pkls if pkl.endswith(ext)]
+    if not len(pkls):
+        raise RuntimeError(
+            f"from_pickle: dir '{dirpath}' contains no such files '*.{ext}'!"
+        )
+    # if you pre- or suf-fixed by timestamp, here's your payoff
+    pkls = sorted(pkls)
+    pkl = pkls[-1]
+    pkl = os.path.join(dirpath, pkl)
+    return _from_pickle(fpath=pkl, **kwargs)
+
+
+def _to_pickle(data: T, fpath: str) -> T:
+    """`fpath` is e.g. 'path/to/file.csv'."""
+    ext = _extract_ext(fpath=fpath)
+    if ext in (".pkl", ".pickle"):
+        with open(fpath, "wb") as pkl:
+            pickle.dump(data, pkl, pickle.HIGHEST_PROTOCOL)
+    elif ext == ".csv":
+        data.to_csv(fpath)
+    elif ext in (".xls", ".xlsx"):
+        data.to_excel(fpath)
+    else:
+        raise NotImplementedError(ext)
+    return data
+
+
+def to_pickle(
+        data: T, description: str="data",
+        dirpath: str="data/", ext: str=".pkl",
+        **kwargs
+    ) -> T:
+    ext = _validate_ext(ext=ext)
+    ext = _get_qualified_ext(qualifier=description, ext=ext)
+    fpath = gen_tmp_filepath(dirpath=dirpath, ext=ext)
+    _ = _to_pickle(data=data, fpath=fpath)
+    # just in case you want to validate that this worked
+    data = _from_pickle(fpath=fpath, **kwargs)
+    return data
 
 
 ############################
