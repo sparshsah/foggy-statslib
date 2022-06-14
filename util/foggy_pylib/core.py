@@ -272,10 +272,12 @@ def strfpct(pct: float, dps: int=1) -> str:
 
 
 def strfccy(amt: float, ccy: str="$") -> str:
+    """Pretty-format a dollar amount."""
     return f"{ccy}{round(amt, 2):.2f}"
 
 
 def strfdate(date: Datelike="now", granular: bool=False) -> str:
+    """Pretty-formate a date."""
     date = dt.datetime.now() if date == "now" else date
     date = pd.to_datetime(date)
     fmt = "%Y-%m-%d"
@@ -304,7 +306,7 @@ def _validate_ext(ext: str, raise_: bool=False) -> str:
         if raise_:
             raise ValueError(msg)
         else:
-           warn(msg)
+            warn(msg)
     return ext
 
 
