@@ -76,15 +76,15 @@ DEFAULT_EST_HORIZON: int = HORIZONS["med"]
 # evaluation, no need to specify horizon
 DEFAULT_EVAL_WINDOW_KIND: str = "full"
 
-ROUND_DPS = {
-    "alpha_t": 2,
-    "corr": 2,
-    "Sharpe": 2,
-    "t-stat": 2,
-    "ER": 4,
-    "Vol": 4,
-    "Frac valid timesteps": 3
-}
+ROUND_DPS = fc.get_series([
+    ("alpha_t", 2),
+    ("corr", 2),
+    ("Sharpe", 2),
+    ("t-stat", 2),
+    ("ER", 4),
+    ("Vol", 4),
+    ("Frac valid timesteps", 3)
+])
 
 ########################################################################################################################
 ## RETURN MANIPULATIONS ################################################################################################
@@ -656,6 +656,9 @@ def _get_est_perf_stats_of_r(r: FloatSeries, est_window_kind: str=DEFAULT_EVAL_W
     # t-stat (always a scalar) will get padded to constant pd.Series if needed
     est_perf_stats = fc.get_series(est_perf_stats) if values_are_scalars else fc.get_df(est_perf_stats)
     return est_perf_stats
+
+
+
 
 
 def _round_perf_stats(perf_stats: pd.Series, round_: bool=True) -> pd.Series:
