@@ -26,11 +26,11 @@ Notes
 """
 
 from typing import Dict, Union, Optional
-from collections import OrderedDict
 import pandas as pd
+from collections import OrderedDict
 import numpy as np
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
-import foggy_pylib.core as fc
+import foggy_pylib.core as fc  # type: ignore
 
 FloatSeries = pd.Series
 FloatDF = pd.DataFrame
@@ -74,6 +74,16 @@ DEFAULT_EST_WINDOW_KIND: str = "ewm"
 DEFAULT_EST_HORIZON: int = HORIZONS["med"]
 # evaluation, no need to specify horizon
 DEFAULT_EVAL_WINDOW_KIND: str = "full"
+
+ROUND_DPS = {
+    "alpha_t": 2,
+    "corr": 2,
+    "Sharpe": 2,
+    "t-stat": 2,
+    "ER": 4,
+    "Vol": 4,
+    "Frac valid timesteps": 3
+}
 
 ########################################################################################################################
 ## RETURN MANIPULATIONS ################################################################################################
@@ -249,7 +259,10 @@ def __get_est_cov_of_r(
     https://github.com/sparshsah/foggy-demo/blob/main/demo/stats/bias-variance-risk.ipynb.pdf
     https://faculty.fuqua.duke.edu/~charvey/Research/Published_Papers/P135_The_impact_of.pdf
     """
-    df = pd.DataFrame(OrderedDict([("a", r_a), ("b", r_b)]))
+    df = fc.get_df([
+        ("a", r_a),
+        ("b", r_b)
+    ])
     del r_b, r_a
     est_deviations = df.apply(
         lambda col: __get_est_deviations_of_r(
@@ -288,7 +301,8 @@ def __get_est_std_of_r(
 def _get_est_corr_of_r(
         r_a: FloatSeries, r_b: FloatSeries,
         de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
-        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
+        round_dps: Optional[int]=None
     ) -> Floatlike:
     # important, else vol's could be calc'ed over inconsistent periods (violating nonnegative-definiteness)
     common_period = r_a.dropna().index.intersection(r_b.dropna().index)
@@ -298,20 +312,23 @@ def _get_est_corr_of_r(
     est_a_std = __get_est_std_of_r(r=r_a, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_b_std = __get_est_std_of_r(r=r_b, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_corr = est_cov / (est_a_std * est_b_std)
+    est_corr = round(est_corr, round_dps) if round_dps is not None else est_corr
     return est_corr
 
 
 def get_est_corr_of_r(
         r: FloatDF,
         de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
-        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
+        round_dps: Optional[int]=None
     ) -> FloatDF:
     est_corr = {
         a: {
             b: _get_est_corr_of_r(
                 r_a=r_a, r_b=r_b,
                 de_avg_kind=de_avg_kind,
-                est_window_kind=est_window_kind
+                est_window_kind=est_window_kind,
+                round_dps=round_dps
             )
         for (b, r_b) in r.iteritems()}
     for (a, r_a) in r.iteritems()}
@@ -589,12 +606,8 @@ def _get_exante_hedged_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: Float
 ## VISUALIZATION #######################################################################################################
 ########################################################################################################################
 
-def _get_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> pd.Series:
-    perf_stats = [
-        ("Sharpe", _get_est_sharpe_of_r(r=r)),
-        ("t-stat", _get_t_stat_of_r(r=r)),
-        ("ER", _get_est_er_of_r(r=r)),
-        ("Vol", _get_est_vol_of_r(r=r)),
+def _get_metadata_of_r(r: FloatSeries) -> pd.Series:
+    metadata = [
         (
             "Frac valid timesteps",
             r.notna().sum() / len(r.index)
@@ -606,35 +619,58 @@ def _get_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> pd.Series:
         ("Last valid timestep", r.last_valid_index()),
         ("Last timestep", r.index[-1])
     ]
-    perf_stats = OrderedDict(perf_stats)
-    perf_stats = pd.Series(perf_stats)
-    if rounded:
-        round_dps = {"Sharpe": 2, "ER": 4, "Vol": 4, "t-stat": 2, "Frac valid timesteps": 3}
-        for (k, dps) in round_dps.items():
-            perf_stats.loc[k] = np.round(perf_stats.loc[k], dps)
+    metadata = fc.get_series(metadata)
+    return metadata
+
+
+def _get_est_perf_stats_of_r(r: FloatSeries) -> FloatSeries:
+    est_perf_stats = [
+        ("Sharpe", _get_est_sharpe_of_r(r=r)),
+        ("t-stat", _get_t_stat_of_r(r=r)),
+        ("ER", _get_est_er_of_r(r=r)),
+        ("Vol", _get_est_vol_of_r(r=r))
+    ]
+    est_perf_stats = fc.get_series(est_perf_stats)
+    return est_perf_stats
+
+
+def _round_perf_stats(perf_stats: pd.Series, round_: bool=True) -> pd.Series:
+    if round_:
+        for (k, dps) in ROUND_DPS.items():
+            if k in perf_stats.index:
+                perf_stats.loc[k] = np.round(perf_stats.loc[k], dps)
     return perf_stats
 
 
-def get_est_perf_stats_of_r(
+def _table_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> pd.Series:
+    metadata = _get_metadata_of_r(r=r)
+    est_perf_stats = _get_est_perf_stats_of_r(r=r)
+    ####
+    collected_stats = pd.concat([est_perf_stats, metadata])
+    collected_stats = _round_perf_stats(collected_stats, round_=rounded)
+    return collected_stats
+
+
+def table_est_perf_stats_of_r(
         r: FloatDF, over_common_subsample: bool=True,
         rounded: bool=True
     ) -> Dict[str, pd.DataFrame]:
     """
     `{
-        'standalone': ...,
         'alpha_t': t-stat of alpha of {row} over {column},
         'corr': ...,
+        'standalone': ...,
     }`.
     """
     r = fc.get_common_subsample(r) if over_common_subsample else r
-    est_standalone_stats = r.apply(_get_est_perf_stats_of_r, axis="index", rounded=rounded)
-    alpha_t_stat = get_alpha_t_stat_of_r(r=r)
+    est_standalone_stats = r.apply(_table_est_perf_stats_of_r, axis="index", rounded=rounded)
     est_corr = get_est_corr_of_r(r=r)
+    alpha_t_stat = get_alpha_t_stat_of_r(r=r)
     ####
     collected_stats = [
-        ("standalone", est_standalone_stats),
         ("alpha_t", alpha_t_stat),
-        ("corr", est_corr)
+        ("corr", est_corr),
+        ("standalone", est_standalone_stats)
     ]
     collected_stats = OrderedDict(collected_stats)
     return collected_stats
