@@ -83,16 +83,18 @@ def maybe_date(
 ########################################################################################################################
 
 def get_series(data: List[Tuple[Any, Any]]) -> pd.Series:
-    """Turn a list of (key, value) pairs into an OrderedDict into a pd.Series."""
+    """Convert a list of (key, value) pairs into a pd.Series."""
     data = OrderedDict(data)
     data = pd.Series(data)
     return data
 
 
 def get_df(data: List[Tuple[Any, pd.Series]]) -> pd.DataFrame:
-    """Turn a list of (colname, pd.Series) pairs into an OrderedDict into a pd.DataFrame."""
+    """Convert a list of (colname, pd.Series) pairs into a pd.DataFrame,
+    or a list of (colname, pd.DataFrame) pairs into a pd.DataFrame(columns=MultiIndex).
+    """
     data = OrderedDict(data)
-    data = pd.DataFrame(data)
+    data = pd.concat(data.values(), axis="columns", keys=data.keys())
     return data
 
 
