@@ -11,6 +11,7 @@ from typing import Tuple, List, Iterable, Callable, Union, Optional, Any
 import operator
 # data structures
 import pandas as pd
+from collections import OrderedDict
 # calculations
 import numpy as np
 import itertools
@@ -80,6 +81,13 @@ def maybe_date(
 ########################################################################################################################
 ## DATA WRANGLING ######################################################################################################
 ########################################################################################################################
+
+def get_series(data: List[Tuple[Any, Any]]) -> pd.Series:
+    """Turn a list of tuples into an OrderedDict into a pd.Series."""
+    data = OrderedDict(data)
+    data = pd.Series(data)
+    return data
+
 
 def flatten(lst: List[List[T]]) -> List[T]:
     """
