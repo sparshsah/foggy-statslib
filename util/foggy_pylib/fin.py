@@ -727,6 +727,7 @@ def get_est_perf_stats_of_r(
     # otherwise, we'll get regular columns and want to flip stat names up to columns
     else:
         est_perf_stats = est_perf_stats.T
+    est_perf_stats.name = f"{est_horizon} {est_window_kind}"
     return est_perf_stats
 
 
