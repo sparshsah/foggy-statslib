@@ -724,7 +724,7 @@ def get_est_perf_stats_of_r(
             return key
         columns = sorted(columns, key=_get_key)
         est_perf_stats = est_perf_stats.reindex(columns=columns)
-    # otherwise, we'll get regular columns and want to flip stat names up to columns
+    # otherwise, we'll get regular columns and want to flip stat names up into columns
     else:
         est_perf_stats = est_perf_stats.T
     est_perf_stats.name = f"{est_horizon}-horizon {est_window_kind}-window"
@@ -764,6 +764,8 @@ def table_est_perf_stats_of_r(
     est_corr = get_est_corr_of_r(r=r)
     alpha_t_stat = get_alpha_t_stat_of_r(r=r)
     ####
+    # flip stat names up into columns
+    est_standalone_stats = est_standalone_stats.T
     collected_stats = [
         ("alpha_t", alpha_t_stat),
         ("corr", est_corr),
