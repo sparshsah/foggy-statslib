@@ -25,7 +25,7 @@ Notes
     specified portfolio stat taking as ground truth the given market params.
 """
 
-from typing import Dict, Union, Optional
+from typing import Tuple, Dict, Union, Optional
 import pandas as pd
 from collections import OrderedDict
 import numpy as np
@@ -678,6 +678,16 @@ def get_est_perf_stats_of_r(r: FloatDF, est_window_kind: str=DEFAULT_EVAL_WINDOW
     if isinstance(est_perf_stats.columns, pd.MultiIndex):
         est_perf_stats = est_perf_stats.swaplevel(axis="columns")
         # sort stat names in my preferred order, then datacolnames in given order
+        columns = est_perf_stats.columns.to_list()
+        def _get_key(statname_colname: Tuple[str, str]) -> Tuple[int, int]:
+            statname, colname = statname_colname
+            del statname_colname
+            primary_key = ROUND_DPS.index.get_loc(statname)
+            secondary_key = r.columns.get_loc(colname)
+            key = primary_key, secondary_key
+            return key
+        columns = sorted(columns, key=_get_key)
+        est_perf_stats = est_perf_stats.reindex(columns=columns)
     # otherwise, we'll get regular columns and want to flip stat names up to columns
     else:
         est_perf_stats = est_perf_stats.T
