@@ -29,6 +29,7 @@ from typing import Tuple, Dict, Union, Optional
 import pandas as pd
 from collections import OrderedDict
 import numpy as np
+import matplotlib.pyplot as plt
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
 import foggy_pylib.core as fc  # type: ignore
 
@@ -298,9 +299,15 @@ def __get_est_cov_of_r(
 def __get_est_std_of_r(
         r: FloatSeries,
         de_avg_kind: Optional[str]=None,
-        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
+        est_horizon: int=DEFAULT_EST_HORIZON
     ) -> Floatlike:
-    est_var = __get_est_cov_of_r(r_a=r, r_b=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_var = __get_est_cov_of_r(
+        r_a=r, r_b=r,
+        de_avg_kind=de_avg_kind,
+        est_window_kind=est_window_kind,
+        est_horizon=est_horizon
+    )
     est_std = est_var **0.5
     return est_std
 
@@ -352,9 +359,10 @@ def get_est_corr_of_r(
 def _get_est_er_of_r(
         r: FloatSeries,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
+        est_horizon: int=DEFAULT_EST_HORIZON,
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
-    est_avg = __get_est_avg_of_r(r=r, est_window_kind=est_window_kind)
+    est_avg = __get_est_avg_of_r(r=r, est_window_kind=est_window_kind, est_horizon=est_horizon)
     est_er = est_avg * annualizer
     return est_er
 
@@ -363,9 +371,10 @@ def _get_est_vol_of_r(
         r: FloatSeries,
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
-        annualizer: int=DAYCOUNTS["BY"]
+        est_horizon: int=DEFAULT_EST_HORIZON,
+        annualizer: int=DAYCOUNTS["BY"],
     ) -> Floatlike:
-    est_std = __get_est_std_of_r(r=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_std = __get_est_std_of_r(r=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind, est_horizon=est_horizon)
     est_vol = est_std * annualizer**0.5
     return est_vol
 
@@ -374,10 +383,22 @@ def _get_est_sharpe_of_r(
         r: FloatSeries,
         de_avg_kind: Optional[str]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
+        est_horizon: int=DEFAULT_EST_HORIZON,
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
-    est_er = _get_est_er_of_r(r=r, est_window_kind=est_window_kind, annualizer=annualizer)
-    est_vol = _get_est_vol_of_r(r=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind, annualizer=annualizer)
+    est_er = _get_est_er_of_r(
+        r=r,
+        est_window_kind=est_window_kind,
+        est_horizon=est_horizon,
+        annualizer=annualizer
+    )
+    est_vol = _get_est_vol_of_r(
+        r=r,
+        de_avg_kind=de_avg_kind,
+        est_window_kind=est_window_kind,
+        est_horizon=est_horizon,
+        annualizer=annualizer
+    )
     est_sharpe = est_er / est_vol
     return est_sharpe
 
@@ -641,20 +662,24 @@ def _get_metadata_of_r(r: FloatSeries) -> pd.Series:
     return metadata
 
 
-def _get_est_perf_stats_of_r(r: FloatSeries, est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND) -> FloatSeriesOrDF:
+def _get_est_perf_stats_of_r(
+        r: FloatSeries,
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
+        est_horizon: int=DEFAULT_EST_HORIZON
+    ) -> FloatSeriesOrDF:
     est_perf_stats = [
         (
             "Sharpe",
-            _get_est_sharpe_of_r(r=r, est_window_kind=est_window_kind)
+            _get_est_sharpe_of_r(r=r, est_window_kind=est_window_kind, est_horizon=est_horizon)
         ), (
             "t-stat",
             _get_t_stat_of_r(r=r)
         ), (
             "ER",
-            _get_est_er_of_r(r=r, est_window_kind=est_window_kind)
+            _get_est_er_of_r(r=r, est_window_kind=est_window_kind, est_horizon=est_horizon)
         ), (
             "Vol",
-            _get_est_vol_of_r(r=r, est_window_kind=est_window_kind)
+            _get_est_vol_of_r(r=r, est_window_kind=est_window_kind, est_horizon=est_horizon)
         )
     ]
     est_perf_stats = OrderedDict(est_perf_stats)
@@ -668,15 +693,20 @@ def _get_est_perf_stats_of_r(r: FloatSeries, est_window_kind: str=DEFAULT_EVAL_W
             name="t-stat"
         )
     est_perf_stats = pd.DataFrame(est_perf_stats) if values_are_seriess else pd.Series(est_perf_stats)
+    est_perf_stats.name = f"{est_horizon} {est_window_kind} {r.name}"
     return est_perf_stats
 
 
-def get_est_perf_stats_of_r(r: FloatDF, est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND) -> FloatDF:
+def get_est_perf_stats_of_r(
+        r: FloatDF,
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
+        est_horizon: int=DEFAULT_EST_HORIZON
+    ) -> FloatDF:
     est_perf_stats = [(
         # this is a key, like 'SPY' or 'AQMNX' or 'ARF'
         colname,
         # this is either a FloatDF (e.g. if 'ewm' window) or a FloatSeries (e.g. if 'full' window)
-        _get_est_perf_stats_of_r(r=col, est_window_kind=est_window_kind)
+        _get_est_perf_stats_of_r(r=col, est_window_kind=est_window_kind, est_horizon=est_horizon)
     ) for (colname, col) in r.items()]
     ####
     est_perf_stats = fc.get_df(est_perf_stats)
@@ -760,8 +790,25 @@ def _chart_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, print_: bool=False) -> pd
     return est_perf_stats
 
 
-def chart_r(r: FloatDF, kind: str=DEFAULT_R_KIND, title: str=""):
+def chart_r(r: FloatDF, kind: str=DEFAULT_R_KIND, title: str="") -> None:
+    #### plot cum r
     plot_cum_r(r=r, kind=kind, title=title)
-    # plot rolling sr, er/vol
-    # table alpha t-stats by third, then full-sample
-    # table corr by third, then full-sample
+    #### plot rolling sr, er/vol
+    fullsample_est_perf_stats = get_est_perf_stats_of_r(r=r)
+    moving_est_perf_stats = get_est_perf_stats_of_r(r=r, est_window_kind="rolling")
+    _, ax = plt.subplots(nrows=3, sharex=True)
+    fc.plot(moving_est_perf_stats["Sharpe"], title="Sharpe", ax=ax[0])
+    fc.plot(moving_est_perf_stats["ER"], ypct=True, title="ER", ax=ax[1])
+    fc.plot(
+        moving_est_perf_stats["Vol"], ylim_bottom=0, ypct=True, title="Vol", ax=ax[2],
+        # 2.5x the default height
+        figsize=(fc.FIGSIZE[0], 2.5*fc.FIGSIZE[1])
+    )
+    plt.show()
+    #### tables
+    # TODO(sparshsah): split by early-mid-late third's then fullsample
+    tables = table_est_perf_stats_of_r(r=r)
+    for statgroup, table in tables.items():
+        print(statgroup)
+        print(table)
+        print("#"*80)
