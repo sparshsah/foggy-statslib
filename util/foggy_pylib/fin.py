@@ -651,10 +651,17 @@ def _get_est_perf_stats_of_r(r: FloatSeries, est_window_kind: str=DEFAULT_EVAL_W
             _get_est_vol_of_r(r=r, est_window_kind=est_window_kind)
         )
     ]
-    # whether est_window_kind is e.g. 'full' (True) or 'ewm' (False) determines type of container needed
-    values_are_scalars = isinstance(est_perf_stats[0][1], float)
-    # t-stat (always a scalar) will get padded to constant pd.Series if needed
-    est_perf_stats = fc.get_series(est_perf_stats) if values_are_scalars else fc.get_df(est_perf_stats)
+    est_perf_stats = OrderedDict(est_perf_stats)
+    # e.g. True if 'ewm' window, False if 'full' window
+    values_are_seriess = isinstance(est_perf_stats["Sharpe"], pd.Series)
+    # t-stat is at this point always simply a full-sample scalar, so we might need to pad it out
+    if values_are_seriess:
+        est_perf_stats["t-stat"] = pd.Series(
+            est_perf_stats["t-stat"],
+            index=est_perf_stats["Sharpe"].index,
+            name="t-stat"
+        )
+    est_perf_stats = pd.DataFrame(est_perf_stats) if values_are_seriess else pd.Series(est_perf_stats)
     return est_perf_stats
 
 
