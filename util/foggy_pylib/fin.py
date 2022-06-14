@@ -693,7 +693,7 @@ def _get_est_perf_stats_of_r(
             name="t-stat"
         )
     est_perf_stats = pd.DataFrame(est_perf_stats) if values_are_seriess else pd.Series(est_perf_stats)
-    est_perf_stats.name = f"{est_horizon} {est_window_kind} {r.name}"
+    est_perf_stats.name = f"{est_horizon}-horizon {est_window_kind}-window {r.name}"
     return est_perf_stats
 
 
@@ -727,7 +727,7 @@ def get_est_perf_stats_of_r(
     # otherwise, we'll get regular columns and want to flip stat names up to columns
     else:
         est_perf_stats = est_perf_stats.T
-    est_perf_stats.name = f"{est_horizon} {est_window_kind}"
+    est_perf_stats.name = f"{est_horizon}-horizon {est_window_kind}-window"
     return est_perf_stats
 
 
@@ -796,8 +796,9 @@ def chart_r(r: FloatDF, kind: str=DEFAULT_R_KIND, title: str="") -> None:
     plot_cum_r(r=r, kind=kind, title=title)
     #### plot rolling sr, er/vol
     fullsample_est_perf_stats = get_est_perf_stats_of_r(r=r)
-    moving_est_perf_stats = get_est_perf_stats_of_r(r=r, est_window_kind="rolling")
-    _, ax = plt.subplots(nrows=3, sharex=True)
+    moving_est_perf_stats = get_est_perf_stats_of_r(r=r, est_window_kind="rolling", est_horizon=HORIZONS["long"])
+    # setting sharex makes weird minor gridlines appear
+    _, ax = plt.subplots(nrows=3)
     fc.plot(moving_est_perf_stats["Sharpe"], title="Sharpe", ax=ax[0])
     fc.plot(moving_est_perf_stats["ER"], ypct=True, title="ER", ax=ax[1])
     fc.plot(
@@ -805,6 +806,7 @@ def chart_r(r: FloatDF, kind: str=DEFAULT_R_KIND, title: str="") -> None:
         # 2.5x the default height
         figsize=(fc.FIGSIZE[0], 2.5*fc.FIGSIZE[1])
     )
+    plt.suptitle(moving_est_perf_stats.name, y=0.91)
     plt.show()
     #### tables
     # TODO(sparshsah): split by early-mid-late third's then fullsample
