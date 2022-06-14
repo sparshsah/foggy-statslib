@@ -52,11 +52,11 @@ Datelike = Union[dt.datetime, str]
 Data = Union[pd.Series, pd.DataFrame]
 
 TYPEFACE = "Arial"
-FONT_SCALE = 1.6
+FONT_SCALE = 1
 LABEL_FONTSIZE = 12
 LABEL_ROTATION = 0
 LEGEND_LOC = (1.04, 0.08)  # x, y
-FIGSIZE = (16, 8)  # width (x), height (y)
+FIGSIZE = (12, 8)  # width (x), height (y)
 
 
 def maybe(v: T=None, ow: T_=None) -> Union[T, T_]:
