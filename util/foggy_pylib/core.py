@@ -677,6 +677,7 @@ def plot(
     ## x
     if sum([xpct, xdollar, xdates]) > 1:
         msg = f"plot: conflict in {xpct}, {xdollar}, {xdates}!"
+        raise ValueError(msg)
     fmt = None
     if xpct:
         fmt = _strfpct
