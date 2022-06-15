@@ -637,9 +637,9 @@ def plot(
 
     # AXIS DIRECTION
     if invert_xaxis:
-        ax.invert_xaxis
+        ax.invert_xaxis()
     if invert_yaxis:
-        ax.invert_yaxis
+        ax.invert_yaxis()
 
     # AXIS TICK INTERVALS
     ## x
