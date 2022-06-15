@@ -606,6 +606,10 @@ def plot(
             val=xlim_right
         )
         xlim_left, xlim_right = xlim
+    # sensible default
+    xlim_left = maybe(xlim_left, df.index[0])
+    xlim_right = maybe(xlim_right, df.index[-1])
+    # set
     if xlim_left is not None:
         ax.set_xlim(left=xlim_left)
     if xlim_right is not None:
@@ -621,6 +625,7 @@ def plot(
             val=ylim_top
         )
         ylim_bottom, ylim_top = ylim
+    # set
     if ylim_bottom is not None:
         ax.set_ylim(bottom=ylim_bottom)
     if ylim_top is not None:

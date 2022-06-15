@@ -781,7 +781,6 @@ def plot_cum_r(r: FloatSeriesOrDF, kind: str=DEFAULT_R_KIND, title: str="") -> f
     cum_r = _get_cum_r(r=r, kind=kind)
     return fc.plot(
         cum_r,
-        xlim=(r.index[0], r.index[-1]),
         ypct=True,
         title=f"{title} {kind} CumRets"
     )
