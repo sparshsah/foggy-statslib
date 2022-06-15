@@ -214,7 +214,7 @@ def filter_like(
         not_: bool=False
     ) -> List[T]:
     fn = (lambda x: x) if fn is None else fn
-    cond = operator._not_ if not_ else bool
+    cond = operator.not_ if not_ else bool
     return [x for x in it if cond( fn(like) in fn(x) )]
 
 
