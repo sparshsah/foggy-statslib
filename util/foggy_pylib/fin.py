@@ -66,7 +66,9 @@ HORIZONS: Dict[str, int] = {
     "sweet": 42,
     "med": DAYCOUNTS["BQ"],
     "long": DAYCOUNTS["BY"],
-    "ultra": 5 * DAYCOUNTS["BY"]
+    "super": 3 * DAYCOUNTS["BY"],
+    "hyper": 5 * DAYCOUNTS["BY"],
+    "ultra": 10 * DAYCOUNTS["BY"]
 }
 # smoothing e.g. to account for international trading-session async
 DEFAULT_SMOOTHING_WINDOW_KIND: str = "rolling"
@@ -803,7 +805,7 @@ def chart_r(r: FloatDF, kind: str=DEFAULT_R_KIND, title: str="") -> None:
     fc.plot_corr_heatmap(tables["corr"], title="corr")
     #### plot rolling sr, er/vol
     fullsample_est_perf_stats = get_est_perf_stats_of_r(r=r)
-    moving_est_perf_stats = get_est_perf_stats_of_r(r=r, est_window_kind="rolling", est_horizon=HORIZONS["long"])
+    moving_est_perf_stats = get_est_perf_stats_of_r(r=r, est_window_kind="rolling", est_horizon=HORIZONS["super"])
     # setting sharex makes weird minor gridlines appear
     _, ax = plt.subplots(nrows=3)
     fc.plot(moving_est_perf_stats["Sharpe"], title="Sharpe", ax=ax[0])
