@@ -30,6 +30,7 @@ import pandas as pd
 from collections import OrderedDict
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
 import foggy_pylib.core as fc  # type: ignore
 
@@ -807,10 +808,29 @@ def chart_r(r: FloatDF, kind: str=DEFAULT_R_KIND, title: str="") -> None:
     moving_est_perf_stats = get_est_perf_stats_of_r(r=r, est_window_kind="rolling", est_horizon=HORIZONS["super"])
     # setting sharex makes weird minor gridlines appear
     _, ax = plt.subplots(nrows=3)
-    fc.plot(moving_est_perf_stats["Sharpe"], title="Sharpe", ax=ax[0])
-    fc.plot(moving_est_perf_stats["ER"], ypct=True, title="ER", ax=ax[1])
     fc.plot(
-        moving_est_perf_stats["Vol"], ylim_bottom=0, ypct=True, title="Vol", ax=ax[2],
+        moving_est_perf_stats["Sharpe"],
+        axhline_locs=[0,] + list(fullsample_est_perf_stats["Sharpe"]),
+        axhline_styles=["-",] + [":",]*len(r.columns),
+        axhline_colors=["darkgrey",] + list(sns.color_palette()),
+        title="Sharpe",
+        ax=ax[0]
+    )
+    fc.plot(
+        moving_est_perf_stats["ER"],
+        axhline_locs=[0,] + list(fullsample_est_perf_stats["ER"]),
+        axhline_styles=["-",] + [":",]*len(r.columns),
+        axhline_colors=["darkgrey",] + list(sns.color_palette()),
+        ypct=True, title="ER",
+        ax=ax[1]
+    )
+    fc.plot(
+        moving_est_perf_stats["Vol"],
+        axhline_locs=[0,] + list(fullsample_est_perf_stats["Vol"]),
+        axhline_styles=[":",],
+        axhline_colors=["darkgrey",] + list(sns.color_palette()),
+        ylim_bottom=0, ypct=True,
+        title="Vol", ax=ax[2],
         # 2.5x the default height
         figsize=(fc.FIGSIZE[0], 2.5*fc.FIGSIZE[1])
     )
