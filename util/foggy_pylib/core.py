@@ -390,7 +390,7 @@ def from_pickle(
     ext = _get_qualified_ext(qualifier=description, ext=ext)
     pkls = os.listdir(dirpath)
     pkls = [pkl for pkl in pkls if pkl.endswith(ext)]
-    if not len(pkls):
+    if not pkls:
         raise RuntimeError(
             f"from_pickle: dir '{dirpath}' contains no such files '*.{ext}'!"
         )
