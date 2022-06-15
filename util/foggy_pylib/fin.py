@@ -498,15 +498,13 @@ def _get_fcast_vol_targeted_xr(
         whose realized sample volatility will be exactly equal to `tgt_vol`.
     """
     est_vol = _get_est_vol_of_r(r=xr, est_window_kind=est_window_kind)
-    '''
-    At the end of each session (t), we review the data,
-    then trade up or down over the next session (t+1) to hit this much leverage,
-    finally earning the corresponding return over the next-next session (t+2).
-    Under this model, you get no execution during t+1, until the close when
-    you get all the execution at once. This seems pretty unrealistic,
-    but it's actually conservative: The alternative is to assume you trade fast
-    and start earning the return intraday during t+1.
-    '''
+    # At the end of each session (t), we review the data,
+    # then trade up or down over the next session (t+1) to hit this much leverage,
+    # finally earning the corresponding return over the next-next session (t+2).
+    # Under this model, you get no execution during t+1, until the close when
+    # you get all the execution at once. This seems pretty unrealistic,
+    # but it's actually conservative: The alternative is to assume you trade fast
+    # and start earning the return intraday during t+1.
     exante_vol = est_vol.shift(impl_lag)
     levered_xr = __get_exante_vol_targeted_xr(xr=xr, vol=exante_vol, tgt_vol=tgt_vol)
     return levered_xr
