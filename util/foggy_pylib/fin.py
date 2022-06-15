@@ -26,8 +26,8 @@ Notes
 """
 
 from typing import Tuple, Dict, Union, Optional
-import pandas as pd
 from collections import OrderedDict
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns

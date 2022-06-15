@@ -6,23 +6,29 @@ v1.0 beta: API probably won't dramatically change, but
 author: [@sparshsah](https://github.com/sparshsah)
 """
 
-# syntax utils
+# standard syntax utils
 from typing import Tuple, List, Iterable, Callable, Union, Optional, Any
 import operator
-# data structures
-import pandas as pd
+# standard data structures
 from collections import OrderedDict
-# calculations
-import numpy as np
+# standard calculations
 import itertools
-# sys
+# standard sys
 import os
 from warnings import warn
-# data i/o
+# standard data i/o
 import datetime as dt
 import random
 import pickle
-# visualization
+# standard visualization (None)
+# extensions for syntax utils (None)
+# extensions for data structures
+import pandas as pd
+# extensions for calculations
+import numpy as np
+# extensions for sys
+# extensions for data i/o (None)
+# extensions for visualization
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plt_ticker
 from matplotlib.axes import Axes as PlotAxes
