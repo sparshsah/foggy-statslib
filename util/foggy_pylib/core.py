@@ -6,52 +6,50 @@ v1.0 beta: API probably won't dramatically change, but
 author: [@sparshsah](https://github.com/sparshsah)
 """
 
-# standard syntax utils
+# standard syntax utils:
 from typing import Tuple, List, Iterable, Callable, Union, Optional, Any
 import operator
-# standard data structures
+# standard data structures:
 from collections import OrderedDict
-# standard calculations
+# standard calculations:
 import itertools
-# standard sys
+# standard sys:
 import os
 from warnings import warn
-# standard data i/o
+# standard data i/o:
 import datetime as dt
 import random
 import pickle
-# standard visualization (None)
-# extensions for syntax utils (None)
-# extensions for data structures
+# standard visualization: None
+# extensions for syntax utils: None
+# extensions for data structures:
 import pandas as pd
-# extensions for calculations
+# extensions for calculations:
 import numpy as np
-# extensions for sys
-# extensions for data i/o (None)
-# extensions for visualization
+# extensions for sys: None
+# extensions for data i/o: None
+# extensions for visualization:
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plt_ticker
 from matplotlib.axes import Axes as PlotAxes
 import seaborn as sns; sns.set()
 
-'''
-`T` is used to indicate a generic type, but is NOT just a synonym for `Any`.
-For example, in Caml, we can have a function `foo: 'a -> 'b`,
-        which accepts any type, returning some unspecified type.
-        We might write this in Python as `foo: Any -> Any`.
-    But, we can also have a function `bar: 'a -> 'a`,
-        which accepts any type, returning the SAME type.
-        We might write this in Python as `bar: T -> T`.
-
-Example 1: `x:Any in lst:list[Any]` means that the object `x`, of some arbitrary type,
-        is a member of list `lst`, whose members have no specified type,
-        and aren't even guaranteed to all share the same type as each other.
-    But, `x:T in lst:list[T]` means that the object `x`, of some generic type,
-        is a member of list `lst`, every member of whom has that SAME type.
-
-Example 2: `fun: Any -> Any` accepts any type, returning some unspecified type;
-    But, `fun: T -> T` accepts any type, returning the SAME type.
-'''
+# `T` is used to indicate a generic type, but is NOT just a synonym for `Any`.
+# For example, in Caml, we can have a function `foo: 'a -> 'b`,
+#         which accepts any type, returning some unspecified type.
+#         We might write this in Python as `foo: Any -> Any`.
+#     But, we can also have a function `bar: 'a -> 'a`,
+#         which accepts any type, returning the SAME type.
+#         We might write this in Python as `bar: T -> T`.
+#
+# Example 1: `x:Any in lst:list[Any]` means that the object `x`, of some arbitrary type,
+#         is a member of list `lst`, whose members have no specified type,
+#         and aren't even guaranteed to all share the same type as each other.
+#     But, `x:T in lst:list[T]` means that the object `x`, of some generic type,
+#         is a member of list `lst`, every member of whom has that SAME type.
+#
+# Example 2: `fun: Any -> Any` accepts any type, returning some unspecified type;
+#     But, `fun: T -> T` accepts any type, returning the SAME type.
 T = Any
 T_ = Any
 Datelike = Union[dt.datetime, str]
