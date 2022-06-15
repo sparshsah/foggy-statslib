@@ -1,3 +1,8 @@
 # https://code.visualstudio.com/docs/python/linting#_commandline-arguments-and-configuration-files
+
+[FORMAT]
+max-line-length=120
+
 [MESSAGES CONTROL]
-disable=line-too-long,invalid-name
+# i'm a big boy, i can see these things for myself
+disable=fixme,invalid-name,missing-function-docstring
