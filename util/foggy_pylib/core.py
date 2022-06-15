@@ -32,7 +32,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plt_ticker
 from matplotlib.axes import Axes as PlotAxes
-import seaborn as sns; sns.set()
+import seaborn as sns
+sns.set()
 
 # `T` is used to indicate a generic type, but is NOT just a synonym for `Any`.
 # For example, in Caml, we can have a function `foo: 'a -> 'b`,
