@@ -640,7 +640,7 @@ def _sim_r(ann_sharpe: float=0, ann_vol: float=DEFAULT_VOL, n_years: float=100) 
     daily_sharpe = ann_sharpe / DAYCOUNTS["BY"]**0.5
     daily_vol = ann_vol / DAYCOUNTS["BY"]**0.5
     daily_er = daily_sharpe * daily_vol
-    n_days = DAYCOUNTS["BY"] * n_years
+    n_days = int(DAYCOUNTS["BY"] * n_years)
     r = sps.norm.rvs(loc=daily_er, scale=daily_vol, size=n_days)
     r = pd.Series(r)
     return r
