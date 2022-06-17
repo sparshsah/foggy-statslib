@@ -636,7 +636,7 @@ def _get_exante_hedged_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: Float
 ## SIMULATION ##########################################################################################################
 ########################################################################################################################
 
-def _sim_r(ann_sharpe: float=0, ann_vol: float=DEFAULT_VOL, n_years: float=1) -> FloatSeries:
+def _sim_r(ann_sharpe: float=0, ann_vol: float=DEFAULT_VOL, n_years: float=10) -> FloatSeries:
     daily_sharpe = ann_sharpe / DAYCOUNTS["BY"]**0.5
     daily_vol = ann_vol / DAYCOUNTS["BY"]**0.5
     daily_er = daily_sharpe * daily_vol
