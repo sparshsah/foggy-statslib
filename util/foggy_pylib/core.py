@@ -612,8 +612,10 @@ def plot(
         )
         xlim_left, xlim_right = xlim
     # sensible default
-    xlim_left = maybe(xlim_left, df.index[0])
-    xlim_right = maybe(xlim_right, df.index[-1])
+    if kind == "line" and xlim_left is None:
+        xlim_left = df.index[0]
+    if kind == "line" and xlim_right is None:
+        xlim_right = df.index[-1]
     # set
     if xlim_left is not None:
         ax.set_xlim(left=xlim_left)
