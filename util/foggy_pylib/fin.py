@@ -636,12 +636,17 @@ def _get_exante_hedged_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: Float
 ## SIMULATION ##########################################################################################################
 ########################################################################################################################
 
-def _sim_r(ann_sharpe: float=0, ann_vol: float=DEFAULT_VOL, n_years: float=100) -> FloatSeries:
-    daily_sharpe = ann_sharpe / DAYCOUNTS["BY"]**0.5
-    daily_vol = ann_vol / DAYCOUNTS["BY"]**0.5
-    daily_er = daily_sharpe * daily_vol
-    n_days = int(DAYCOUNTS["BY"] * n_years)
-    r = sps.norm.rvs(loc=daily_er, scale=daily_vol, size=n_days)
+def _sim_r(
+        ann_sharpe: float=0,
+        ann_vol: float=DEFAULT_VOL,
+        n_years: float=100,
+        annualizer: int=DAYCOUNTS["BY"]
+    ) -> FloatSeries:
+    single_timestep_sharpe = ann_sharpe / annualizer**0.5
+    single_timestep_vol = ann_vol / annualizer**0.5
+    single_timestep_er = single_timestep_sharpe * single_timestep_vol
+    n_timesteps = int(annualizer * n_years)
+    r = sps.norm.rvs(loc=single_timestep_er, scale=single_timestep_vol, size=n_timesteps)
     r = pd.Series(r)
     return r
 
