@@ -57,6 +57,7 @@ IMPL_LAG: int = 2
 # analytical or portfolio-construction choices that we do control
 DEFAULT_R_KIND: str = "log"
 DEFAULT_AVG_KIND: str = "mean"
+DEFAULT_DE_AVG_KIND: Optional[str] = None
 # nice standard number to target
 DEFAULT_VOL: float = 0.10
 
@@ -217,7 +218,7 @@ def __get_est_avg_of_r(
 
 def __get_est_deviations_of_r(
         r: FloatSeries,
-        de_avg_kind: Optional[str]=None,
+        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         avg_est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         avg_est_horizon: int=DEFAULT_EST_HORIZON,
     ) -> FloatSeries:
@@ -229,7 +230,7 @@ def __get_est_deviations_of_r(
 
 def __get_est_cov_of_r(
         r_a: FloatSeries, r_b: FloatSeries,
-        de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
+        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         smoothing_avg_kind: str=DEFAULT_AVG_KIND,
         smoothing_window_kind: str=DEFAULT_SMOOTHING_WINDOW_KIND,
         # pass `1` if you don't want to smooth
@@ -318,7 +319,7 @@ def __get_est_cov_of_r(
 
 def __get_est_std_of_r(
         r: FloatSeries,
-        de_avg_kind: Optional[str]=None,
+        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EST_HORIZON
     ) -> Floatlike:
@@ -334,7 +335,7 @@ def __get_est_std_of_r(
 
 def _get_est_corr_of_r(
         r_a: FloatSeries, r_b: FloatSeries,
-        de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
+        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         round_dps: Optional[int]=None
     ) -> Floatlike:
@@ -352,7 +353,7 @@ def _get_est_corr_of_r(
 
 def get_est_corr_of_r(
         r: FloatDF,
-        de_avg_kind: Optional[str]=DEFAULT_AVG_KIND,
+        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         round_dps: Optional[int]=None
     ) -> FloatDF:
@@ -389,7 +390,7 @@ def _get_est_er_of_r(
 
 def _get_est_vol_of_r(
         r: FloatSeries,
-        de_avg_kind: Optional[str]=None,
+        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EST_HORIZON,
         annualizer: int=DAYCOUNTS["BY"],
@@ -401,7 +402,7 @@ def _get_est_vol_of_r(
 
 def _get_est_sharpe_of_r(
         r: FloatSeries,
-        de_avg_kind: Optional[str]=None,
+        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EST_HORIZON,
         annualizer: int=DAYCOUNTS["BY"]
@@ -425,7 +426,7 @@ def _get_est_sharpe_of_r(
 
 def _get_t_stat_of_r(
         r: FloatSeries,
-        de_avg_kind: Optional[str]=None,
+        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
     # https://web.stanford.edu/~wfsharpe/art/sr/sr.htm
@@ -438,7 +439,7 @@ def _get_t_stat_of_r(
 def _get_est_beta_of_r(
         of_r: FloatSeries,
         on_r: FloatSeries,
-        de_avg_kind: Optional[str]=None,
+        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
     est_corr = _get_est_corr_of_r(r_a=of_r, r_b=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
@@ -451,7 +452,7 @@ def _get_est_beta_of_r(
 def _get_alpha_t_stat_of_r(
         of_r: FloatSeries,
         on_r: FloatSeries,
-        de_avg_kind: Optional[str]=None,
+        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
     _ = of_r, on_r, de_avg_kind, est_window_kind
@@ -460,7 +461,7 @@ def _get_alpha_t_stat_of_r(
 
 def get_alpha_t_stat_of_r(
         r: FloatDF,
-        de_avg_kind: Optional[str]=None,
+        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> FloatDF:
     alpha_t_stat = {
