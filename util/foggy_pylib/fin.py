@@ -244,6 +244,7 @@ def __get_est_cov_of_r(
 
     You can get a "robust" estimate by setting smoothing_avg_kind = "median",
         which will tend to "filter out" highly-influential one-off outliers.
+        If you do this, be sure to also explicitly model kurtosis!
 
     By the way, you'll often hear that a financial risk model should
     use a slightly longer-than-MSE-optimal estimation horizon, because:
@@ -295,9 +296,24 @@ def __get_est_cov_of_r(
         )
     )
     est_co_deviations = smoothed_est_deviations["a"] * smoothed_est_deviations["b"]
-    est_cov = ___get_window(est_co_deviations, kind=est_window_kind, horizon=est_horizon).mean()
-    ann_est_cov = est_cov * annualizer
-    return ann_est_cov
+    est_cov = ___get_window(
+        est_co_deviations,
+        kind=est_window_kind,
+        horizon=est_horizon
+    ).mean()
+    # https://en.wikipedia.org/wiki/Bessel%27s_correction
+    # If `de_avg_kind` is None: We treat the mean as known to be zero;
+    # Otherwise: We should bias-correct by post-multiplying T/(T-1).
+    sample_sz = ___get_window(
+        est_co_deviations.notna(),  # 1 at every valid index
+        kind=est_window_kind,
+        horizon=est_horizon
+    ).sum()
+    bessel_degrees_of_freedom = bool(de_avg_kind)
+    bessel_factor = sample_sz / ( sample_sz - bessel_degrees_of_freedom )
+    besseled_est_cov = est_cov * bessel_factor
+    ann_besseled_est_cov = besseled_est_cov * annualizer
+    return ann_besseled_est_cov
 
 
 def __get_est_std_of_r(
