@@ -191,7 +191,7 @@ def ___get_window(
     elif kind == "expanding":
         window = ser.expanding(min_periods=min_periods)
     elif kind == "ewm":
-        window = ser.ewm(com=horizon, min_periods=min_periods)
+        window = ser.ewm(span=horizon, min_periods=min_periods)
     elif kind == "rolling":
         window = ser.rolling(window=horizon, min_periods=min_periods)
     else:
