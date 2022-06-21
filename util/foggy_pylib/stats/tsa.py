@@ -6,18 +6,15 @@ v1.0 beta: API probably won't dramatically change, but
 author: [@sparshsah](https://github.com/sparshsah)
 """
 
-from typing import Union, Optional
+from typing import Optional
 import pandas as pd
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
 import foggy_pylib.core as fc
+# https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/stats/est.py
+# import foggy_pylib.stats.est as fse
 
-FloatSeries = pd.Series
-FloatDF = pd.DataFrame
-FloatSeriesOrDF = Union[FloatSeries, FloatDF]
-Floatlike = Union[float, FloatSeriesOrDF]
-
-DEFAULT_AVG_KIND: str = "mean"
-DEFAULT_DE_AVG_KIND: Optional[str] = DEFAULT_AVG_KIND
+from foggy_pylib.stats.est import FloatSeries, FloatDF, Floatlike, \
+    DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND
 
 DEFAULT_SMOOTHING_WINDOW_KIND: str = "rolling"
 DEFAULT_SMOOTHING_HORIZON: int = 3  # overlap of yesterday, today, and tomorrow
