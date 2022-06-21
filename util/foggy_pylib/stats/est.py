@@ -6,9 +6,7 @@ v1.0 beta: API probably won't dramatically change, but
 author: [@sparshsah](https://github.com/sparshsah)
 
 
-Notes
------
-
+# Notes
 * Currently, each estimator adheres to a frequentist paradigm,
     using the realized (observed) sample stat directly as its point estimate of the parameter.
     But in the future, we could implement a more Bayesian approach,
