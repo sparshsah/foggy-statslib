@@ -173,7 +173,7 @@ def _get_est_cov(
 
     sources
     -------
-    https://github.com/sparshsah/foggy-demo/blob/main/demo/stats/bias-variance-risk.ipynb.pdf
+    https://github.com/sparshsah/foggy-demo/blob/main/demo/stats/risk-bias-variance.ipynb.pdf
     https://faculty.fuqua.duke.edu/~charvey/Research/Published_Papers/P135_The_impact_of.pdf
     """
     df = fc.get_df([
