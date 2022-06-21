@@ -5,4 +5,4 @@ max-line-length=120
 
 [MESSAGES CONTROL]
 # i'm a big boy, i can see these things for myself
-disable=fixme,invalid-name,missing-function-docstring
+disable=fixme,missing-function-docstring,protected-access,invalid-name
