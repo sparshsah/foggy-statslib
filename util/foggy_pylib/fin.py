@@ -8,12 +8,6 @@ author: [@sparshsah](https://github.com/sparshsah)
 Notes
 -----
 
-* `r` refers to passive-asset returns, `pnl` refers to active-portfolio returns.
-
-* In general, an unqualified statistic name like `vol` refers to passive asset(s).
-    If we want to refer to active portfolio weights,
-    we'll explicitly write something like `vol_of_w`.
-
 * Each `get_est_{whatever}_of_r()` function estimates its
     specified market param based on the given data sample.
 ** Currently, each estimator adheres to a frequentist paradigm,
