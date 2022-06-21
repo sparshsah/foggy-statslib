@@ -1,3 +1,13 @@
+# Package structure
+
+* `core`
+* `stat`istic`s`
+    - `sim`ulations
+    - `est`imation
+    - `t`ime`s`eries `a`nalysis
+* `fin`ance
+
+
 # Style notes
 
 * We permit ourselves our personal predilection for underscores, to the point of controversy and perhaps even overuse.
