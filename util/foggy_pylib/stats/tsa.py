@@ -156,8 +156,6 @@ def _get_est_cov(
         smoothing_horizon: int=DEFAULT_SMOOTHING_HORIZON,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EVAL_HORIZON,
-        # want this to be general (not necessarily finance-first)
-        annualizer: int=1
     ) -> Floatlike:
     """Simple GARCH estimate of covariance.
     The estimate at time `t` incorporates information up to and including `t`.
@@ -211,8 +209,7 @@ def _get_est_cov(
     bessel_degrees_of_freedom = bool(de_avg_kind)
     bessel_factor = sample_sz / ( sample_sz - bessel_degrees_of_freedom )
     besseled_est_cov = est_cov * bessel_factor
-    ann_besseled_est_cov = besseled_est_cov * annualizer
-    return ann_besseled_est_cov
+    return besseled_est_cov
 
 
 def _get_est_std(
