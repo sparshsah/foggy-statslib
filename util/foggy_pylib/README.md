@@ -1,3 +1,5 @@
+author: [@sparshsah](https://github.com/sparshsah)
+
 # Package structure
 
 * `core`
