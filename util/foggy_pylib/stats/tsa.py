@@ -9,7 +9,7 @@ author: [@sparshsah](https://github.com/sparshsah)
 from typing import Union, Optional
 import pandas as pd
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
-import foggy_pylib.core as fc  # type: ignore
+from . import core as fc
 
 FloatSeries = pd.Series
 FloatDF = pd.DataFrame
