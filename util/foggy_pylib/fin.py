@@ -38,13 +38,13 @@ Floatlike = Union[float, FloatSeriesOrDF]
 # approx duration of a 10Y US treasury note in a "normal" rates climate
 DEFAULT_BOND_DUR: float = 7
 # calendar, business
-DAYCOUNTS: Dict[str, int] = {
-    "d": 1, "Bd": 1,
-    "W": 7, "BW": 5,
-    "Cm": 30,"Bm": 21,
-    "CQ": 91, "BQ": 65,
-    "CY": 365, "BY": 261
-}
+DAYCOUNTS: pd.Series = fc.get_series([
+    ("d", 1), ("Bd", 1),
+    ("W", 7), ("BW", 5),
+    ("Cm", 30), ("Bm", 21),
+    ("CQ", 91), ("BQ", 65),
+    ("CY", 365), ("BY", 261)
+])
 # observe info at `t`, trade on it the course of `t+1`, earn at `t+2`
 IMPL_LAG: int = 2
 
@@ -56,17 +56,17 @@ DEFAULT_DE_AVG_KIND: Optional[str] = None
 DEFAULT_VOL: float = 0.10
 
 # smoothing, estimation, evaluation, etc
-HORIZONS: Dict[str, int] = {
-    "micro": 3,
-    "mini": DAYCOUNTS["BW"],
-    "short": DAYCOUNTS["Bm"],
-    "sweet": 42,
-    "med": DAYCOUNTS["BQ"],
-    "long": DAYCOUNTS["BY"],
-    "super": 3 * DAYCOUNTS["BY"],
-    "hyper": 5 * DAYCOUNTS["BY"],
-    "ultra": 10 * DAYCOUNTS["BY"]
-}
+HORIZONS: pd.Series = fc.get_series([
+    ("micro", 3),
+    ("mini", DAYCOUNTS["BW"]),
+    ("short", DAYCOUNTS["Bm"]),
+    ("sweet", 42),
+    ("med", DAYCOUNTS["BQ"]),
+    ("long", DAYCOUNTS["BY"]),
+    ("super", 3 * DAYCOUNTS["BY"]),
+    ("hyper", 5 * DAYCOUNTS["BY"]),
+    ("ultra", 10 * DAYCOUNTS["BY"])
+])
 # smoothing e.g. to account for international trading-session async
 DEFAULT_SMOOTHING_WINDOW_KIND: str = "rolling"
 DEFAULT_SMOOTHING_HORIZON: int = HORIZONS["micro"]
@@ -76,7 +76,7 @@ DEFAULT_EST_HORIZON: int = HORIZONS["med"]
 # evaluation, no need to specify horizon
 DEFAULT_EVAL_WINDOW_KIND: str = "full"
 
-ROUND_DPS = fc.get_series([
+ROUND_DPS: pd.Series = fc.get_series([
     ("alpha_t", 2),
     ("corr", 2),
     ("Sharpe", 2),
