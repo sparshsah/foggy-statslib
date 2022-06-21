@@ -21,11 +21,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
 import foggy_pylib.core as fc
+# https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/stats/est.py
+import foggy_pylib.stats.est as fse
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/stats/tsa.py
 import foggy_pylib.stats.tsa as fst
 
-from foggy_pylib.stats.tsa import FloatSeries, FloatDF, FloatSeriesOrDF, Floatlike, \
-    DEFAULT_DE_AVG_KIND, DEFAULT_EST_WINDOW_KIND, DEFAULT_EST_HORIZON, DEFAULT_EVAL_WINDOW_KIND
+from foggy_pylib.stats.est import FloatSeries, FloatDF, FloatSeriesOrDF, Floatlike, DEFAULT_DE_AVG_KIND
+from foggy_pylib.stats.tsa import DEFAULT_EST_WINDOW_KIND, DEFAULT_EST_HORIZON, DEFAULT_EVAL_WINDOW_KIND
 
 # market facts that we can't control
 # approx duration of a 10Y US treasury note in a "normal" rates climate
@@ -537,7 +539,7 @@ def _round_perf_stats(perf_stats: pd.Series, round_: bool=True) -> pd.Series:
 
 
 def _table_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> pd.Series:
-    metadata = fst._get_metadata(ser=r)
+    metadata = fse._get_metadata(ser=r)
     est_perf_stats = _get_est_perf_stats_of_r(r=r)
     ####
     collected_stats = pd.concat([est_perf_stats, metadata])
