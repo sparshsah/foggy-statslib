@@ -26,6 +26,7 @@ DEFAULT_EST_WINDOW_KIND: str = "ewm"
 DEFAULT_EST_HORIZON: int = 65  # inspired by number of days in a business quarter
 # evaluation, no need to specify horizon
 DEFAULT_EVAL_WINDOW_KIND: str = "full"
+DEFAULT_EVAL_HORIZON: int = DEFAULT_EST_HORIZON  # doesn't matter since window is full
 
 
 ########################################################################################################################
@@ -34,8 +35,8 @@ DEFAULT_EVAL_WINDOW_KIND: str = "full"
 
 def ___get_window(
         ser: pd.Series,
-        kind: str=DEFAULT_EST_WINDOW_KIND,
-        horizon: int=DEFAULT_EST_HORIZON,
+        kind: str=DEFAULT_EVAL_WINDOW_KIND,
+        horizon: int=DEFAULT_EVAL_HORIZON,
         min_periods: Optional[int]=None
     ) -> pd.core.window.Window:
     min_periods = fc.maybe(min_periods, ow=int(horizon/2))
@@ -116,7 +117,7 @@ def _get_est_avg(
         ser: FloatSeries,
         avg_kind: str=DEFAULT_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
-        est_horizon: int=DEFAULT_EST_HORIZON
+        est_horizon: int=DEFAULT_EVAL_HORIZON
     ) -> Floatlike:
     window = ___get_window(ser, kind=est_window_kind, horizon=est_horizon)
     if avg_kind == "mean":
@@ -132,7 +133,7 @@ def __get_est_deviations(
         ser: FloatSeries,
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         avg_est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
-        avg_est_horizon: int=DEFAULT_EST_HORIZON,
+        avg_est_horizon: int=DEFAULT_EVAL_HORIZON,
     ) -> FloatSeries:
     # thing we're going to remove before calculating deviations
     avg = 0 if de_avg_kind is None else \
@@ -154,7 +155,7 @@ def _get_est_cov(
         # pass `1` if you don't want to smooth
         smoothing_horizon: int=DEFAULT_SMOOTHING_HORIZON,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
-        est_horizon: int=DEFAULT_EST_HORIZON,
+        est_horizon: int=DEFAULT_EVAL_HORIZON,
         # want this to be general (not necessarily finance-first)
         annualizer: int=1
     ) -> Floatlike:
@@ -218,7 +219,7 @@ def _get_est_std(
         ser: FloatSeries,
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
-        est_horizon: int=DEFAULT_EST_HORIZON
+        est_horizon: int=DEFAULT_EVAL_HORIZON
     ) -> Floatlike:
     est_var = _get_est_cov(
         ser_a=ser, ser_b=ser,
