@@ -5,17 +5,14 @@ v0.1.1 alpha: API MAY (IN FACT, CERTAINLY WILL) BREAK AT ANY TIME!
 author: [@sparshsah](https://github.com/sparshsah)
 
 
-Notes
------
-
+# Notes
 * Each `get_est_{whatever}_of_r()` function estimates its
     specified market param based on the given data sample.
-
 * Each `get_exante_{whatever}_of_w()` function calculates its
     specified portfolio stat taking as ground truth the given market params.
 """
 
-from typing import Tuple, Dict, Union, Optional
+from typing import Tuple, Dict, Optional
 from collections import OrderedDict
 import pandas as pd
 import numpy as np
@@ -23,12 +20,12 @@ import scipy.stats as sps
 import matplotlib.pyplot as plt
 import seaborn as sns
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
-import foggy_pylib.core as fc  # type: ignore
+import foggy_pylib.core as fc
+# https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/stats/tsa.py
+import foggy_pylib.stats.tsa as fst
 
-FloatSeries = pd.Series
-FloatDF = pd.DataFrame
-FloatSeriesOrDF = Union[FloatSeries, FloatDF]
-Floatlike = Union[float, FloatSeriesOrDF]
+from foggy_pylib.stats.tsa import FloatSeries, FloatDF, FloatSeriesOrDF, Floatlike, \
+    DEFAULT_DE_AVG_KIND, DEFAULT_EST_WINDOW_KIND, DEFAULT_EST_HORIZON, DEFAULT_EVAL_WINDOW_KIND
 
 # market facts that we can't control
 # approx duration of a 10Y US treasury note in a "normal" rates climate
@@ -46,8 +43,6 @@ IMPL_LAG: int = 2
 
 # analytical or portfolio-construction choices that we do control
 DEFAULT_R_KIND: str = "log"
-DEFAULT_AVG_KIND: str = "mean"
-DEFAULT_DE_AVG_KIND: Optional[str] = None
 # nice standard number to target
 DEFAULT_VOL: float = 0.10
 
@@ -63,14 +58,6 @@ HORIZONS: pd.Series = fc.get_series([
     ("hyper", 5 * DAYCOUNTS["BY"]),
     ("ultra", 10 * DAYCOUNTS["BY"])
 ])
-# smoothing e.g. to account for international trading-session async
-DEFAULT_SMOOTHING_WINDOW_KIND: str = "rolling"
-DEFAULT_SMOOTHING_HORIZON: int = HORIZONS["micro"]
-# reality of market data-generating process is that it's non-stationary
-DEFAULT_EST_WINDOW_KIND: str = "ewm"
-DEFAULT_EST_HORIZON: int = HORIZONS["med"]
-# evaluation, no need to specify horizon
-DEFAULT_EVAL_WINDOW_KIND: str = "full"
 
 ROUND_DPS: pd.Series = fc.get_series([
     ("alpha_t", 2),
@@ -81,6 +68,7 @@ ROUND_DPS: pd.Series = fc.get_series([
     ("Vol", 4),
     ("Frac valid timesteps", 3)
 ])
+
 
 ########################################################################################################################
 ## RETURN MANIPULATIONS ################################################################################################
@@ -117,30 +105,6 @@ def _get_xr(r: FloatSeries, cash_r: FloatSeries) -> FloatSeries:
     return xr
 
 
-def _smooth(
-        r: FloatSeries,
-        avg_kind: str=DEFAULT_AVG_KIND,
-        window_kind: str=DEFAULT_SMOOTHING_WINDOW_KIND,
-        horizon: int=DEFAULT_SMOOTHING_HORIZON,
-        scale_up_pow: float=0
-    ) -> FloatSeries:
-    """Smooth returns, e.g. to account for international trading-session async.
-
-    scale_up_pow: float,
-        * ...
-        * -1 -> scale down by 1/horizon (why would you do this? idk);
-        * ...
-        * 0 -> don't scale up;
-        * ...
-        * +0.5 -> scale up by horizon**0.5
-            motivated by CLT: STD of avg scales with inverse of sqrt(N)
-        * ....
-    """
-    est_avg = __get_est_avg_of_r(r=r, avg_kind=avg_kind, est_window_kind=window_kind, est_horizon=horizon)
-    scaled = est_avg * horizon**scale_up_pow
-    return scaled
-
-
 def _get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     if kind == "arith":
         cum_r = r.cumsum()
@@ -167,76 +131,28 @@ def _get_pnl(w: FloatSeries, r: FloatSeries, impl_lag: int=IMPL_LAG, agg: bool=T
 
 
 ########################################################################################################################
-## STATISTICAL CALCULATIONS ############################################################################################
+## BACKWARD-LOOKING RETURN STATISTICS ##################################################################################
 ########################################################################################################################
 
-def ___get_window(
-        ser: pd.Series,
-        kind: str=DEFAULT_EVAL_WINDOW_KIND,
-        horizon: int=HORIZONS["sweet"],
-        min_periods: Optional[int]=None
-    ) -> pd.core.window.Window:
-    min_periods = fc.maybe(min_periods, ow=int(horizon/2))
-    if kind == "full":
-        window = ser
-    elif kind == "expanding":
-        window = ser.expanding(min_periods=min_periods)
-    elif kind == "ewm":
-        window = ser.ewm(span=horizon, min_periods=min_periods)
-    elif kind == "rolling":
-        window = ser.rolling(window=horizon, min_periods=min_periods)
-    else:
-        raise ValueError(kind)
-    return window
-
-
-def __get_est_avg_of_r(
+def _get_est_er_of_r(
         r: FloatSeries,
-        avg_kind: str=DEFAULT_AVG_KIND,
-        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
-        est_horizon: int=DEFAULT_EST_HORIZON
-    ) -> Floatlike:
-    window = ___get_window(r, kind=est_window_kind, horizon=est_horizon)
-    if avg_kind == "mean":
-        est_avg = window.mean()
-    elif avg_kind == "median":
-        est_avg = window.median()
-    else:
-        raise ValueError(avg_kind)
-    return est_avg
-
-
-def __get_est_deviations_of_r(
-        r: FloatSeries,
-        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
-        avg_est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
-        avg_est_horizon: int=DEFAULT_EST_HORIZON,
-    ) -> FloatSeries:
-    avg = 0 if de_avg_kind is None else \
-        __get_est_avg_of_r(r=r, avg_kind=de_avg_kind, est_window_kind=avg_est_window_kind, est_horizon=avg_est_horizon)
-    est_deviations = r - avg
-    return est_deviations
-
-
-def __get_est_cov_of_r(
-        r_a: FloatSeries, r_b: FloatSeries,
-        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
-        smoothing_avg_kind: str=DEFAULT_AVG_KIND,
-        smoothing_window_kind: str=DEFAULT_SMOOTHING_WINDOW_KIND,
-        # pass `1` if you don't want to smooth
-        smoothing_horizon: int=DEFAULT_SMOOTHING_HORIZON,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EST_HORIZON,
-        # want this to be general (not necessarily finance-first)
-        annualizer: int=1
+        annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
-    """Simple GARCH estimate of covariance.
-    The estimate at time `t` incorporates information up to and including `t`.
+    est_avg = fst._get_est_avg(ser=r, est_window_kind=est_window_kind, est_horizon=est_horizon)
+    est_er = est_avg * annualizer
+    return est_er
 
-    You can get a "robust" estimate by setting smoothing_avg_kind = "median",
-        which will tend to "filter out" highly-influential one-off outliers.
-        If you do this, be sure to also explicitly model kurtosis!
 
+def _get_est_vol_of_r(
+        r: FloatSeries,
+        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
+        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
+        est_horizon: int=DEFAULT_EST_HORIZON,
+        annualizer: int=DAYCOUNTS["BY"],
+    ) -> Floatlike:
+    """
     By the way, you'll often hear that a financial risk model should
     use a slightly longer-than-MSE-optimal estimation horizon, because:
     ----
@@ -257,135 +173,13 @@ def __get_est_cov_of_r(
             it's good to filter it out when constructing trading signals;
             But when estimating risk, it's a different story:
             Volatility is, by definition, "just" market noise!
-
-    sources
-    -------
-    https://github.com/sparshsah/foggy-demo/blob/main/demo/stats/bias-variance-risk.ipynb.pdf
-    https://faculty.fuqua.duke.edu/~charvey/Research/Published_Papers/P135_The_impact_of.pdf
     """
-    df = fc.get_df([
-        ("a", r_a),
-        ("b", r_b)
-    ])
-    del r_b, r_a
-    est_deviations = df.apply(
-        lambda col: __get_est_deviations_of_r(
-            col,
-            de_avg_kind=de_avg_kind,
-            avg_est_window_kind=est_window_kind,
-            avg_est_horizon=est_horizon
-        )
-    )
-    smoothed_est_deviations = est_deviations.apply(
-        lambda col: _smooth(
-            r=col,
-            avg_kind=smoothing_avg_kind,
-            window_kind=smoothing_window_kind,
-            horizon=smoothing_horizon,
-            # account for CLT -> get the same STD
-            scale_up_pow=0.5
-        )
-    )
-    est_co_deviations = smoothed_est_deviations["a"] * smoothed_est_deviations["b"]
-    est_cov = ___get_window(
-        est_co_deviations,
-        kind=est_window_kind,
-        horizon=est_horizon
-    ).mean()
-    # https://en.wikipedia.org/wiki/Bessel%27s_correction
-    # If `de_avg_kind` is None: We treat the mean as known to be zero;
-    # Otherwise: We should bias-correct by post-multiplying T/(T-1).
-    sample_sz = ___get_window(
-        est_co_deviations.notna(),  # 1 at every valid index
-        kind=est_window_kind,
-        horizon=est_horizon
-    ).sum()
-    bessel_degrees_of_freedom = bool(de_avg_kind)
-    bessel_factor = sample_sz / ( sample_sz - bessel_degrees_of_freedom )
-    besseled_est_cov = est_cov * bessel_factor
-    ann_besseled_est_cov = besseled_est_cov * annualizer
-    return ann_besseled_est_cov
-
-
-def __get_est_std_of_r(
-        r: FloatSeries,
-        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
-        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
-        est_horizon: int=DEFAULT_EST_HORIZON
-    ) -> Floatlike:
-    est_var = __get_est_cov_of_r(
-        r_a=r, r_b=r,
+    est_std = fst._get_est_std(
+        ser=r,
         de_avg_kind=de_avg_kind,
         est_window_kind=est_window_kind,
         est_horizon=est_horizon
     )
-    est_std = est_var **0.5
-    return est_std
-
-
-def _get_est_corr_of_r(
-        r_a: FloatSeries, r_b: FloatSeries,
-        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
-        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
-        round_dps: Optional[int]=None
-    ) -> Floatlike:
-    # important, else vol's could be calc'ed over inconsistent periods (violating nonnegative-definiteness)
-    common_period = r_a.dropna().index.intersection(r_b.dropna().index)
-    r_a = r_a.loc[common_period]
-    r_b = r_b.loc[common_period]
-    est_cov = __get_est_cov_of_r(r_a=r_a, r_b=r_b, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_a_std = __get_est_std_of_r(r=r_a, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_b_std = __get_est_std_of_r(r=r_b, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_corr = est_cov / (est_a_std * est_b_std)
-    est_corr = round(est_corr, round_dps) if round_dps is not None else est_corr
-    return est_corr
-
-
-def get_est_corr_of_r(
-        r: FloatDF,
-        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
-        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
-        round_dps: Optional[int]=None
-    ) -> FloatDF:
-    est_corr = {
-        a: {
-            b: _get_est_corr_of_r(
-                r_a=r_a, r_b=r_b,
-                de_avg_kind=de_avg_kind,
-                est_window_kind=est_window_kind,
-                round_dps=round_dps
-            )
-        for (b, r_b) in r.iteritems()}
-    for (a, r_a) in r.iteritems()}
-    est_corr = pd.DataFrame(est_corr).T
-    return est_corr
-
-
-########################################################################################################################
-## FINANCIAL EVALUATIONS ###############################################################################################
-########################################################################################################################
-
-# BACKWARD-LOOKING STUFF
-
-def _get_est_er_of_r(
-        r: FloatSeries,
-        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
-        est_horizon: int=DEFAULT_EST_HORIZON,
-        annualizer: int=DAYCOUNTS["BY"]
-    ) -> Floatlike:
-    est_avg = __get_est_avg_of_r(r=r, est_window_kind=est_window_kind, est_horizon=est_horizon)
-    est_er = est_avg * annualizer
-    return est_er
-
-
-def _get_est_vol_of_r(
-        r: FloatSeries,
-        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
-        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
-        est_horizon: int=DEFAULT_EST_HORIZON,
-        annualizer: int=DAYCOUNTS["BY"],
-    ) -> Floatlike:
-    est_std = __get_est_std_of_r(r=r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind, est_horizon=est_horizon)
     est_vol = est_std * annualizer**0.5
     return est_vol
 
@@ -432,9 +226,9 @@ def _get_est_beta_of_r(
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    est_corr = _get_est_corr_of_r(r_a=of_r, r_b=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_of_std = __get_est_std_of_r(r=of_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_on_std = __get_est_std_of_r(r=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_corr = fst._get_est_corr(ser_a=of_r, ser_b=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_of_std = fst._get_est_std(ser=of_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_on_std = fst._get_est_std(ser=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_beta = est_corr * (est_of_std / est_on_std)
     return est_beta
 
@@ -445,6 +239,7 @@ def _get_alpha_t_stat_of_r(
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
+    # TODO(sparshsah)
     _ = of_r, on_r, de_avg_kind, est_window_kind
     return np.nan
 
@@ -468,7 +263,9 @@ def get_alpha_t_stat_of_r(
     return alpha_t_stat
 
 
-# FORWARD-LOOKING STUFF
+########################################################################################################################
+## FORWARD-LOOKING RETURN CONSTRUCTION #################################################################################
+########################################################################################################################
 
 def __get_exante_vol_targeted_xr(
         xr: FloatSeries,
@@ -662,34 +459,6 @@ def _sim_r(
 ## VISUALIZATION #######################################################################################################
 ########################################################################################################################
 
-def _get_metadata_of_r(r: FloatSeries) -> pd.Series:
-    metadata = [
-        (
-            "Frac valid timesteps",
-            r.notna().sum() / len(r.index)
-        ), (
-            "Total valid timesteps",
-            r.notna().sum()
-        ), (
-            "Total timesteps",
-            len(r.index)
-        ), (
-            "First timestep",
-            r.index[0]
-        ), (
-            "First valid timestep",
-            r.first_valid_index()
-        ), (
-            "Last valid timestep",
-            r.last_valid_index()
-        ), (
-            "Last timestep", r.index[-1]
-        )
-    ]
-    metadata = fc.get_series(metadata)
-    return metadata
-
-
 def _get_est_perf_stats_of_r(
         r: FloatSeries,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
@@ -768,7 +537,7 @@ def _round_perf_stats(perf_stats: pd.Series, round_: bool=True) -> pd.Series:
 
 
 def _table_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> pd.Series:
-    metadata = _get_metadata_of_r(r=r)
+    metadata = fst._get_metadata(ser=r)
     est_perf_stats = _get_est_perf_stats_of_r(r=r)
     ####
     collected_stats = pd.concat([est_perf_stats, metadata])
@@ -789,7 +558,7 @@ def table_est_perf_stats_of_r(
     """
     r = fc.get_common_subsample(r) if over_common_subsample else r
     est_standalone_stats = r.apply(_table_est_perf_stats_of_r, axis="index", rounded=rounded)
-    est_corr = get_est_corr_of_r(r=r)
+    est_corr = fst.get_est_corr(ser=r)
     alpha_t_stat = get_alpha_t_stat_of_r(r=r)
     ####
     # flip stat names up into columns
