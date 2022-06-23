@@ -157,6 +157,7 @@ def __get_est_deviations(
 def _get_est_cov(
         ser_a: FloatSeries, ser_b: FloatSeries,
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
+        bessel_degree: Optional[int]=None,
         smoothing_avg_kind: str=DEFAULT_AVG_KIND,
         smoothing_window_kind: str=DEFAULT_SMOOTHING_WINDOW_KIND,
         # pass `1` if you don't want to smooth
@@ -171,10 +172,9 @@ def _get_est_cov(
         which will tend to "filter out" highly-influential one-off outliers.
         If you do this, be sure to also explicitly model kurtosis!
 
-    sources
-    -------
-    https://github.com/sparshsah/foggy-demo/blob/main/demo/stats/risk-bias-variance.ipynb.pdf
-    https://faculty.fuqua.duke.edu/~charvey/Research/Published_Papers/P135_The_impact_of.pdf
+    # Sources
+    * https://github.com/sparshsah/foggy-demo/blob/main/demo/stats/risk-bias-variance.ipynb.pdf
+    * https://faculty.fuqua.duke.edu/~charvey/Research/Published_Papers/P135_The_impact_of.pdf
     """
     df = fc.get_df([
         ("a", ser_a),
@@ -206,15 +206,16 @@ def _get_est_cov(
         horizon=est_horizon
     ).mean()
     # https://en.wikipedia.org/wiki/Bessel%27s_correction
-    # If `de_avg_kind` is None: We treat the mean as known to be zero;
-    # Otherwise: We should bias-correct by post-multiplying T/(T-1).
+    # By default:
+    #   If `de_avg_kind` is None: We treat the mean as known to be zero;
+    #   Otherwise: We should bias-correct by post-multiplying T/(T-1).
     sample_sz = ___get_window(
         est_co_deviations.notna(),  # 1 at every valid index
         kind=est_window_kind,
         horizon=est_horizon
     ).sum()
-    bessel_degrees_of_freedom = bool(de_avg_kind)
-    bessel_factor = sample_sz / ( sample_sz - bessel_degrees_of_freedom )
+    bessel_degree = fc.maybe(bessel_degree, bool(de_avg_kind))
+    bessel_factor = sample_sz / ( sample_sz - bessel_degree )
     besseled_est_cov = est_cov * bessel_factor
     return besseled_est_cov
 
@@ -222,12 +223,14 @@ def _get_est_cov(
 def _get_est_std(
         ser: FloatSeries,
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
+        bessel_degree: Optional[int]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EVAL_HORIZON
     ) -> Floatlike:
     est_var = _get_est_cov(
         ser_a=ser, ser_b=ser,
         de_avg_kind=de_avg_kind,
+        bessel_degree=bessel_degree,
         est_window_kind=est_window_kind,
         est_horizon=est_horizon
     )

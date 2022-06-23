@@ -148,6 +148,7 @@ def _get_est_er_of_r(
 def _get_est_vol_of_r(
         r: FloatSeries,
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
+        bessel_degree: Optional[int]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EST_HORIZON,
         annualizer: int=DAYCOUNTS["BY"],
@@ -177,6 +178,7 @@ def _get_est_vol_of_r(
     est_std = fst._get_est_std(
         ser=r,
         de_avg_kind=de_avg_kind,
+        bessel_degree=bessel_degree,
         est_window_kind=est_window_kind,
         est_horizon=est_horizon
     )
@@ -187,6 +189,7 @@ def _get_est_vol_of_r(
 def _get_est_sharpe_of_r(
         r: FloatSeries,
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
+        bessel_degree: Optional[int]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EST_HORIZON,
         annualizer: int=DAYCOUNTS["BY"]
@@ -200,6 +203,7 @@ def _get_est_sharpe_of_r(
     est_vol = _get_est_vol_of_r(
         r=r,
         de_avg_kind=de_avg_kind,
+        bessel_degree=bessel_degree,
         est_window_kind=est_window_kind,
         est_horizon=est_horizon,
         annualizer=annualizer
