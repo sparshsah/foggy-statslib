@@ -169,8 +169,7 @@ def _get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
 
 def get_cum_r(r: FloatDF, kind: str=DEFAULT_R_KIND) -> FloatDF:
     """Accumulate returns over time."""
-    # ty vectorization on duck-typing
-    cum_r = _get_cum_r(r=r, kind=kind)
+    cum_r = r.apply(_get_cum_r, kind=kind)
     return cum_r
 
 
