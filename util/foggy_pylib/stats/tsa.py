@@ -15,6 +15,7 @@ author: [@sparshsah](https://github.com/sparshsah)
 
 from typing import Union, Optional
 import pandas as pd
+import numpy as np
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
 import foggy_pylib.core as fc
 
@@ -33,7 +34,9 @@ DEFAULT_EST_WINDOW_KIND: str = "ewm"
 DEFAULT_EST_HORIZON: int = 65  # inspired by number of days in a business quarter
 # evaluation, no need to specify horizon
 DEFAULT_EVAL_WINDOW_KIND: str = "full"
-DEFAULT_EVAL_HORIZON: int = DEFAULT_EST_HORIZON  # doesn't matter since window is full
+DEFAULT_EVAL_HORIZON: int = DEFAULT_EST_HORIZON  # technically doesn't matter since window is "full"
+
+REASONABLE_FRACTION_OF_TOTAL: float = 0.95
 
 
 ########################################################################################################################
@@ -76,9 +79,9 @@ def ___get_window(
         ser: pd.Series,
         kind: str=DEFAULT_EVAL_WINDOW_KIND,
         horizon: int=DEFAULT_EVAL_HORIZON,
-        min_periods: Optional[int]=None
+        min_frac: float=REASONABLE_FRACTION_OF_TOTAL
     ) -> pd.core.window.Window:
-    min_periods = fc.maybe(min_periods, ow=horizon)
+    min_periods = int(np.ceil(min_frac * horizon))
     if kind == "full":
         window = ser
     elif kind == "expanding":
@@ -124,9 +127,10 @@ def _get_est_avg(
         ser: FloatSeries,
         avg_kind: str=DEFAULT_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
-        est_horizon: int=DEFAULT_EVAL_HORIZON
+        est_horizon: int=DEFAULT_EVAL_HORIZON,
+        est_min_frac: float=REASONABLE_FRACTION_OF_TOTAL
     ) -> Floatlike:
-    window = ___get_window(ser, kind=est_window_kind, horizon=est_horizon)
+    window = ___get_window(ser, kind=est_window_kind, horizon=est_horizon, min_frac=est_min_frac)
     if avg_kind == "mean":
         est_avg = window.mean()
     elif avg_kind == "median":
@@ -141,6 +145,7 @@ def __get_est_deviations(
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         avg_est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         avg_est_horizon: int=DEFAULT_EVAL_HORIZON,
+        avg_min_frac: float=REASONABLE_FRACTION_OF_TOTAL
     ) -> FloatSeries:
     # thing we're going to remove before calculating deviations
     avg = 0 if de_avg_kind is None else \
@@ -148,7 +153,8 @@ def __get_est_deviations(
             ser=ser,
             avg_kind=de_avg_kind,
             est_window_kind=avg_est_window_kind,
-            est_horizon=avg_est_horizon
+            est_horizon=avg_est_horizon,
+            est_min_frac=avg_min_frac
         )
     est_deviations = ser - avg
     return est_deviations
@@ -164,6 +170,7 @@ def _get_est_cov(
         smoothing_horizon: int=DEFAULT_SMOOTHING_HORIZON,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EVAL_HORIZON,
+        est_min_frac: float=REASONABLE_FRACTION_OF_TOTAL
     ) -> Floatlike:
     """Simple GARCH estimate of covariance.
     The estimate at time `t` incorporates information up to and including `t`.
@@ -176,6 +183,11 @@ def _get_est_cov(
     * https://github.com/sparshsah/foggy-demo/blob/main/demo/stats/risk-bias-variance.ipynb.pdf
     * https://faculty.fuqua.duke.edu/~charvey/Research/Published_Papers/P135_The_impact_of.pdf
     """
+    # this is so hacky... but if I use just `est_min_frac`, then I need to wait
+    # that long for the mean to be estimated (which is enough to estimate deviations) PLUS
+    # that long again for the covariance to be estimated
+    adj_est_min_frac = 0.5 * est_min_frac
+    del est_min_frac
     df = fc.get_df([
         ("a", ser_a),
         ("b", ser_b)
@@ -186,7 +198,8 @@ def _get_est_cov(
             col,
             de_avg_kind=de_avg_kind,
             avg_est_window_kind=est_window_kind,
-            avg_est_horizon=est_horizon
+            avg_est_horizon=est_horizon,
+            avg_min_frac=adj_est_min_frac
         )
     )
     smoothed_est_deviations = est_deviations.apply(
@@ -203,7 +216,8 @@ def _get_est_cov(
     est_cov = ___get_window(
         est_co_deviations,
         kind=est_window_kind,
-        horizon=est_horizon
+        horizon=est_horizon,
+        min_frac=adj_est_min_frac
     ).mean()
     # https://en.wikipedia.org/wiki/Bessel%27s_correction
     # By default:
