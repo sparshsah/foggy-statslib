@@ -192,22 +192,38 @@ def get_xr(r: FloatDF, cash_r: FloatSeries) -> FloatSeries:
 def _get_pnl(
         w: FloatSeries, r: FloatSeries,
         kind: str=DEFAULT_R_KIND,
-        impl_lag: int=IMPL_LAG,
         agg: bool=True
-    ) -> Floatlike:
-    w_ = w.shift(impl_lag)
+    ) -> Union[float, FloatSeries]:
+    """Active pnl at a single timestep."""
     if kind in ["geom", "arith"]:
-        pnl = w_ * r
+        pnl = w * r
     elif kind == "log":
         # init_principal = P
         # end_wealth = w_a*P*e^r_a + w_b*P*e^r_b
         # mult = end_wealth / init_principal = w_a*e^r_a + w_b*e^r_b
         # therefore, return = ln(w_a*e^r_a + w_b*e^r_b)
         mult = np.exp(r)
-        weighted_mult = w_ * mult
+        weighted_mult = w * mult
         pnl = np.log(weighted_mult)
     pnl = _get_agg_r(pnl, kind=kind) if agg else pnl
     return pnl
+
+
+def get_pnl(
+        w: FloatDF, r: FloatDF,
+        kind: str=DEFAULT_R_KIND,
+        impl_lag: int=IMPL_LAG,
+        agg: bool=True
+    ) -> FloatSeriesOrDF:
+    """Active pnl at each timestep."""
+    w_ = w.shift(impl_lag)
+    pnl = fc.get_df([
+        (
+            t,  # key
+            _get_pnl(w=w_.loc[t, :], r=r.loc[t, :], kind=kind, agg=agg)  # value
+        )
+    for t in w_.index])
+    pnl = pd.DataFrame(pnl)
 
 
 ########################################################################################################################
