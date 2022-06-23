@@ -53,8 +53,12 @@ sns.set()
 #     But, `fun: T -> T` accepts any type, returning the SAME type.
 T = Any
 T_ = Any
-Datelike = Union[dt.datetime, str]
 Data = Union[pd.Series, pd.DataFrame]
+FloatSeries = pd.Series
+FloatDF = pd.DataFrame
+FloatSeriesOrDF = Union[FloatSeries, FloatDF]
+Floatlike = Union[float, FloatSeriesOrDF]
+Datelike = Union[dt.datetime, str]
 
 TYPEFACE = "Arial"
 FONT_SCALE = 1
