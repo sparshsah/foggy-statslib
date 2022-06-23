@@ -12,7 +12,7 @@ author: [@sparshsah](https://github.com/sparshsah)
     specified portfolio stat taking as ground truth the given market params.
 """
 
-from typing import Tuple, Dict, Optional
+from typing import Tuple, Dict, Union, Optional
 from collections import OrderedDict
 import pandas as pd
 import numpy as np
@@ -44,7 +44,8 @@ DAYCOUNTS: pd.Series = fc.get_series([
 IMPL_LAG: int = 2
 
 # analytical or portfolio-construction choices that we do control
-DEFAULT_R_KIND: str = "log"
+DEFAULT_R_KIND: str = "geom"
+DEFAULT_PLOT_CUM_R_KIND: str = "log-of-geom"
 # nice standard number to target
 DEFAULT_VOL: float = 0.10
 
@@ -77,81 +78,121 @@ ROUND_DPS: pd.Series = fc.get_series([
 ########################################################################################################################
 
 def __get_r_from_mult(mult: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
-    if kind == "log":
-        r = np.log(mult)
-    elif kind in ["arith", "geom"]:
+    if kind in ["geom", "arith"]:
         r = mult-1
+    elif kind == "log":
+        r = np.log(mult)
     else:
         raise ValueError(kind)
+    r = r.rename(mult.name)
     return r
 
 
 def __get_mult(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
-    if kind == "log":
-        mult = np.exp(r)
-    elif kind in ["arith", "geom"]:
+    if kind in ["geom", "arith"]:
         mult = 1+r
+    elif kind == "log":
+        mult = np.exp(r)
     else:
         raise ValueError(kind)
+    mult = mult.rename(r.name)
     return mult
 
 
 def _get_r_from_px(px: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
-    if kind == "arith":
-        r = px.diff()
+    if kind == "geom":
+        mult = px / px.shift()
+        r = mult-1
     elif kind == "log":
-        r = px / px.shift()
-        r = np.log(r)
-    elif kind == "geom":
-        r = px / px.shift()
-        r = r - 1
+        mult = px / px.shift()
+        r = np.log(mult)
+    elif kind == "arith":
+        r = px.diff()
     else:
         raise ValueError(kind)
+    r = r.rename(px.name)
     return r
 
 
-def _get_r_from_yld(yld: FloatSeries, dur: float=DEFAULT_BOND_DUR, annualizer: int=DAYCOUNTS["BY"]) -> FloatSeries:
-    """Approximation for a constant-duration bond, assuming log yields."""
+def _get_r_from_yld(
+        yld: FloatSeries,
+        dur: Union[float, FloatSeries]=DEFAULT_BOND_DUR,
+        annualizer: int=DAYCOUNTS["BY"]
+    ) -> FloatSeries:
+    """Approximation assuming log yields."""
     single_day_carry_exposed_return = yld.shift() / annualizer
     # remember: duration is in years, so we must use annualized yields
+    dur = FloatSeries(dur, index=yld.index)
     delta_yld = yld - yld.shift()
-    duration_exposed_return = -dur * (delta_yld)
+    duration_exposed_return = -dur.shift() * delta_yld
+    # combine the two effects
     r = single_day_carry_exposed_return + duration_exposed_return
+    r = r.rename(name=yld.name)
     return r
 
 
-def _get_xr(r: FloatSeries, cash_r: FloatSeries) -> FloatSeries:
-    """Excess-of-cash returns."""
-    cash_r = cash_r.reindex(index=r.index).rename(r.name)
-    xr = r - cash_r
-    return xr
+def _get_agg_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> float:
+    """Aggregate returns across a single timestep."""
+    if kind in ["geom", "arith"]:
+        agg_r = r.sum()
+    elif kind == "log":
+        mults = np.exp(r)
+        agg_mult = mults.sum()
+        agg_r = np.log(agg_mult)
+    agg_r = agg_r.rename(r.name)
+    return agg_r
+
+
+def get_agg_r(r: FloatDF, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+    """Aggregate returns across each timestep."""
+    agg_r = r.apply(_get_agg_r, kind=kind, axis="columns")
+    return agg_r
 
 
 def _get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
-    if kind == "arith":
-        cum_r = r.cumsum()
-    elif kind == "log":
-        cum_r = r.cumsum()
-    elif kind == "geom":
-        cum_r = (1+r).cumprod() - 1
-    elif kind == "geom_to_log":
+    """Accumulate returns over time."""
+    if kind == "geom":
+        cum_r = (1+r).cumprod()
+        cum_r = cum_r - 1
+    elif kind == "log-of-geom":
         cum_r = (1+r).cumprod()
         cum_r = np.log(cum_r)
+    elif kind == "log":
+        cum_r = r.cumsum()
+    elif kind == "arith":
+        cum_r = r.cumsum()
     else:
         raise ValueError(kind)
+    cum_r = cum_r.rename(r.name)
     return cum_r
 
 
 def get_cum_r(r: FloatDF, kind: str=DEFAULT_R_KIND) -> FloatDF:
-    # ty duck typing
+    """Accumulate returns over time."""
+    # ty vectorization on duck-typing
     cum_r = _get_cum_r(r=r, kind=kind)
     return cum_r
 
 
-def _get_pnl(w: FloatSeries, r: FloatSeries, impl_lag: int=IMPL_LAG, agg: bool=True) -> Floatlike:
+def _get_xr(r: FloatSeries, cash_r: FloatSeries) -> FloatSeries:
+    """Excess-of-cash returns."""
+    cash_r = cash_r.reindex(index=r.index)
+    # obviously works for geom and arith r_kind
+    # but, works for log too: ln(e**r / e**cash_r) = r - cash_r
+    xr = r - cash_r
+    xr = xr.rename(r.name)
+    return xr
+
+
+def _get_pnl(
+        w: FloatSeries, r: FloatSeries,
+        kind: str=DEFAULT_R_KIND,
+        impl_lag: int=IMPL_LAG,
+        agg: bool=True
+    ) -> Floatlike:
     w_ = w.shift(impl_lag)
-    pnl = r @ w_
-    pnl = pnl.sum() if agg else pnl
+    pnl = w_ @ r
+    pnl = _get_agg_r(pnl, kind=kind) if agg else pnl
     return pnl
 
 
@@ -167,21 +208,18 @@ def _get_est_er_of_r(
         est_horizon: int=DEFAULT_EST_HORIZON,
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
-    if avg_kind.startswith("arith"):
-        est_avg_r = fset._get_est_avg(
-            ser=r,
+    def _get_est_avg(ser: FloatSeries) -> float:
+        return fset._get_est_avg(
+            ser=ser,
             avg_kind=avg_kind,
             est_window_kind=est_window_kind,
             est_horizon=est_horizon
         )
+    if avg_kind.startswith("arith"):
+        est_avg_r = _get_est_avg(ser=r)
     else:
         mult = __get_mult(r=r, kind=r_kind)
-        est_avg_mult = fset._get_est_avg(
-            ser=mult,
-            avg_kind=avg_kind,
-            est_window_kind=est_window_kind,
-            est_horizon=est_horizon
-        )
+        est_avg_mult = _get_est_avg(ser=mult)
         est_avg_r = __get_r_from_mult(mult=est_avg_mult, kind=r_kind)
     ann_est_avg_r = annualizer * est_avg_r
     return ann_est_avg_r
@@ -193,7 +231,7 @@ def _get_est_vol_of_r(
         bessel_degree: Optional[int]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EST_HORIZON,
-        annualizer: int=DAYCOUNTS["BY"],
+        annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
     """
     By the way, you'll often hear that a financial risk model should
@@ -230,6 +268,7 @@ def _get_est_vol_of_r(
 
 def _get_est_sharpe_of_r(
         r: FloatSeries,
+        r_kind: str=DEFAULT_R_KIND,
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         bessel_degree: Optional[int]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
@@ -238,6 +277,7 @@ def _get_est_sharpe_of_r(
     ) -> Floatlike:
     est_er = _get_est_er_of_r(
         r=r,
+        r_kind=r_kind,
         est_window_kind=est_window_kind,
         est_horizon=est_horizon,
         annualizer=annualizer
@@ -256,11 +296,18 @@ def _get_est_sharpe_of_r(
 
 def _get_t_stat_of_r(
         r: FloatSeries,
+        r_kind: str=DEFAULT_R_KIND,
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
     # https://web.stanford.edu/~wfsharpe/art/sr/sr.htm
-    granular_est_sharpe = _get_est_sharpe_of_r(r=r, de_avg_kind=de_avg_kind, est_window_kind=window_kind, annualizer=1)
+    granular_est_sharpe = _get_est_sharpe_of_r(
+        r=r,
+        r_kind=r_kind,
+        de_avg_kind=de_avg_kind,
+        est_window_kind=window_kind,
+        annualizer=1
+    )
     valid_timesteps = r.notna().sum()
     t_stat = granular_est_sharpe * valid_timesteps**0.5
     return t_stat
@@ -272,10 +319,14 @@ def _get_est_beta_of_r(
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    est_corr = fset._get_est_corr(ser_a=of_r, ser_b=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_of_std = fset._get_est_std(ser=of_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_on_std = fset._get_est_std(ser=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_beta = est_corr * (est_of_std / est_on_std)
+    est_corr = fset._get_est_corr(
+        ser_a=of_r, ser_b=on_r,
+        de_avg_kind=de_avg_kind,
+        est_window_kind=est_window_kind
+    )
+    est_beta = (est_of_std / est_on_std) * est_corr
     return est_beta
 
 
