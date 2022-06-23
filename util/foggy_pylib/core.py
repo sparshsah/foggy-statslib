@@ -60,6 +60,7 @@ FloatSeriesOrDF = Union[FloatSeries, FloatDF]
 Floatlike = Union[float, FloatSeriesOrDF]
 Datelike = Union[dt.datetime, str]
 
+REASONABLE_FRACTION_OF_TOTAL: float = 0.95
 TYPEFACE = "Arial"
 FONT_SCALE = 1
 LABEL_FONTSIZE = 12
