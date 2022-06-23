@@ -40,6 +40,19 @@ DEFAULT_EVAL_HORIZON: int = DEFAULT_EST_HORIZON  # technically doesn't matter si
 REASONABLE_FRACTION_OF_TOTAL: float = 0.95
 
 
+# some preprocessing
+if not hasattr(pd.Series, "gmean"):
+    def pd_series_gmean(self: pd.Series) -> pd.Series:
+        return sps.stats.gmean(self)
+    pd.Series.gmean = pd_series_gmean
+    del pd_series_gmean
+if not hasattr(pd.Series, "hmean"):
+    def pd_series_hmean(self: pd.Series) -> pd.Series:
+        return sps.stats.hmean(self)
+    pd.Series.gmean = pd_series_hmean
+    del pd_series_hmean
+
+
 ########################################################################################################################
 ## DATA DESCRIPTION ####################################################################################################
 ########################################################################################################################
@@ -138,9 +151,9 @@ def _get_est_avg(
     elif avg_kind == "arith_median":
         est_avg = window.median()
     elif avg_kind == "geom_mean":
-        est_avg = window.apply(sps.gmean)
+        est_avg = window.gmean() if hasattr(window, "gmean") else window.apply(sps.stats.gmean)
     elif avg_kind == "har_mean":
-        est_avg = window.apply(sps.hmean)
+        est_avg = window.hmean() if hasattr(window, "hmean") else window.apply(sps.stats.hmean)
     else:
         raise ValueError(avg_kind)
     return est_avg
