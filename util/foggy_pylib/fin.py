@@ -24,8 +24,10 @@ import foggy_pylib.core as fc
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/stats/tsa.py
 import foggy_pylib.stats.est.tsa as fset
 
-from foggy_pylib.stats.tsa import FloatSeries, FloatDF, FloatSeriesOrDF, Floatlike, \
-    DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND, DEFAULT_EST_WINDOW_KIND, DEFAULT_EST_HORIZON, DEFAULT_EVAL_WINDOW_KIND
+from foggy_pylib.core import FloatSeries, FloatDF, FloatSeriesOrDF, Floatlike
+from foggy_pylib.stats.est.tsa import DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND, \
+    DEFAULT_EST_WINDOW_KIND, DEFAULT_EST_HORIZON, DEFAULT_EVAL_WINDOW_KIND
+
 
 # market facts that we can't control
 # approx duration of a 10Y US treasury note in a "normal" rates climate
