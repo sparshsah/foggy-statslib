@@ -6,20 +6,14 @@ v1.0 beta: API probably won't dramatically change, but
 author: [@sparshsah](https://github.com/sparshsah)
 """
 
-from typing import Union, Optional
+from typing import Optional
 import pandas as pd
 import numpy as np
 import scipy.stats as sps
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
 import foggy_pylib.core as fc
-
-FloatSeries = pd.Series
-FloatDF = pd.DataFrame
-FloatSeriesOrDF = Union[FloatSeries, FloatDF]
-Floatlike = Union[float, FloatSeriesOrDF]
-
-DEFAULT_AVG_KIND: str = "arith_mean"
-DEFAULT_DE_AVG_KIND: Optional[str] = DEFAULT_AVG_KIND
+from foggy_pylib.core import FloatSeries, FloatDF, Floatlike, REASONABLE_FRACTION_OF_TOTAL
+from foggy_pylib.stats.est.core import DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND
 
 DEFAULT_SMOOTHING_WINDOW_KIND: str = "rolling"
 DEFAULT_SMOOTHING_HORIZON: int = 3  # overlap of yesterday, today, and tomorrow
@@ -29,8 +23,6 @@ DEFAULT_EST_HORIZON: int = 65  # inspired by number of days in a business quarte
 # evaluation, no need to specify horizon
 DEFAULT_EVAL_WINDOW_KIND: str = "full"
 DEFAULT_EVAL_HORIZON: int = DEFAULT_EST_HORIZON  # technically doesn't matter since window is "full"
-
-REASONABLE_FRACTION_OF_TOTAL: float = 0.95
 
 
 # some preprocessing
