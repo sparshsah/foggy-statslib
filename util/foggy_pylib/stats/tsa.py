@@ -16,6 +16,7 @@ author: [@sparshsah](https://github.com/sparshsah)
 from typing import Union, Optional
 import pandas as pd
 import numpy as np
+import scipy.stats as sps
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
 import foggy_pylib.core as fc
 
@@ -24,7 +25,7 @@ FloatDF = pd.DataFrame
 FloatSeriesOrDF = Union[FloatSeries, FloatDF]
 Floatlike = Union[float, FloatSeriesOrDF]
 
-DEFAULT_AVG_KIND: str = "mean"
+DEFAULT_AVG_KIND: str = "arith_mean"
 DEFAULT_DE_AVG_KIND: Optional[str] = DEFAULT_AVG_KIND
 
 DEFAULT_SMOOTHING_WINDOW_KIND: str = "rolling"
@@ -130,11 +131,16 @@ def _get_est_avg(
         est_horizon: int=DEFAULT_EVAL_HORIZON,
         est_min_frac: float=REASONABLE_FRACTION_OF_TOTAL
     ) -> Floatlike:
+    """https://en.wikipedia.org/wiki/Generalized_mean"""
     window = ___get_window(ser, kind=est_window_kind, horizon=est_horizon, min_frac=est_min_frac)
-    if avg_kind == "mean":
+    if avg_kind == "arith_mean":
         est_avg = window.mean()
-    elif avg_kind == "median":
+    elif avg_kind == "arith_median":
         est_avg = window.median()
+    elif avg_kind == "geom_mean":
+        est_avg = window.apply(sps.gmean)
+    elif avg_kind == "har_mean":
+        est_avg = window.apply(sps.hmean)
     else:
         raise ValueError(avg_kind)
     return est_avg

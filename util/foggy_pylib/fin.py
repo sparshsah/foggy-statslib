@@ -25,7 +25,7 @@ import foggy_pylib.core as fc
 import foggy_pylib.stats.tsa as fst
 
 from foggy_pylib.stats.tsa import FloatSeries, FloatDF, FloatSeriesOrDF, Floatlike, \
-    DEFAULT_DE_AVG_KIND, DEFAULT_EST_WINDOW_KIND, DEFAULT_EST_HORIZON, DEFAULT_EVAL_WINDOW_KIND
+    DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND, DEFAULT_EST_WINDOW_KIND, DEFAULT_EST_HORIZON, DEFAULT_EVAL_WINDOW_KIND
 
 # market facts that we can't control
 # approx duration of a 10Y US treasury note in a "normal" rates climate
@@ -73,6 +73,26 @@ ROUND_DPS: pd.Series = fc.get_series([
 ########################################################################################################################
 ## RETURN MANIPULATIONS ################################################################################################
 ########################################################################################################################
+
+def __get_r_from_mult(mult: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+    if kind == "log":
+        r = np.log(r)
+    elif kind in ["arith", "geom"]:
+        r = mult-1
+    else:
+        raise ValueError(kind)
+    return r
+
+
+def __get_mult(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+    if kind == "log":
+        mult = np.exp(r)
+    elif kind in ["arith", "geom"]:
+        mult = 1+r
+    else:
+        raise ValueError(kind)
+    return mult
+
 
 def _get_r_from_px(px: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     if kind == "arith":
@@ -139,13 +159,22 @@ def _get_pnl(w: FloatSeries, r: FloatSeries, impl_lag: int=IMPL_LAG, agg: bool=T
 
 def _get_est_er_of_r(
         r: FloatSeries,
+        r_kind: str=DEFAULT_R_KIND,
+        avg_kind: str=DEFAULT_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         est_horizon: int=DEFAULT_EST_HORIZON,
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
-    est_avg = fst._get_est_avg(ser=r, est_window_kind=est_window_kind, est_horizon=est_horizon)
-    est_er = est_avg * annualizer
-    return est_er
+    mult = __get_mult(r=r, kind=r_kind)
+    est_avg_mult = fst._get_est_avg(
+        ser=mult,
+        avg_kind=avg_kind,
+        est_window_kind=est_window_kind,
+        est_horizon=est_horizon
+    )
+    est_avg_r = __get_r_from_mult(mult=est_avg_mult, kind=r_kind)
+    ann_est_avg_r = annualizer * est_avg_r
+    return ann_est_avg_r
 
 
 def _get_est_vol_of_r(
@@ -178,15 +207,15 @@ def _get_est_vol_of_r(
             But when estimating risk, it's a different story:
             Volatility is, by definition, "just" market noise!
     """
-    est_std = fst._get_est_std(
+    est_vol = fst._get_est_std(
         ser=r,
         de_avg_kind=de_avg_kind,
         bessel_degree=bessel_degree,
         est_window_kind=est_window_kind,
         est_horizon=est_horizon
     )
-    est_vol = est_std * annualizer**0.5
-    return est_vol
+    ann_est_vol = annualizer**0.5 * est_vol
+    return ann_est_vol
 
 
 def _get_est_sharpe_of_r(
