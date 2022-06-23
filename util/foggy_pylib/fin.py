@@ -76,7 +76,7 @@ ROUND_DPS: pd.Series = fc.get_series([
 
 def __get_r_from_mult(mult: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     if kind == "log":
-        r = np.log(r)
+        r = np.log(mult)
     elif kind in ["arith", "geom"]:
         r = mult-1
     else:
