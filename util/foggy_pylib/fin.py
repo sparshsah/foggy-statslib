@@ -165,14 +165,22 @@ def _get_est_er_of_r(
         est_horizon: int=DEFAULT_EST_HORIZON,
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
-    mult = __get_mult(r=r, kind=r_kind)
-    est_avg_mult = fst._get_est_avg(
-        ser=mult,
-        avg_kind=avg_kind,
-        est_window_kind=est_window_kind,
-        est_horizon=est_horizon
-    )
-    est_avg_r = __get_r_from_mult(mult=est_avg_mult, kind=r_kind)
+    if avg_kind.startswith("arith"):
+        est_avg_r = fst._get_est_avg(
+            ser=r,
+            avg_kind=avg_kind,
+            est_window_kind=est_window_kind,
+            est_horizon=est_horizon
+        )
+    else:
+        mult = __get_mult(r=r, kind=r_kind)
+        est_avg_mult = fst._get_est_avg(
+            ser=mult,
+            avg_kind=avg_kind,
+            est_window_kind=est_window_kind,
+            est_horizon=est_horizon
+        )
+        est_avg_r = __get_r_from_mult(mult=est_avg_mult, kind=r_kind)
     ann_est_avg_r = annualizer * est_avg_r
     return ann_est_avg_r
 
