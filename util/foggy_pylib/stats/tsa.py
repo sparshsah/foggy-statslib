@@ -49,7 +49,7 @@ if not hasattr(pd.Series, "gmean"):
 if not hasattr(pd.Series, "hmean"):
     def pd_series_hmean(self: pd.Series) -> pd.Series:
         return sps.stats.hmean(self)
-    pd.Series.gmean = pd_series_hmean
+    pd.Series.hmean = pd_series_hmean
     del pd_series_hmean
 
 
