@@ -15,6 +15,8 @@ author: [@sparshsah](https://github.com/sparshsah)
 
 from typing import Optional
 # pylint: disable=unused-import
+from numpy import mean as get_amean
+# pylint: disable=unused-import
 from scipy.stats import gmean as get_gmean, hmean as get_hmean
 from foggy_pylib.core import FloatSeries
 
