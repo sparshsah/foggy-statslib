@@ -136,8 +136,8 @@ def _get_agg_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> float:
     if kind in ["geom", "arith"]:
         agg_r = r.sum()
     elif kind == "log":
-        mults = np.exp(r)
-        agg_mult = mults.sum()
+        mult = np.exp(r)
+        agg_mult = mult.sum()
         agg_r = np.log(agg_mult)
     agg_r = agg_r.rename(r.name)
     return agg_r
@@ -178,7 +178,7 @@ def _get_xr(r: FloatSeries, cash_r: FloatSeries) -> FloatSeries:
     """Excess-of-cash returns."""
     cash_r = cash_r.reindex(index=r.index)
     # obviously works for geom and arith r_kind
-    # but, works for log too: ln(e**r / e**cash_r) = r - cash_r
+    # but, works for log too: ln(e^r / e^cash_r) = r - cash_r
     xr = r - cash_r
     xr = xr.rename(r.name)
     return xr
@@ -191,7 +191,16 @@ def _get_pnl(
         agg: bool=True
     ) -> Floatlike:
     w_ = w.shift(impl_lag)
-    pnl = w_ @ r
+    if kind in ["geom", "arith"]:
+        pnl = w_ * r
+    elif kind == "log":
+        # init_principal = P
+        # end_wealth = w_a*P*e^r_a + w_b*P*e^r_b
+        # mult = end_wealth / init_principal = w_a*e^r_a + w_b*e^r_b
+        # therefore, return = ln(w_a*e^r_a + w_b*e^r_b)
+        mult = np.exp(r)
+        weighted_mult = w_ * mult
+        pnl = np.log(weighted_mult)
     pnl = _get_agg_r(pnl, kind=kind) if agg else pnl
     return pnl
 
