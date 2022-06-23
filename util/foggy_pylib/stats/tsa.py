@@ -78,7 +78,7 @@ def ___get_window(
         horizon: int=DEFAULT_EVAL_HORIZON,
         min_periods: Optional[int]=None
     ) -> pd.core.window.Window:
-    min_periods = fc.maybe(min_periods, ow=int(horizon/2))
+    min_periods = fc.maybe(min_periods, ow=horizon)
     if kind == "full":
         window = ser
     elif kind == "expanding":
