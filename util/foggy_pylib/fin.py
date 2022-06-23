@@ -22,7 +22,7 @@ import seaborn as sns
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
 import foggy_pylib.core as fc
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/stats/tsa.py
-import foggy_pylib.stats.tsa as fst
+import foggy_pylib.stats.est.tsa as fset
 
 from foggy_pylib.stats.tsa import FloatSeries, FloatDF, FloatSeriesOrDF, Floatlike, \
     DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND, DEFAULT_EST_WINDOW_KIND, DEFAULT_EST_HORIZON, DEFAULT_EVAL_WINDOW_KIND
@@ -166,7 +166,7 @@ def _get_est_er_of_r(
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
     if avg_kind.startswith("arith"):
-        est_avg_r = fst._get_est_avg(
+        est_avg_r = fset._get_est_avg(
             ser=r,
             avg_kind=avg_kind,
             est_window_kind=est_window_kind,
@@ -174,7 +174,7 @@ def _get_est_er_of_r(
         )
     else:
         mult = __get_mult(r=r, kind=r_kind)
-        est_avg_mult = fst._get_est_avg(
+        est_avg_mult = fset._get_est_avg(
             ser=mult,
             avg_kind=avg_kind,
             est_window_kind=est_window_kind,
@@ -215,7 +215,7 @@ def _get_est_vol_of_r(
             But when estimating risk, it's a different story:
             Volatility is, by definition, "just" market noise!
     """
-    est_vol = fst._get_est_std(
+    est_vol = fset._get_est_std(
         ser=r,
         de_avg_kind=de_avg_kind,
         bessel_degree=bessel_degree,
@@ -270,9 +270,9 @@ def _get_est_beta_of_r(
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    est_corr = fst._get_est_corr(ser_a=of_r, ser_b=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_of_std = fst._get_est_std(ser=of_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_on_std = fst._get_est_std(ser=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_corr = fset._get_est_corr(ser_a=of_r, ser_b=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_of_std = fset._get_est_std(ser=of_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_on_std = fset._get_est_std(ser=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_beta = est_corr * (est_of_std / est_on_std)
     return est_beta
 
@@ -581,7 +581,7 @@ def _round_perf_stats(perf_stats: pd.Series, round_: bool=True) -> pd.Series:
 
 
 def _table_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> pd.Series:
-    metadata = fst._get_metadata(ser=r)
+    metadata = fset._get_metadata(ser=r)
     est_perf_stats = _get_est_perf_stats_of_r(r=r)
     ####
     collected_stats = pd.concat([est_perf_stats, metadata])
@@ -602,7 +602,7 @@ def table_est_perf_stats_of_r(
     """
     r = fc.get_common_subsample(r) if over_common_subsample else r
     est_standalone_stats = r.apply(_table_est_perf_stats_of_r, axis="index", rounded=rounded)
-    est_corr = fst.get_est_corr(ser=r)
+    est_corr = fset.get_est_corr(ser=r)
     alpha_t_stat = get_alpha_t_stat_of_r(r=r)
     ####
     # flip stat names up into columns
