@@ -25,19 +25,6 @@ DEFAULT_EVAL_WINDOW_KIND: str = "full"
 DEFAULT_EVAL_HORIZON: int = DEFAULT_EST_HORIZON  # technically doesn't matter since window is "full"
 
 
-# some preprocessing
-if not hasattr(pd.Series, "gmean"):
-    def pd_series_gmean(self: pd.Series) -> pd.Series:
-        return sps.stats.gmean(self)
-    pd.Series.gmean = pd_series_gmean
-    del pd_series_gmean
-if not hasattr(pd.Series, "hmean"):
-    def pd_series_hmean(self: pd.Series) -> pd.Series:
-        return sps.stats.hmean(self)
-    pd.Series.hmean = pd_series_hmean
-    del pd_series_hmean
-
-
 ########################################################################################################################
 ## DATA DESCRIPTION ####################################################################################################
 ########################################################################################################################
