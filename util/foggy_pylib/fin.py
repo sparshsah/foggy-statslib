@@ -112,6 +112,9 @@ def _get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
         cum_r = r.cumsum()
     elif kind == "geom":
         cum_r = (1+r).cumprod() - 1
+    elif kind == "geom_to_log":
+        cum_r = (1+r).cumprod()
+        cum_r = np.log(cum_r)
     else:
         raise ValueError(kind)
     return cum_r
