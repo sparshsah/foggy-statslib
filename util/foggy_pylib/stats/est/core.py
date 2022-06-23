@@ -13,8 +13,17 @@ author: [@sparshsah](https://github.com/sparshsah)
     using the data to instead inform our posterior distribution for the parameter.
 """
 
-import pandas as pd
+from typing import Optional
+# pylint: disable=unused-import
 from scipy.stats import gmean as get_gmean, hmean as get_hmean
+from foggy_pylib.core import FloatSeries
+
+DEFAULT_AVG_KIND: str = "arith_mean"
+DEFAULT_DE_AVG_KIND: Optional[str] = DEFAULT_AVG_KIND
 
 
-def
+def get_qmean(a: FloatSeries) -> float:
+    square = a**2
+    mean_square = square.mean()
+    root_mean_square = mean_square**0.5
+    return root_mean_square
