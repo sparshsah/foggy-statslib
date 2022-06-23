@@ -183,6 +183,12 @@ def _get_xr(r: FloatSeries, cash_r: FloatSeries) -> FloatSeries:
     return xr
 
 
+def get_xr(r: FloatDF, cash_r: FloatSeries) -> FloatSeries:
+    """Excess-of-cash returns."""
+    xr = r.apply(_get_xr, cash_r=cash_r)
+    return xr
+
+
 def _get_pnl(
         w: FloatSeries, r: FloatSeries,
         kind: str=DEFAULT_R_KIND,
