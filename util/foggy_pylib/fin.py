@@ -200,10 +200,10 @@ def get_xr(r: FloatDF, cash_r: FloatSeries) -> FloatSeries:
     return xr
 
 
-def __get_lev_xr(lev: float, xr: float, kind: str=DEFAULT_R_KIND) -> float:
-    """Levered excess-of-cash return."""
+def __get_levered_xr(lev: float, xr: float, kind: str=DEFAULT_R_KIND) -> float:
+    """Levered excess-of-cash return at a single timestep for a single asset."""
     if kind in ["geom", "arith"]:
-        lev_xr = lev * xr
+        levered_xr = lev * xr
     elif kind == "log":
         # P := principal_amount
         #   risked_amount = lev * P
@@ -212,8 +212,26 @@ def __get_lev_xr(lev: float, xr: float, kind: str=DEFAULT_R_KIND) -> float:
         # mult := final_amount / principal_amount = lev * e^xr  +  (1-lev)
         # lev_xr = ln(mult) = ln(lev * e^xr  +  1-lev)
         mult = lev*np.exp(xr) + 1-lev
-        lev_xr = __get_r_from_mult(mult=mult, kind=kind)
-    return lev_xr
+        levered_xr = __get_r_from_mult(mult=mult, kind=kind)
+    return levered_xr
+
+
+def _get_levered_xr(lev: FloatSeries, xr: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+    """Levered excess-of-cash return at a single timestep for each asset."""
+    levered_xr = [(ccy,
+        __get_levered_xr(lev=lev.loc[ccy], xr=xr.loc[ccy], kind=kind)
+    ) for ccy in lev.index]
+    levered_xr = fc.get_series(levered_xr)
+    return levered_xr
+
+
+def get_levered_xr(lev: FloatDF, xr: FloatDF, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+    """Levered excess-of-cash return at each timestep for each asset."""
+    levered_xr = [(t,
+        _get_levered_xr(lev=lev.loc[t, :], xr=xr.loc[t, :], kind=kind)
+    ) for t in lev.index]
+    levered_xr = fc.get_df(levered_xr, values_are="rows")
+    return levered_xr
 
 
 def _get_pnl(
@@ -669,7 +687,7 @@ def get_est_perf_stats_of_r(
         _get_est_perf_stats_of_r(r=col, est_window_kind=est_window_kind, est_horizon=est_horizon)
     ) for (colname, col) in r.items()]
     ####
-    est_perf_stats = fc.get_df(est_perf_stats)
+    est_perf_stats = fc.get_df(est_perf_stats, values_are="columns")
     # if each value was a DF, we'll get MultiIndex columns and want to flip stat names up to top-level
     if isinstance(est_perf_stats.columns, pd.MultiIndex):
         est_perf_stats = est_perf_stats.swaplevel(axis="columns")
