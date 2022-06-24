@@ -152,7 +152,7 @@ def get_xr(r: FloatDF, cash_r: FloatSeries) -> FloatSeries:
 
 
 def __get_levered_xr(lev: float, xr: float, kind: str=DEFAULT_R_KIND) -> float:
-    """Levered excess-of-cash return at a single timestep for a single asset."""
+    """Levered excess-of-cash return at a _single timestep_ for a _single asset_."""
     # principal_amount       =:            P
     ##  risked_amount        =      lev  * P
     ##  cash_balance         =   (1-lev) * P
@@ -178,7 +178,7 @@ def __get_levered_xr(lev: float, xr: float, kind: str=DEFAULT_R_KIND) -> float:
 
 
 def _get_levered_xr(lev: FloatSeries, xr: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
-    """Levered excess-of-cash return at a single timestep for each asset."""
+    """Levered excess-of-cash return at a _single timestep_ for each asset."""
     levered_xr = [(ccy,
         __get_levered_xr(lev=lev.loc[ccy], xr=xr.loc[ccy], kind=kind)
     ) for ccy in lev.index]
@@ -221,11 +221,11 @@ def get_agg_r(r: FloatDF, kind: str=DEFAULT_R_KIND) -> FloatSeries:
 def _get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     """Accumulate returns over time."""
     if kind == "geom":
-        cum_r = (1+r).cumprod()
-        cum_r = cum_r - 1
+        cum_mult = (1+r).cumprod()
+        cum_r = cum_mult - 1
     elif kind == "log-of-geom":
-        cum_r = (1+r).cumprod()
-        cum_r = np.log(cum_r)
+        cum_mult = (1+r).cumprod()
+        cum_r = np.log(cum_mult)
     elif kind == "log":
         cum_r = r.cumsum()
     elif kind == "arith":
