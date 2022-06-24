@@ -496,6 +496,8 @@ def _get_fcast_vol_targeted_xr(
         whose realized sample volatility will be exactly equal to `tgt_vol`.
     """
     est_vol = _get_est_vol_of_r(r=xr, est_window_kind=est_window_kind)
+    # pad if this was a scalar (e.g. if est_window_kind == "full")
+    est_vol = pd.Series(est_vol, index=xr.index)
     # At the end of each session (t), we review the data,
     # then trade up or down over the next session (t+1) to hit this much leverage,
     # finally earning the corresponding return over the next-next session (t+2).
@@ -557,6 +559,8 @@ def _get_fcast_hedged_xr(
     """
     # at the end of each day, we submit an order to short this much of the hedge asset
     est_beta = _get_est_beta_of_r(of_r=base_xr, on_r=hedge_xr, est_window_kind=est_window_kind)
+    # pad if this was a scalar (e.g. if est_window_kind == "full")
+    est_beta = pd.Series(est_beta, index=base_xr.index)
     exante_beta = est_beta.shift(impl_lag)
     hedged_xr = __get_exante_hedged_xr(base_xr=base_xr, hedge_xr=hedge_xr, beta=exante_beta, kind=r_kind)
     return hedged_xr
