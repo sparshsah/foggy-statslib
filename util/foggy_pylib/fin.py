@@ -44,8 +44,8 @@ DAYCOUNTS: pd.Series = fc.get_series([
 IMPL_LAG: int = 2
 
 # analytical or portfolio-construction choices that we do control
-DEFAULT_R_KIND: str = "geom"
-DEFAULT_PLOT_CUM_R_KIND: str = "log-of-geom"
+DEFAULT_R_KIND: str = "log"
+DEFAULT_PLOT_CUM_R_KIND: str = DEFAULT_R_KIND
 # nice standard number to target
 DEFAULT_VOL: float = 0.10
 CASH_NAME: str = "cash"
