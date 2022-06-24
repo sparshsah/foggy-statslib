@@ -78,24 +78,34 @@ ROUND_DPS: pd.Series = fc.get_series([
 ## RETURN MANIPULATIONS ################################################################################################
 ########################################################################################################################
 
-def __get_r_from_mult(mult: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+def ___get_r_from_mult(mult: float, kind: str=DEFAULT_R_KIND) -> float:
     if kind in ["geom", "arith"]:
         r = mult-1
     elif kind == "log":
         r = np.log(mult)
     else:
         raise ValueError(kind)
+    return r
+
+
+def __get_r_from_mult(mult: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+    r = mult.map(___get_r_from_mult)
     r = r.rename(mult.name)
     return r
 
 
-def __get_mult(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+def ___get_mult(r: float, kind: str=DEFAULT_R_KIND) -> float:
     if kind in ["geom", "arith"]:
         mult = 1+r
     elif kind == "log":
         mult = np.exp(r)
     else:
         raise ValueError(kind)
+    return mult
+
+
+def __get_mult(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+    mult = r.map(___get_mult)
     mult = mult.rename(r.name)
     return mult
 
@@ -271,7 +281,7 @@ def _get_est_er_of_r(
     else:
         mult = __get_mult(r=r, kind=r_kind)
         est_avg_mult = _get_est_avg(ser=mult)
-        est_avg_r = __get_r_from_mult(mult=est_avg_mult, kind=r_kind)
+        est_avg_r = ___get_r_from_mult(mult=est_avg_mult, kind=r_kind)
     ann_est_avg_r = annualizer * est_avg_r
     return ann_est_avg_r
 
