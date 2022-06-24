@@ -148,8 +148,14 @@ def _get_agg_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> float:
     if kind in ["geom", "arith"]:
         agg_r = r.sum()
     elif kind == "log":
+        # Remember to adjust for the extra multiples of NAV we pick up,
+        # E.g. r  :=        [    0.02  ,    0.01  ,    -0.03  ,    0.04  ]
+        #      s  :=          e^(0.02) + e^(0.01) + e^(-0.03) + e^(0.04)
+        #          \approx       1.02  +    1.01  +     0.97  +    1.04     =  4.04
+        #   -> We expected a multiplier of about 1.04, but instead got 4.04
         mult = np.exp(r)
-        agg_mult = mult.sum()
+        fluffed_agg_mult = mult.sum()
+        agg_mult = 1 + fluffed_agg_mult - len(r)
         agg_r = np.log(agg_mult)
     return agg_r
 
