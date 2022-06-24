@@ -720,15 +720,15 @@ def plot_cum_r(r: FloatSeriesOrDF, kind: str=DEFAULT_R_KIND, title: str="") -> f
     )
 
 
-def _chart_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, print_: bool=False) -> pd.Series:
-    plot_cum_r(r=r, kind=kind, title=r.name)
+def _chart_r(r: FloatSeries, plot_cum_r_kind: str=DEFAULT_PLOT_CUM_R_KIND, print_: bool=False) -> pd.Series:
+    plot_cum_r(r=r, kind=plot_cum_r_kind, title=r.name)
     est_perf_stats = _get_est_perf_stats_of_r(r=r)
     if print_:
         print(est_perf_stats)
     return est_perf_stats
 
 
-def chart_r(r: FloatDF, kind: str=DEFAULT_R_KIND, plot_cum_r_kind: str= DEFAULT_PLOT_CUM_R_KIND, title: str="") -> None:
+def chart_r(r: FloatDF, plot_cum_r_kind: str= DEFAULT_PLOT_CUM_R_KIND, title: str="") -> None:
     #### plot cum r
     plot_cum_r(r=r, kind=plot_cum_r_kind, title=title)
     #### tables
