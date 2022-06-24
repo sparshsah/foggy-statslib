@@ -230,9 +230,10 @@ def _get_agg_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> float:
     ```
     """
     mult = _get_mult(r=r, kind=kind)
+    # this is now a float
     fluffed_agg_mult = mult.sum()
     agg_mult = 1 + fluffed_agg_mult - len(r)
-    agg_r = _get_r_from_mult(mult=agg_mult, kind=kind)
+    agg_r = __get_r_from_mult(mult=agg_mult, kind=kind)
     return agg_r
 
 
