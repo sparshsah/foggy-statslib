@@ -89,7 +89,7 @@ def __get_r_from_mult(mult: float, kind: str=DEFAULT_R_KIND) -> float:
 
 
 def _get_r_from_mult(mult: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
-    r = mult.map(__get_r_from_mult, kind=kind)
+    r = mult.apply(__get_r_from_mult, kind=kind)
     r = r.rename(mult.name)
     return r
 
@@ -105,7 +105,7 @@ def __get_mult(r: float, kind: str=DEFAULT_R_KIND) -> float:
 
 
 def _get_mult(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
-    mult = r.map(__get_mult, kind=kind)
+    mult = r.apply(__get_mult, kind=kind)
     mult = mult.rename(r.name)
     return mult
 
