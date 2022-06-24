@@ -268,13 +268,10 @@ def get_pnl(
     ) -> FloatSeriesOrDF:
     """Active pnl at each timestep."""
     w_ = w.shift(impl_lag)
-    pnl = [
-        (
-            t,  # key
-            _get_pnl(w=w_.loc[t, :], r=r.loc[t, :], kind=kind, agg=agg)  # value
-        )
-    for t in w_.index]
-    pnl = fc.get_df(pnl, values_are="rows")
+    pnl = [(t,  # key (timestep)
+        _get_pnl(w=w_.loc[t, :], r=r.loc[t, :], kind=kind, agg=agg)  # value (pnl at that timestep)
+    ) for t in w_.index]
+    pnl = fc.get_series(pnl) if agg else fc.get_df(pnl, values_are="rows")
     return pnl
 
 
@@ -445,20 +442,22 @@ def get_alpha_t_stat_of_r(
 def __get_exante_vol_targeted_xr(
         xr: FloatSeries,
         vol: FloatSeries,
+        kind: str=DEFAULT_R_KIND,
         tgt_vol: float=DEFAULT_VOL
     ) -> FloatSeries:
     """Volatility-target the asset,
     treating `vol[t]` aa its ground-truth volatility at time t.
     """
-    # this is portfolio leverage as $ notional / $ NAV
-    req_leverage = tgt_vol / vol
-    levered_xr = req_leverage * xr
+    # this is required portfolio leverage as $ notional / $ NAV
+    req_lev = tgt_vol / vol
+    levered_xr = _get_levered_xr(lev=req_lev, xr=xr, kind=kind)
     levered_xr = levered_xr.rename(xr.name)
     return levered_xr
 
 
 def _get_fcast_vol_targeted_xr(
         xr: FloatSeries,
+        r_kind: str=DEFAULT_R_KIND,
         est_window_kind: str=DEFAULT_EST_WINDOW_KIND,
         impl_lag: int=IMPL_LAG,
         tgt_vol: float=DEFAULT_VOL
@@ -486,7 +485,7 @@ def _get_fcast_vol_targeted_xr(
     # but it's actually conservative: The alternative is to assume you trade fast
     # and start earning the return intraday during t+1.
     exante_vol = est_vol.shift(impl_lag)
-    levered_xr = __get_exante_vol_targeted_xr(xr=xr, vol=exante_vol, tgt_vol=tgt_vol)
+    levered_xr = __get_exante_vol_targeted_xr(xr=xr, vol=exante_vol, kind=r_kind, tgt_vol=tgt_vol)
     return levered_xr
 
 
@@ -494,21 +493,32 @@ def __get_exante_hedged_xr(
         base_xr: FloatSeries,
         hedge_xr: FloatSeries,
         beta: FloatSeries,
+        kind: str=DEFAULT_R_KIND
     ) -> FloatSeries:
     """Hedge out exposure to the hedge asset, treating `beta[t]` as the
     ground-truth beta of the base asset on the hedge asset at time t.
     """
-    # this is portfolio weight as $ notional / $ NAV
-    hedge_pos = -beta
-    hedge_xpnl = hedge_pos * hedge_xr
-    hedged_base_xr = base_xr + hedge_xpnl
-    hedged_base_xr = hedged_base_xr.rename(base_xr.name)
+    # FIRST, CALCULATE YOUR ACTIVE HEDGE EXCESS-OF-CASH PNL
+    ##  this is required portfolio weight as $ notional / $ NAV,
+    ##    which we can interpret as leverage :)
+    hedge_lev = -beta
+    hedge_xpnl = _get_levered_xr(lev=hedge_lev, xr=hedge_xr, kind=kind)
+    del hedge_lev, hedge_xr
+    # THEN, ADD IT TO THE PASSIVE BASE ASSET'S EXCESS-OF-CASH RETURNS
+    xr = fc.get_df([
+        (base_xr.name, base_xr),
+        (hedge_xpnl.name, hedge_xpnl)
+    ], values_are="columns")
+    del hedge_xpnl, base_xr
+    hedged_base_xr = get_agg_r(r=xr, kind=kind)
+    hedged_base_xr = hedged_base_xr.rename(xr.columns[0])
     return hedged_base_xr
 
 
 def _get_fcast_hedged_xr(
         base_xr: FloatSeries,
         hedge_xr: FloatSeries,
+        r_kind: str=DEFAULT_R_KIND,
         est_window_kind: str=DEFAULT_EST_WINDOW_KIND,
         impl_lag: int=IMPL_LAG
     ) -> FloatSeries:
@@ -529,7 +539,7 @@ def _get_fcast_hedged_xr(
     # at the end of each day, we submit an order to short this much of the hedge asset
     est_beta = _get_est_beta_of_r(of_r=base_xr, on_r=hedge_xr, est_window_kind=est_window_kind)
     exante_beta = est_beta.shift(impl_lag)
-    hedged_xr = __get_exante_hedged_xr(base_xr=base_xr, hedge_xr=hedge_xr, beta=exante_beta)
+    hedged_xr = __get_exante_hedged_xr(base_xr=base_xr, hedge_xr=hedge_xr, beta=exante_beta, kind=r_kind)
     return hedged_xr
 
 
@@ -747,7 +757,7 @@ def table_est_perf_stats_of_r(
     return collected_stats
 
 
-def _plot_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, title: str="") -> fc.PlotAxes:
+def _plot_cum_r(r: FloatSeries, kind: str=DEFAULT_PLOT_CUM_R_KIND, title: str="") -> fc.PlotAxes:
     cum_r = _get_cum_r(r=r, kind=kind)
     return fc.plot(
         cum_r,
@@ -756,7 +766,7 @@ def _plot_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, title: str="") -> fc.P
     )
 
 
-def plot_cum_r(r: FloatDF, kind: str=DEFAULT_R_KIND, title: str="") -> fc.PlotAxes:
+def plot_cum_r(r: FloatDF, kind: str=DEFAULT_PLOT_CUM_R_KIND, title: str="") -> fc.PlotAxes:
     cum_r = get_cum_r(r=r, kind=kind)
     return fc.plot(
         cum_r,
@@ -773,7 +783,7 @@ def _chart_r(r: FloatSeries, plot_cum_r_kind: str=DEFAULT_PLOT_CUM_R_KIND, print
     return est_perf_stats
 
 
-def chart_r(r: FloatDF, plot_cum_r_kind: str= DEFAULT_PLOT_CUM_R_KIND, title: str="") -> None:
+def chart_r(r: FloatDF, plot_cum_r_kind: str=DEFAULT_PLOT_CUM_R_KIND, title: str="") -> None:
     #### plot cum r
     plot_cum_r(r=r, kind=plot_cum_r_kind, title=title)
     #### tables
