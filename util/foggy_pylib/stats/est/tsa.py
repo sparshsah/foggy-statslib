@@ -9,7 +9,6 @@ author: [@sparshsah](https://github.com/sparshsah)
 from typing import Optional
 import pandas as pd
 import numpy as np
-import scipy.stats as sps
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
 import foggy_pylib.core as fc
 from foggy_pylib.core import FloatSeries, FloatDF, Floatlike, REASONABLE_FRACTION_OF_TOTAL
