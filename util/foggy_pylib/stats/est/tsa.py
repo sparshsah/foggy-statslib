@@ -176,6 +176,7 @@ def _get_est_cov(
     * https://github.com/sparshsah/foggy-demo/blob/main/demo/stats/risk-bias-variance.ipynb.pdf
     * https://faculty.fuqua.duke.edu/~charvey/Research/Published_Papers/P135_The_impact_of.pdf
     """
+    # TODO(sparshsah): this isn't the behavior you'd expect...
     # this is so hacky... but if I use just `est_min_frac`, then I need to wait
     # that long for the mean to be estimated (which is enough to estimate deviations) PLUS
     # that long again for the covariance to be estimated
