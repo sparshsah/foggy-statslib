@@ -383,8 +383,8 @@ def get_alpha_t_stat_of_r(
                 de_avg_kind=de_avg_kind,
                 est_window_kind=est_window_kind
             )
-        for (on_name, on_r) in r.iteritems()}
-    for (of_name, of_r) in r.iteritems()}
+        for (on_name, on_r) in r.items()}
+    for (of_name, of_r) in r.items()}
     # we want "of" in rows and "on" in columns, so transpose output of DF constructor
     alpha_t_stat = pd.DataFrame(alpha_t_stat, columns=r.columns, index=r.columns).T
     return alpha_t_stat
