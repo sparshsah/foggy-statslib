@@ -152,7 +152,10 @@ def get_xr(r: FloatDF, cash_r: FloatSeries) -> FloatSeries:
 
 
 def __get_levered_xr(lev: float, xr: float, kind: str=DEFAULT_R_KIND) -> float:
-    """Levered excess-of-cash return at a _single timestep_ for a _single asset_."""
+    """Levered excess-of-cash return at a _single timestep_ for a _single asset_.
+
+    Proof:
+    ```
     # principal_amount       =:            P
     ##  risked_amount        =      lev  * P
     ##  cash_balance         =   (1-lev) * P
@@ -172,6 +175,8 @@ def __get_levered_xr(lev: float, xr: float, kind: str=DEFAULT_R_KIND) -> float:
         #                    =      lev      *  e^xr   +  (1-lev)
         #                    =      lev      *  M(xr)  +  (1-lev)
         # levered_xr = R(levered_xmult) = ln(levered_xmult)    = ln(lev*e^xr + 1-lev)
+    ```
+    """
     levered_xmult = lev * __get_mult(r=xr, kind=kind)  +  (1-lev)
     levered_xr = __get_r_from_mult(mult=levered_xmult, kind=kind)
     return levered_xr
