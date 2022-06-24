@@ -13,6 +13,7 @@ import scipy.stats as sps
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
 import foggy_pylib.core as fc
 from foggy_pylib.core import FloatSeries, FloatDF, Floatlike, REASONABLE_FRACTION_OF_TOTAL
+import foggy_pylib.stats.est.core as fsec
 from foggy_pylib.stats.est.core import DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND
 
 DEFAULT_SMOOTHING_WINDOW_KIND: str = "rolling"
@@ -118,14 +119,16 @@ def _get_est_avg(
     ) -> Floatlike:
     """https://en.wikipedia.org/wiki/Generalized_mean"""
     window = ___get_window(ser, kind=est_window_kind, horizon=est_horizon, min_frac=est_min_frac)
+    if avg_kind == "quadr_mean":
+        est_avg = window.qmean() if hasattr(window, "qmean") else window.apply(fsec.get_qmean)
     if avg_kind == "arith_mean":
         est_avg = window.mean()
     elif avg_kind == "arith_median":
         est_avg = window.median()
     elif avg_kind == "geom_mean":
-        est_avg = window.gmean() if hasattr(window, "gmean") else window.apply(sps.stats.gmean)
+        est_avg = window.gmean() if hasattr(window, "gmean") else window.apply(fsec.get_gmean)
     elif avg_kind == "har_mean":
-        est_avg = window.hmean() if hasattr(window, "hmean") else window.apply(sps.stats.hmean)
+        est_avg = window.hmean() if hasattr(window, "hmean") else window.apply(fsec.get_hmean)
     else:
         raise ValueError(avg_kind)
     return est_avg
