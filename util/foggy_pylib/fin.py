@@ -190,8 +190,8 @@ def get_xr(r: FloatDF, cash_r: FloatSeries) -> FloatSeries:
     return xr
 
 
-def __get_levered_xr(lev: float, xr: float) -> float:
-    pass
+def __get_levered_xr(lev: float, xr: float, r_kind: str=DEFAULT_R_KIND) -> float:
+    raise NotImplementedError
 
 
 def _get_pnl(
