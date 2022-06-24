@@ -625,7 +625,7 @@ def get_est_perf_stats_of_r(
         est_horizon: int=DEFAULT_EST_HORIZON
     ) -> FloatDF:
     est_perf_stats = [(
-        # this is a key, like 'SPY' or 'AQMNX' or 'ARF'
+        # this is a key e.g. 'ARF' or 'AQMNX' or 'SPY'
         colname,
         # this is either a FloatDF (e.g. if 'ewm' window) or a FloatSeries (e.g. if 'full' window)
         _get_est_perf_stats_of_r(r=col, est_window_kind=est_window_kind, est_horizon=est_horizon)
