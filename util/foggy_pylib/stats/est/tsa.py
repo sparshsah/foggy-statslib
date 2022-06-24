@@ -185,7 +185,7 @@ def _get_est_cov(
     df = fc.get_df([
         ("a", ser_a),
         ("b", ser_b)
-    ])
+    ], values_are="columns")
     del ser_b, ser_a
     est_deviations = df.apply(
         lambda col: __get_est_deviations(
