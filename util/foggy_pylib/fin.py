@@ -154,26 +154,26 @@ def get_xr(r: FloatDF, cash_r: FloatSeries) -> FloatSeries:
 def __get_levered_xr(lev: float, xr: float, kind: str=DEFAULT_R_KIND) -> float:
     """Levered excess-of-cash return at a _single timestep_ for a _single asset_.
 
-    Proof:
+    Proof (notice the math's elegant symmetry!):
     ```
-    # principal_amount       =:            P
-    ##  risked_amount        =      lev  * P
-    ##  cash_balance         =   (1-lev) * P
+    # principal_amount       =:              P
+    ##  risked_amount        =        lev  * P
+    ##  cash_balance         =     (1-lev) * P
     # if kind in ["geom", "arith"]:
-        # final_amount       =      lev  * P * (1+xr)  +  (1-lev) * P * (1+0)
-        # levered_xmult     :=                    final_amount                 /  principal_amount
-        #                    =      lev  * P * (1+xr)  +  (1-lev) * P * (1+0)  /  P
-        #                    =      lev      * (1+xr)  +  (1-lev)     * (1+0)
-        #                    =      lev      * (1+xr)  +  (1-lev)
-        #                    =      lev      *  M(xr)  +  (1-lev)
+        # final_amount       =        lev  * P * (1+xr)  +  (1-lev) * P * (1+0)
+        # levered_xmult     :=                      final_amount                   /  principal_amount
+                             =      [ lev  * P * (1+xr)  +  (1-lev) * P * (1+0) ]  /  P
+                             =        lev      * (1+xr)  +  (1-lev)     * (1+0)
+                             =        lev      * (1+xr)  +  (1-lev)
+                             =        lev      *  M(xr)  +  (1-lev)
         # levered_xr = R(levered_xmult) =    levered_xmult - 1 = lev+lev*xr + 1-lev - 1 = lev*xr
     # elif kind == "log":
-        # final_amount       =      lev  * P *  e^xr   +  (1-lev) * P *  e^0
-        # levered_xmult     :=                    final_amount                 /  principal_amount
-        #                    =     (lev  * P *  e^xr   +  (1-lev) * P *  e^0)  /  P
-        #                    =      lev      *  e^xr   +  (1-lev)     *  e^0
-        #                    =      lev      *  e^xr   +  (1-lev)
-        #                    =      lev      *  M(xr)  +  (1-lev)
+        # final_amount       =        lev  * P *  e^xr   +  (1-lev) * P *  e^0
+        # levered_xmult     :=                      final_amount                   /  principal_amount
+                             =      [ lev  * P *  e^xr   +  (1-lev) * P *  e^0  ]  /  P
+                             =        lev      *  e^xr   +  (1-lev)     *  e^0
+                             =        lev      *  e^xr   +  (1-lev)
+                             =        lev      *  M(xr)  +  (1-lev)
         # levered_xr = R(levered_xmult) = ln(levered_xmult)    = ln(lev*e^xr + 1-lev)
     ```
     """
@@ -201,19 +201,38 @@ def get_levered_xr(lev: FloatDF, xr: FloatDF, kind: str=DEFAULT_R_KIND) -> Float
 
 
 def _get_agg_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> float:
-    """Aggregate returns across a single timestep."""
-    if kind in ["geom", "arith"]:
-        agg_r = r.sum()
-    elif kind == "log":
-        # Remember to adjust for the extra multiples of NAV we pick up,
-        # E.g. r  :=        [    0.02  ,    0.01  ,    -0.03  ,    0.04  ]
-        #      s  :=          e^(0.02) + e^(0.01) + e^(-0.03) + e^(0.04)
-        #          \approx       1.02  +    1.01  +     0.97  +    1.04     =  4.04
-        #   -> We expected a multiplier of about 1.04, but instead got 4.04
-        mult = np.exp(r)
-        fluffed_agg_mult = mult.sum()
-        agg_mult = 1 + fluffed_agg_mult - len(r)
-        agg_r = np.log(agg_mult)
+    """Aggregate returns across a single timestep.
+
+    Proof (notice the math's elegant symmetry!):
+    ```
+    # principal_amount   =:    P
+    # take e.g. r       :=                            xr
+                         =:              [   a ,    b ,    c ,    d  ]
+    # final_amount       =   {              principal amount                                         } +
+                             { hypothetical collected returns   of fully investing in every asset    } +
+                             {                        repayment of        borrowed          leverage }
+    # if kind in ["geom", "arith"]:
+        # final_amount   =     P  +  P * ( 1+a  + 1+b  + 1+c  + 1+d  )  -  P*4
+        # agg_mult      :=                        final_amount                    /  principal_amount
+                         =   [ P  +  P * ( 1+a  + 1+b  + 1+c  + 1+d  )  -  P*4 ]  /  P
+                         =     1  +      ( 1+a  + 1+b  + 1+c  + 1+d  )  -    4
+                         =     1  +      ( M(a) + M(b) + M(c) + M(d) )  -    4
+                         =:    1  +             fluffed_agg_mult        -    N
+        # agg_r = R(agg_mult) =    agg_mult - 1 = 1 + N+a+b+c+d - N  -  1     = a + b + c + d
+    # if kind == "log":
+        # final_amount   =     P  +  P * ( e^a  + e^b  + e^c  + e^d  )  -  P*4
+        # agg_mult      :=                        final_amount                    /  principal_amount
+                         =   [ P  +  P * ( e^a  + e^b  + e^c  + e^d  )  -  P*4 ]  /  P
+                         =     1  +      ( e^a  + e^b  + e^c  + e^d  )  -    4
+                         =     1  +      ( M(a) + M(b) + M(c) + M(d) )  -    4
+                         =:    1  +             fluffed_agg_mult        -    N
+        # agg_r = R(agg_mult) = ln(agg_mult)    = ln(1 + e^a+e^b+e^c+e^d - N)
+    ```
+    """
+    mult = _get_mult(r=r, kind=kind)
+    fluffed_agg_mult = mult.sum()
+    agg_mult = 1 + fluffed_agg_mult - len(r)
+    agg_r = _get_r_from_mult(mult=agg_mult, kind=kind)
     return agg_r
 
 
