@@ -458,7 +458,7 @@ def get_alpha_t_stat_of_r(
 ## FORWARD-LOOKING RETURN CONSTRUCTION #################################################################################
 ########################################################################################################################
 
-def __get_exante_vol_targeted_xr(
+def __get_exante_targeted_vol_xr(
         xr: FloatSeries,
         vol: FloatSeries,
         kind: str=DEFAULT_R_KIND,
@@ -474,7 +474,7 @@ def __get_exante_vol_targeted_xr(
     return levered_xr
 
 
-def _get_fcast_vol_targeted_xr(
+def _get_fcast_targeted_vol_xr(
         xr: FloatSeries,
         r_kind: str=DEFAULT_R_KIND,
         est_window_kind: str=DEFAULT_EST_WINDOW_KIND,
@@ -506,7 +506,7 @@ def _get_fcast_vol_targeted_xr(
     # but it's actually conservative: The alternative is to assume you trade fast
     # and start earning the return intraday during t+1.
     exante_vol = est_vol.shift(impl_lag)
-    levered_xr = __get_exante_vol_targeted_xr(xr=xr, vol=exante_vol, kind=r_kind, tgt_vol=tgt_vol)
+    levered_xr = __get_exante_targeted_vol_xr(xr=xr, vol=exante_vol, kind=r_kind, tgt_vol=tgt_vol)
     return levered_xr
 
 
