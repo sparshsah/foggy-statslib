@@ -191,6 +191,9 @@ def get_xr(r: FloatDF, cash_r: FloatSeries) -> FloatSeries:
 
 
 def __get_levered_xr(lev: float, xr: float, r_kind: str=DEFAULT_R_KIND) -> float:
+    # for log returns, this is gonna be an approximation, simply because to get a log return of 2r,
+    # you need a compounded multiplier of e^(2r) = (e^r)^2 = (e^r)(e^r), meaning you needed to have somehow
+    # realized your return e^r then gone back in time and reinvested that again into the same investment
     raise NotImplementedError
 
 
