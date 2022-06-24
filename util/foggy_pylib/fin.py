@@ -48,6 +48,7 @@ DEFAULT_R_KIND: str = "log"
 DEFAULT_PLOT_CUM_R_KIND: str = DEFAULT_R_KIND
 # nice standard number to target
 DEFAULT_VOL: float = 0.10
+CASH_NAME: str = "cash"
 
 # smoothing, estimation, evaluation, etc
 HORIZONS: pd.Series = fc.get_series([
@@ -139,7 +140,6 @@ def _get_agg_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> float:
         mult = np.exp(r)
         agg_mult = mult.sum()
         agg_r = np.log(agg_mult)
-    agg_r = agg_r.rename(r.name)
     return agg_r
 
 
@@ -189,6 +189,10 @@ def get_xr(r: FloatDF, cash_r: FloatSeries) -> FloatSeries:
     return xr
 
 
+def __get_levered_xr(lev: float, xr: float) -> float
+    pass
+
+
 def _get_pnl(
         w: FloatSeries, r: FloatSeries,
         kind: str=DEFAULT_R_KIND,
@@ -198,10 +202,17 @@ def _get_pnl(
     if kind in ["geom", "arith"]:
         pnl = w * r
     elif kind == "log":
-        # init_principal = P
-        # end_wealth = w_a*P*e^r_a + w_b*P*e^r_b
-        # mult = end_wealth / init_principal = w_a*e^r_a + w_b*e^r_b
-        # therefore, return = ln(w_a*e^r_a + w_b*e^r_b)
+        # Proof:
+        #   init_principal = P
+        #   end_wealth = w_a*P*e^r_a + w_b*P*e^r_b
+        #   mult = end_wealth / init_principal = w_a*e^r_a + w_b*e^r_b
+        #   therefore, return = ln(w_a*e^r_a + w_b*e^r_b).
+        # Note: You MUST, MUST include the allocation to cash!
+        #   Otherwise imagine you have w_a = 0.60 and r_a = 0.05...
+        #   ln(0.60*e^0.05) = -0.47 (!).
+        #   You wanted,
+        #   ln(0.60*e^0.05 + 0.40*e^0) = 0.03,
+        #     which as a sanity check is close to the geometric version = 0.03.
         mult = np.exp(r)
         weighted_mult = w * mult
         pnl = np.log(weighted_mult)
