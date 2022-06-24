@@ -189,7 +189,7 @@ def get_xr(r: FloatDF, cash_r: FloatSeries) -> FloatSeries:
     return xr
 
 
-def __get_levered_xr(lev: float, xr: float) -> float
+def __get_levered_xr(lev: float, xr: float) -> float:
     pass
 
 
@@ -199,6 +199,8 @@ def _get_pnl(
         agg: bool=True
     ) -> Union[float, FloatSeries]:
     """Active pnl at a single timestep."""
+    if not np.isclose(w.sum(), 1):
+        raise ValueError(f"Active weighting {w} sums to {w.sum()}, did you forget cash balance?")
     if kind in ["geom", "arith"]:
         pnl = w * r
     elif kind == "log":
@@ -216,6 +218,8 @@ def _get_pnl(
         mult = np.exp(r)
         weighted_mult = w * mult
         pnl = np.log(weighted_mult)
+        if not agg:
+            raise ValueError("Per-ccy active log returns act super-weird...")
     pnl = _get_agg_r(pnl, kind=kind) if agg else pnl
     return pnl
 
