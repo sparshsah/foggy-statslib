@@ -208,17 +208,27 @@ def get_xr(r: FloatDF, cash_r: FloatSeries) -> FloatSeries:
 
 def __get_levered_xr(lev: float, xr: float, kind: str=DEFAULT_R_KIND) -> float:
     """Levered excess-of-cash return at a single timestep for a single asset."""
-    if kind in ["geom", "arith"]:
-        levered_xr = lev * xr
-    elif kind == "log":
-        # P := principal_amount
-        #   risked_amount = lev * P
-        #   cash_balance = (1-lev) * P
-        # final_amount = lev * P * e^xr  +  (1-lev) * P
-        # mult := final_amount / principal_amount = lev * e^xr  +  (1-lev)
-        # lev_xr = ln(mult) = ln(lev * e^xr  +  1-lev)
-        mult = lev*np.exp(xr) + 1-lev
-        levered_xr = __get_r_from_mult(mult=mult, kind=kind)
+    # principal_amount       =:            P
+    ##  risked_amount        =      lev  * P
+    ##  cash_balance         =   (1-lev) * P
+    # if kind in ["geom", "arith"]:
+        # final_amount       =      lev  * P * (1+xr)  +  (1-lev) * P * (1+0)
+        # levered_xmult     :=                    final_amount                 /  principal_amount
+        #                    =      lev  * P * (1+xr)  +  (1-lev) * P * (1+0)  /  P
+        #                    =      lev      * (1+xr)  +  (1-lev)     * (1+0)
+        #                    =      lev      * (1+xr)  +  (1-lev)
+        #                    =      lev      *  M(xr)  +  (1-lev)
+        # levered_xr = R(levered_xmult) =    levered_xmult - 1 = lev+lev*xr + 1-lev - 1 = lev*xr
+    # elif kind == "log":
+        # final_amount       =      lev  * P *  e^xr   +  (1-lev) * P *  e^0
+        # levered_xmult     :=                    final_amount                 /  principal_amount
+        #                    =     (lev  * P *  e^xr   +  (1-lev) * P *  e^0)  /  P
+        #                    =      lev      *  e^xr   +  (1-lev)     *  e^0
+        #                    =      lev      *  e^xr   +  (1-lev)
+        #                    =      lev      *  M(xr)  +  (1-lev)
+        # levered_xr = R(levered_xmult) = ln(levered_xmult)    = ln(lev*e^xr + 1-lev)
+    levered_xmult = lev * __get_mult(r=xr, kind=kind)  +  (1-lev)
+    levered_xr = __get_r_from_mult(mult=levered_xmult, kind=kind)
     return levered_xr
 
 
