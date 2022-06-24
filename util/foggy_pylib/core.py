@@ -99,16 +99,28 @@ def get_series(data: List[Tuple[Any, Any]]) -> pd.Series:
     return data
 
 
-def get_df(data: List[Tuple[Any, pd.Series]], values_are: str="columns") -> pd.DataFrame:
-    """Convert a list of (colname, pd.Series) pairs into a pd.DataFrame,
-    or a list of (colname, pd.DataFrame) pairs into a pd.DataFrame(columns=MultiIndex).
+def get_df(data: List[Tuple[Any, pd.Series]], values_are: str="rows") -> pd.DataFrame:
+    """Convert orderly data `..., (rowname,row), ...` into a DataFrame.
+
+    ```
+    if values_are == "rows":
+        if each value is a Series:
+            return a DataFrame
+        elif each value is a DataFrame:
+            return a DataFrame with MultiIndex'ed index
+    elif values_are == "columns":
+        if each value is a Series:
+            return a DataFrame
+        elif each value is a DataFrame:
+            return a DataFrame with MultiIndex'ed columns
+    ```
     """
     data = OrderedDict(data)
     data = pd.concat(data.values(), axis="columns", keys=data.keys())
-    if values_are == "columns":
-        pass
-    elif values_are == "rows":
+    if values_are == "rows":
         data = data.T
+    elif values_are == "columns":
+        pass
     else:
         raise ValueError(values_are)
     return data
