@@ -44,8 +44,8 @@ DAYCOUNTS: pd.Series = fc.get_series([
 IMPL_LAG: int = 2
 
 # analytical or portfolio-construction choices that we do control
-DEFAULT_R_KIND: str = "log"
-DEFAULT_PLOT_CUM_R_KIND: str = DEFAULT_R_KIND
+DEFAULT_R_KIND: str = "geom"
+DEFAULT_PLOT_CUM_R_KIND: str = "log-of-geom"
 # nice standard number to target
 DEFAULT_VOL: float = 0.10
 CASH_NAME: str = "cash"
@@ -728,9 +728,9 @@ def _chart_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, print_: bool=False) -> pd
     return est_perf_stats
 
 
-def chart_r(r: FloatDF, kind: str=DEFAULT_R_KIND, title: str="") -> None:
+def chart_r(r: FloatDF, kind: str=DEFAULT_R_KIND, plot_cum_r_kind: str= DEFAULT_PLOT_CUM_R_KIND, title: str="") -> None:
     #### plot cum r
-    plot_cum_r(r=r, kind=kind, title=title)
+    plot_cum_r(r=r, kind=plot_cum_r_kind, title=title)
     #### tables
     # TODO(sparshsah): split by early-mid-late third's then fullsample
     tables = table_est_perf_stats_of_r(r=r)
