@@ -253,9 +253,9 @@ def _get_est_corr(
     common_period = ser_a.dropna().index.intersection(ser_b.dropna().index)
     ser_a = ser_a.loc[common_period]
     ser_b = ser_b.loc[common_period]
-    est_cov = _get_est_cov(ser_a=ser_a, ser_b=ser_b, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_a_std = _get_est_std(ser=ser_a, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_b_std = _get_est_std(ser=ser_b, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_cov = _get_est_cov(ser_a=ser_a, ser_b=ser_b, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
     est_corr = est_cov / (est_a_std * est_b_std)
     est_corr = round(est_corr, round_dps) if round_dps is not None else est_corr
     return est_corr

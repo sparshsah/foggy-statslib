@@ -525,9 +525,9 @@ def _get_exante_vol_of_w(w: FloatSeries, cov_matrix: FloatDF) -> float:
 
 
 def _get_exante_corr_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatDF) -> float:
-    exante_cov = __get_exante_cov_of_w(w_a=w_a, w_b=w_b, cov_matrix=cov_matrix)
     exante_a_vol = _get_exante_vol_of_w(w=w_a, cov_matrix=cov_matrix)
     exante_b_vol = _get_exante_vol_of_w(w=w_b, cov_matrix=cov_matrix)
+    exante_cov = __get_exante_cov_of_w(w_a=w_a, w_b=w_b, cov_matrix=cov_matrix)
     exante_corr = exante_cov / (exante_a_vol * exante_b_vol)
     return exante_corr
 
@@ -537,10 +537,10 @@ def _get_exante_beta_of_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: Floa
     To get the beta of `of_w` on a single asset, pass
         `on_w=pd.Series({on_asset_name: 1})`.
     """
-    exante_corr = _get_exante_corr_of_w(w_a=of_w, w_b=on_w, cov_matrix=cov_matrix)
     exante_of_vol = _get_exante_vol_of_w(w=of_w, cov_matrix=cov_matrix)
     exante_on_vol = _get_exante_vol_of_w(w=on_w, cov_matrix=cov_matrix)
-    exante_beta = exante_corr * (exante_of_vol / exante_on_vol)
+    exante_corr = _get_exante_corr_of_w(w_a=of_w, w_b=on_w, cov_matrix=cov_matrix)
+    exante_beta = (exante_of_vol / exante_on_vol) * exante_corr
     return exante_beta
 
 
