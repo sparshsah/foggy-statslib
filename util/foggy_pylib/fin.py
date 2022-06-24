@@ -246,28 +246,9 @@ def _get_pnl(
         agg: bool=True
     ) -> Union[float, FloatSeries]:
     """Active pnl at a single timestep."""
-    if not np.isclose(w.sum(), 1):
-        raise ValueError(f"Active weighting\n{w}\nsums to {w.sum()}, did you forget cash balance?")
-    if kind in ["geom", "arith"]:
-        pnl = w * r
-    elif kind == "log":
-        # Proof:
-        #   init_principal = P
-        #   end_wealth = w_a*P*e^r_a + w_b*P*e^r_b
-        #   mult = end_wealth / init_principal = w_a*e^r_a + w_b*e^r_b
-        #   therefore, return = ln(w_a*e^r_a + w_b*e^r_b).
-        # Note: You MUST, MUST include the allocation to cash!
-        #   Otherwise imagine you have w_a = 0.60 and r_a = 0.05...
-        #   ln(0.60*e^0.05) = -0.47 (!).
-        #   You wanted,
-        #   ln(0.60*e^0.05 + 0.40*e^0) = 0.03,
-        #     which as a sanity check is close to the geometric version = 0.03.
-        mult = np.exp(r)
-        weighted_mult = w * mult
-        pnl = np.log(weighted_mult)
-        # TODO(sparshsah): uh, figure this out, i guess?
-        if not agg:
-            raise ValueError("Per-ccy active log returns act super-weird...")
+    # the `xr` is just there to remind you that you can't lever for free,
+    #   it's OK to pass either excess or total returns depending on your use case
+    pnl = _get_levered_xr(lev=w, xr=r, kind=kind)
     pnl = _get_agg_r(pnl, kind=kind) if agg else pnl
     return pnl
 
