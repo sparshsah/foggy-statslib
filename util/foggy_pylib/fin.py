@@ -78,7 +78,7 @@ ROUND_DPS: pd.Series = fc.get_series([
 ## RETURN MANIPULATIONS ################################################################################################
 ########################################################################################################################
 
-def ___get_r_from_mult(mult: float, kind: str=DEFAULT_R_KIND) -> float:
+def __get_r_from_mult(mult: float, kind: str=DEFAULT_R_KIND) -> float:
     if kind in ["geom", "arith"]:
         r = mult-1
     elif kind == "log":
@@ -88,13 +88,13 @@ def ___get_r_from_mult(mult: float, kind: str=DEFAULT_R_KIND) -> float:
     return r
 
 
-def __get_r_from_mult(mult: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
-    r = mult.map(___get_r_from_mult, kind=kind)
+def _get_r_from_mult(mult: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+    r = mult.map(__get_r_from_mult, kind=kind)
     r = r.rename(mult.name)
     return r
 
 
-def ___get_mult(r: float, kind: str=DEFAULT_R_KIND) -> float:
+def __get_mult(r: float, kind: str=DEFAULT_R_KIND) -> float:
     if kind in ["geom", "arith"]:
         mult = 1+r
     elif kind == "log":
@@ -104,8 +104,8 @@ def ___get_mult(r: float, kind: str=DEFAULT_R_KIND) -> float:
     return mult
 
 
-def __get_mult(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
-    mult = r.map(___get_mult, kind=kind)
+def _get_mult(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+    mult = r.map(__get_mult, kind=kind)
     mult = mult.rename(r.name)
     return mult
 
@@ -200,11 +200,20 @@ def get_xr(r: FloatDF, cash_r: FloatSeries) -> FloatSeries:
     return xr
 
 
-def __get_levered_xr(lev: float, xr: float, r_kind: str=DEFAULT_R_KIND) -> float:
-    # for log returns, this is gonna be an approximation, simply because to get a log return of 2r,
-    # you need a compounded multiplier of e^(2r) = (e^r)^2 = (e^r)(e^r), meaning you needed to have somehow
-    # realized your return e^r then gone back in time and reinvested that again into the same investment
-    raise NotImplementedError
+def __get_lev_xr(lev: float, xr: float, kind: str=DEFAULT_R_KIND) -> float:
+    """Levered excess-of-cash return."""
+    if kind in ["geom", "arith"]:
+        lev_xr = lev * xr
+    elif kind == "log":
+        # P := principal_amount
+        #   risked_amount = lev * P
+        #   cash_balance = (1-lev) * P
+        # final_amount = lev * P * e^xr  +  (1-lev) * P
+        # mult := final_amount / principal_amount = lev * e^xr  +  (1-lev)
+        # lev_xr = ln(mult) = ln(lev * e^xr  +  1-lev)
+        mult = lev*np.exp(xr) + 1-lev
+        lev_xr = __get_r_from_mult(mult=mult, kind=kind)
+    return lev_xr
 
 
 def _get_pnl(
@@ -279,9 +288,9 @@ def _get_est_er_of_r(
     if avg_kind.startswith("arith"):
         est_avg_r = _get_est_avg(ser=r)
     else:
-        mult = __get_mult(r=r, kind=r_kind)
+        mult = _get_mult(r=r, kind=r_kind)
         est_avg_mult = _get_est_avg(ser=mult)
-        est_avg_r = ___get_r_from_mult(mult=est_avg_mult, kind=r_kind)
+        est_avg_r = __get_r_from_mult(mult=est_avg_mult, kind=r_kind)
     ann_est_avg_r = annualizer * est_avg_r
     return ann_est_avg_r
 
