@@ -219,6 +219,7 @@ def _get_pnl(
         mult = np.exp(r)
         weighted_mult = w * mult
         pnl = np.log(weighted_mult)
+        # TODO(sparshsah): uh, figure this out, i guess?
         if not agg:
             raise ValueError("Per-ccy active log returns act super-weird...")
     pnl = _get_agg_r(pnl, kind=kind) if agg else pnl
