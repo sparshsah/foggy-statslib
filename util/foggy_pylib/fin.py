@@ -143,53 +143,6 @@ def _get_r_from_yld(
     return r
 
 
-def _get_agg_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> float:
-    """Aggregate returns across a single timestep."""
-    if kind in ["geom", "arith"]:
-        agg_r = r.sum()
-    elif kind == "log":
-        # Remember to adjust for the extra multiples of NAV we pick up,
-        # E.g. r  :=        [    0.02  ,    0.01  ,    -0.03  ,    0.04  ]
-        #      s  :=          e^(0.02) + e^(0.01) + e^(-0.03) + e^(0.04)
-        #          \approx       1.02  +    1.01  +     0.97  +    1.04     =  4.04
-        #   -> We expected a multiplier of about 1.04, but instead got 4.04
-        mult = np.exp(r)
-        fluffed_agg_mult = mult.sum()
-        agg_mult = 1 + fluffed_agg_mult - len(r)
-        agg_r = np.log(agg_mult)
-    return agg_r
-
-
-def get_agg_r(r: FloatDF, kind: str=DEFAULT_R_KIND) -> FloatSeries:
-    """Aggregate returns across each timestep."""
-    agg_r = r.apply(_get_agg_r, kind=kind, axis="columns")
-    return agg_r
-
-
-def _get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
-    """Accumulate returns over time."""
-    if kind == "geom":
-        cum_r = (1+r).cumprod()
-        cum_r = cum_r - 1
-    elif kind == "log-of-geom":
-        cum_r = (1+r).cumprod()
-        cum_r = np.log(cum_r)
-    elif kind == "log":
-        cum_r = r.cumsum()
-    elif kind == "arith":
-        cum_r = r.cumsum()
-    else:
-        raise ValueError(kind)
-    cum_r = cum_r.rename(r.name)
-    return cum_r
-
-
-def get_cum_r(r: FloatDF, kind: str=DEFAULT_R_KIND) -> FloatDF:
-    """Accumulate returns over time."""
-    cum_r = r.apply(_get_cum_r, kind=kind)
-    return cum_r
-
-
 def _get_xr(r: FloatSeries, cash_r: FloatSeries) -> FloatSeries:
     """Excess-of-cash returns."""
     cash_r = cash_r.reindex(index=r.index)
@@ -248,6 +201,53 @@ def get_levered_xr(lev: FloatDF, xr: FloatDF, kind: str=DEFAULT_R_KIND) -> Float
     ) for t in lev.index]
     levered_xr = fc.get_df(levered_xr, values_are="rows")
     return levered_xr
+
+
+def _get_agg_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> float:
+    """Aggregate returns across a single timestep."""
+    if kind in ["geom", "arith"]:
+        agg_r = r.sum()
+    elif kind == "log":
+        # Remember to adjust for the extra multiples of NAV we pick up,
+        # E.g. r  :=        [    0.02  ,    0.01  ,    -0.03  ,    0.04  ]
+        #      s  :=          e^(0.02) + e^(0.01) + e^(-0.03) + e^(0.04)
+        #          \approx       1.02  +    1.01  +     0.97  +    1.04     =  4.04
+        #   -> We expected a multiplier of about 1.04, but instead got 4.04
+        mult = np.exp(r)
+        fluffed_agg_mult = mult.sum()
+        agg_mult = 1 + fluffed_agg_mult - len(r)
+        agg_r = np.log(agg_mult)
+    return agg_r
+
+
+def get_agg_r(r: FloatDF, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+    """Aggregate returns across each timestep."""
+    agg_r = r.apply(_get_agg_r, kind=kind, axis="columns")
+    return agg_r
+
+
+def _get_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+    """Accumulate returns over time."""
+    if kind == "geom":
+        cum_r = (1+r).cumprod()
+        cum_r = cum_r - 1
+    elif kind == "log-of-geom":
+        cum_r = (1+r).cumprod()
+        cum_r = np.log(cum_r)
+    elif kind == "log":
+        cum_r = r.cumsum()
+    elif kind == "arith":
+        cum_r = r.cumsum()
+    else:
+        raise ValueError(kind)
+    cum_r = cum_r.rename(r.name)
+    return cum_r
+
+
+def get_cum_r(r: FloatDF, kind: str=DEFAULT_R_KIND) -> FloatDF:
+    """Accumulate returns over time."""
+    cum_r = r.apply(_get_cum_r, kind=kind)
+    return cum_r
 
 
 def _get_pnl(
