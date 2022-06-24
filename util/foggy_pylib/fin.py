@@ -111,16 +111,8 @@ def _get_mult(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
 
 
 def _get_r_from_px(px: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
-    if kind == "geom":
-        mult = px / px.shift()
-        r = mult-1
-    elif kind == "log":
-        mult = px / px.shift()
-        r = np.log(mult)
-    elif kind == "arith":
-        r = px.diff()
-    else:
-        raise ValueError(kind)
+    mult = px / px.shift()
+    r = _get_r_from_mult(mult=mult, kind=kind)
     r = r.rename(px.name)
     return r
 
