@@ -262,7 +262,7 @@ def _get_est_corr(
 
 
 def get_est_corr(
-        ser: FloatDF,
+        df: FloatDF,
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
         round_dps: Optional[int]=None
@@ -275,7 +275,7 @@ def get_est_corr(
                 est_window_kind=est_window_kind,
                 round_dps=round_dps
             )
-        for (b, ser_b) in ser.iteritems()}
-    for (a, ser_a) in ser.iteritems()}
-    est_corr = pd.DataFrame(est_corr).T
+        for (b, ser_b) in df.items()}
+    for (a, ser_a) in df.items()}
+    est_corr = pd.DataFrame(est_corr, columns=df.columns, index=df.columns).T
     return est_corr

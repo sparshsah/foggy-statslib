@@ -386,7 +386,7 @@ def get_alpha_t_stat_of_r(
         for (on_name, on_r) in r.iteritems()}
     for (of_name, of_r) in r.iteritems()}
     # we want "of" in rows and "on" in columns, so transpose output of DF constructor
-    alpha_t_stat = pd.DataFrame(alpha_t_stat).T
+    alpha_t_stat = pd.DataFrame(alpha_t_stat, columns=r.columns, index=r.columns).T
     return alpha_t_stat
 
 
@@ -685,7 +685,7 @@ def table_est_perf_stats_of_r(
     """
     r = fc.get_common_subsample(r) if over_common_subsample else r
     est_standalone_stats = r.apply(_table_est_perf_stats_of_r, axis="index", rounded=rounded)
-    est_corr = fset.get_est_corr(ser=r)
+    est_corr = fset.get_est_corr(df=r)
     alpha_t_stat = get_alpha_t_stat_of_r(r=r)
     ####
     # flip stat names up into columns
