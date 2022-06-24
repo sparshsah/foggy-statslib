@@ -307,7 +307,6 @@ def _get_est_sharpe_of_r(
     ) -> Floatlike:
     est_er = _get_est_er_of_r(
         r=r,
-        r_kind=r_kind,
         est_window_kind=est_window_kind,
         est_horizon=est_horizon,
         annualizer=annualizer
