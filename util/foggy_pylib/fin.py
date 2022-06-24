@@ -726,7 +726,7 @@ def table_est_perf_stats_of_r(
     return collected_stats
 
 
-def plot_cum_r(r: FloatSeriesOrDF, kind: str=DEFAULT_R_KIND, title: str="") -> fc.PlotAxes:
+def _plot_cum_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, title: str="") -> fc.PlotAxes:
     cum_r = _get_cum_r(r=r, kind=kind)
     return fc.plot(
         cum_r,
@@ -735,8 +735,17 @@ def plot_cum_r(r: FloatSeriesOrDF, kind: str=DEFAULT_R_KIND, title: str="") -> f
     )
 
 
+def plot_cum_r(r: FloatDF, kind: str=DEFAULT_R_KIND, title: str="") -> fc.PlotAxes:
+    cum_r = get_cum_r(r=r, kind=kind)
+    return fc.plot(
+        cum_r,
+        ypct=True,
+        title=f"{title} {kind} CumRets"
+    )
+
+
 def _chart_r(r: FloatSeries, plot_cum_r_kind: str=DEFAULT_PLOT_CUM_R_KIND, print_: bool=False) -> pd.Series:
-    plot_cum_r(r=r, kind=plot_cum_r_kind, title=r.name)
+    _plot_cum_r(r=r, kind=plot_cum_r_kind, title=r.name)
     est_perf_stats = _get_est_perf_stats_of_r(r=r)
     if print_:
         print(est_perf_stats)
