@@ -214,7 +214,7 @@ def _get_pnl(
     ) -> Union[float, FloatSeries]:
     """Active pnl at a single timestep."""
     if not np.isclose(w.sum(), 1):
-        raise ValueError(f"Active weighting {w} sums to {w.sum()}, did you forget cash balance?")
+        raise ValueError(f"Active weighting \n{w}\n sums to {w.sum()}, did you forget cash balance?")
     if kind in ["geom", "arith"]:
         pnl = w * r
     elif kind == "log":
