@@ -217,13 +217,14 @@ def get_pnl(
     ) -> FloatSeriesOrDF:
     """Active pnl at each timestep."""
     w_ = w.shift(impl_lag)
-    pnl = fc.get_df([
+    pnl = [
         (
             t,  # key
             _get_pnl(w=w_.loc[t, :], r=r.loc[t, :], kind=kind, agg=agg)  # value
         )
-    for t in w_.index])
-    pnl = pd.DataFrame(pnl)
+    for t in w_.index]
+    pnl = fc.get_df(pnl, values_are="rows")
+    return pnl
 
 
 ########################################################################################################################
