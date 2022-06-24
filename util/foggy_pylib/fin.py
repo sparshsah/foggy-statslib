@@ -121,6 +121,7 @@ def _get_r_from_yld(
         annualizer: int=DAYCOUNTS["BY"]
     ) -> FloatSeries:
     """Approximation assuming log yields."""
+    # TODO(sparshsah): prove and implement for every r_kind
     single_day_carry_exposed_return = yld.shift() / annualizer
     # remember: duration is in years, so we must use annualized yields
     dur = FloatSeries(dur, index=yld.index)
