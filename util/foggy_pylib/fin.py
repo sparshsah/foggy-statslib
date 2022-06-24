@@ -298,7 +298,6 @@ def _get_est_vol_of_r(
 
 def _get_est_sharpe_of_r(
         r: FloatSeries,
-        r_kind: str=DEFAULT_R_KIND,
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         bessel_degree: Optional[int]=None,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
@@ -326,14 +325,12 @@ def _get_est_sharpe_of_r(
 
 def _get_t_stat_of_r(
         r: FloatSeries,
-        r_kind: str=DEFAULT_R_KIND,
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
     # https://web.stanford.edu/~wfsharpe/art/sr/sr.htm
     granular_est_sharpe = _get_est_sharpe_of_r(
         r=r,
-        r_kind=r_kind,
         de_avg_kind=de_avg_kind,
         est_window_kind=window_kind,
         annualizer=1
