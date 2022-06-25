@@ -24,7 +24,7 @@ import foggy_pylib.core as fc
 # https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/stats/tsa.py
 import foggy_pylib.stats.est.tsa as fset
 
-from foggy_pylib.core import FloatSeries, FloatDF, FloatSeriesOrDF, Floatlike
+from foggy_pylib.core import FloatSeries, FloatDF, FloatSeriesOrDF, Floatlike, DEFAULT_DATETIME_FREQ
 from foggy_pylib.stats.est.tsa import DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND, \
     DEFAULT_EST_WINDOW_KIND, DEFAULT_EST_HORIZON, DEFAULT_EVAL_WINDOW_KIND
 
@@ -292,6 +292,20 @@ def get_cum_r(r: FloatDF, kind: str=DEFAULT_R_KIND) -> FloatDF:
     """Accumulate returns over time."""
     cum_r = r.apply(_get_cum_r, kind=kind)
     return cum_r
+
+
+def _refreq_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, freq: str=DEFAULT_DATETIME_FREQ) -> FloatSeries:
+    if kind == "geom":
+        cum_r = _get_cum_r(r=r, kind=kind)
+        px = 1 + cum_r
+        del cum_r
+        refreqed_px = px.asfreq(freq)
+        del px
+        refreqed_r = _get_r_from_px(px=refreqed_px, kind=kind)
+        del refreqed_px
+    elif kind in ["log", "arith"]:
+        refreqed_r = r.resample(freq).sum()
+    return refreqed_r
 
 
 def _get_pnl(
