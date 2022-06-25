@@ -724,6 +724,22 @@ def _get_exante_hedged_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: Float
 ## SIMULATION ##########################################################################################################
 ########################################################################################################################
 
+def __sim_r(
+        ann_sharpe: float=0,
+        ann_vol: float=DEFAULT_VOL,
+        annualizer: int=DAYCOUNTS["BY"],
+        kind: str=DEFAULT_R_KIND
+    ) -> float:
+    # first, simulate logarithmic returns
+    single_timestep_sharpe = ann_sharpe / annualizer**0.5
+    single_timestep_vol = ann_vol / annualizer**0.5
+    single_timestep_er = single_timestep_sharpe * single_timestep_vol
+    r = sps.norm.rvs(loc=single_timestep_er, scale=single_timestep_vol)
+    # then, convert to user's desired return kind
+    r = __rekind_r(r=r, from_kind="log", to_kind=kind)
+    return r
+
+
 def _sim_r(
         ann_sharpe: float=0,
         ann_vol: float=DEFAULT_VOL,
