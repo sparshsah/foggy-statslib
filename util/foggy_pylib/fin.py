@@ -1,6 +1,6 @@
 """Financial programming utilities.
 
-v0.4 alpha: API MAY (IN FACT, CERTAINLY WILL) BREAK AT ANY TIME!
+v0.4.1 alpha: API MAY (IN FACT, CERTAINLY WILL) BREAK AT ANY TIME!
 
 author: [@sparshsah](https://github.com/sparshsah)
 
