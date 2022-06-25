@@ -85,7 +85,11 @@ ROUND_DPS: pd.Series = fc.get_series([
 ## RETURN MANIPULATIONS ################################################################################################
 ########################################################################################################################
 
-def __get_r_from_mult(mult: float, kind: str=DEFAULT_R_KIND) -> float:
+def __rekind_r(r: float=0, from_kind: str=DEFAULT_R_KIND, to_kind: str=DEFAULT_R_KIND) -> float:
+    raise NotImplementedError
+
+
+def __get_r_from_mult(mult: float=1, kind: str=DEFAULT_R_KIND) -> float:
     if kind in ["geom", "arith"]:
         r = mult-1
     elif kind == "log":
@@ -101,7 +105,7 @@ def _get_r_from_mult(mult: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries
     return r
 
 
-def __get_mult(r: float, kind: str=DEFAULT_R_KIND) -> float:
+def __get_mult(r: float=0, kind: str=DEFAULT_R_KIND) -> float:
     if kind in ["geom", "arith"]:
         mult = 1+r
     elif kind == "log":
@@ -704,8 +708,10 @@ def _sim_r(
         ann_sharpe: float=0,
         ann_vol: float=DEFAULT_VOL,
         sz_in_years: float=100,
-        annualizer: int=DAYCOUNTS["BY"]
+        annualizer: int=DAYCOUNTS["BY"],
+        kind: str=DEFAULT_R_KIND
     ) -> FloatSeries:
+    # first, simulate logarithmic returns
     single_timestep_sharpe = ann_sharpe / annualizer**0.5
     single_timestep_vol = ann_vol / annualizer**0.5
     single_timestep_er = single_timestep_sharpe * single_timestep_vol
@@ -713,6 +719,8 @@ def _sim_r(
     r = sps.norm.rvs(loc=single_timestep_er, scale=single_timestep_vol, size=sz_in_timesteps)
     dtx = fc.get_dtx(periods=sz_in_timesteps)
     r = pd.Series(r, index=dtx)
+    # then, convert to user's desired return kind
+
     return r
 
 
