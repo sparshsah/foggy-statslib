@@ -681,7 +681,8 @@ def _sim_r(
     single_timestep_er = single_timestep_sharpe * single_timestep_vol
     sz_in_timesteps = int(sz_in_years * annualizer)
     r = sps.norm.rvs(loc=single_timestep_er, scale=single_timestep_vol, size=sz_in_timesteps)
-    r = pd.Series(r)
+    dtx = fc.get_dtx(periods=sz_in_timesteps)
+    r = pd.Series(r, index=dtx)
     return r
 
 
