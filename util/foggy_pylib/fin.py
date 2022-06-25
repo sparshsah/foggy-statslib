@@ -40,7 +40,14 @@ DAYCOUNTS: pd.Series = fc.get_series([
     ("CQ", 91), ("BQ", 65),
     ("CY", 365), ("BY", 261)
 ])
-# observe info at `t`, trade on it the course of `t+1`, earn at `t+2`
+# Observe info at `t`, trade on it the course of `t+1`, earn at `t+2`:
+# At the end of each session (t), we review the data,
+# then trade up or down over the next session (t+1) to hit target leverage,
+# finally earning the corresponding return over the next-next session (t+2).
+# Under this model, you get no execution during t+1, until the close when
+# you get all the execution at once. This seems pretty unrealistic,
+# but it's actually conservative: The alternative is to assume you trade fast
+# and thereby start earning the return intraday during t+1.
 IMPL_LAG: int = 2
 
 # analytical or portfolio-construction choices that we do control
@@ -154,6 +161,26 @@ def get_xr(r: FloatDF, cash_r: FloatSeries) -> FloatSeries:
 def __get_levered_xr(lev: float, xr: float, kind: str=DEFAULT_R_KIND) -> float:
     """Levered excess-of-cash return at a _single timestep_ for a _single asset_.
 
+    The portfolio return on NAV you'd get if you invested
+    `lev`% of NAV in the passive asset and `1-lev`% in cash.
+    Handles different return kinds appropriately.
+
+    inputs
+    ------
+    lev: float (e.g. 0.60 or 1.30), the amount of leverage.
+    xr: float (e.g. -0.01 or 0.02), the passive-asset's excess-of-cash return.
+        It's called `xr` to remind you that you can't lever for free:
+        If you delever, you can deposit the excess cash in the bank and earn interest;
+        Whereas if you uplever, you must pay a funding rate.
+        (It's simplistic to assume the funding rate is the same as the deposit interest rate---it
+        will usually be higher, since your private default risk is greater than the bank's---but ok.)
+    kind: str (default 'log'), the kind of return ('geom', 'log', or 'arith').
+
+    output
+    ------
+    levered_xr: float, the levered excess return.
+
+
     Proof (notice the math's elegant symmetry!):
     ```
     # principal_amount       =:              P
@@ -230,7 +257,7 @@ def _get_agg_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> float:
     ```
     """
     mult = _get_mult(r=r, kind=kind)
-    # this is now a float
+    # this is now a float scalar
     fluffed_agg_mult = mult.sum()
     agg_mult = 1 + fluffed_agg_mult - len(r)
     agg_r = __get_r_from_mult(mult=agg_mult, kind=kind)
@@ -273,8 +300,7 @@ def _get_pnl(
         agg: bool=True
     ) -> Union[float, FloatSeries]:
     """Active pnl at a single timestep."""
-    # the `xr` is just there to remind you that you can't lever for free,
-    #   it's OK to pass either excess or total returns depending on your use case
+    # abuse of notation, but works for our purpose even if `r` is total (not excess)
     pnl = _get_levered_xr(lev=w, xr=r, kind=kind)
     pnl = _get_agg_r(pnl, kind=kind) if agg else pnl
     return pnl
@@ -288,10 +314,22 @@ def get_pnl(
     ) -> FloatSeriesOrDF:
     """Active pnl at each timestep."""
     w_ = w.shift(impl_lag)
-    pnl = [(t,  # key (timestep)
-        _get_pnl(w=w_.loc[t, :], r=r.loc[t, :], kind=kind, agg=agg)  # value (pnl at that timestep)
-    ) for t in w_.index]
-    pnl = fc.get_series(pnl) if agg else fc.get_df(pnl, values_are="rows")
+    pnl = [
+            (
+                # key = timestep
+                t,
+                # value = pnl at that timestep
+                _get_pnl(
+                    w=w_.loc[t, :],
+                    r=r.loc[t, :],
+                    kind=kind,
+                    agg=agg
+                )
+            )
+        for t in w_.index
+    ]
+    pnl = fc.get_series(pnl) if agg else \
+        fc.get_df(pnl, values_are="rows")
     return pnl
 
 
@@ -334,25 +372,23 @@ def _get_est_vol_of_r(
     ) -> Floatlike:
     """
     By the way, you'll often hear that a financial risk model should
-    use a slightly longer-than-MSE-optimal estimation horizon, because:
-    ----
+        use a slightly longer-than-MSE-optimal estimation horizon, because:
     (a) Asset returns are kurtotic (susceptible to huge shocks), so
         using a longer lookback acts like a "floor" during periods of low volatility,
         reducing the risk of blowup in a tail event by
         "remembering" that markets weren't always so calm.
-        L-> This is valid, since we often cop out of directly modeling kurtosis.
-    |
-    ~~~ BUT ALSO ~~~
-    |
+        |
+        -> This is valid, since we often cop out of directly modeling kurtosis.
     (b) You don't want to constantly trade up and down to relever a
         volatility-targeted portfolio in response to
         the vacillations of your risk model.
-        L-> This is stupid: If you don't want to be overly sensitive to
-            short-term market fluctuations, use tcost aversion or turnover controls.
-            Market noise isn't very informative to asset ER's, so
-            it's good to filter it out when constructing trading signals;
-            But when estimating risk, it's a different story:
-            Volatility is, by definition, "just" market noise!
+        |
+        -> This is stupid: If you don't want to be overly sensitive to
+           short-term market fluctuations, use tcost aversion or turnover controls.
+           Market noise isn't very informative to asset ER's, so the point is to
+           try to "filter it out" when constructing trading signals;
+           But when estimating risk, it's a different story:
+           Volatility is, by definition, "just" market noise!
     """
     est_vol = fset._get_est_std(
         ser=r,
@@ -465,9 +501,7 @@ def __get_exante_targeted_vol_xr(
         kind: str=DEFAULT_R_KIND,
         tgt_vol: float=DEFAULT_VOL
     ) -> FloatSeries:
-    """Volatility-target the asset,
-    treating `vol[t]` aa its ground-truth volatility at time t.
-    """
+    """Target-vol asset, treating `vol[t]` as its ground-truth passive vol at `t`."""
     # this is required portfolio leverage as $ notional / $ NAV
     req_lev = tgt_vol / vol
     levered_xr = _get_levered_xr(lev=req_lev, xr=xr, kind=kind)
@@ -484,13 +518,7 @@ def _get_fcast_targeted_vol_xr(
     ) -> FloatSeries:
     """(Implementably) modulate volatility.
 
-    Input should be excess-of-cash returns:
-        If you delever, you can deposit the excess cash in the bank and earn interest;
-        Whereas if you uplever, you must pay a funding rate.
-        It's simplistic to assume the funding rate is the same as the deposit interest rate
-        (it will usually be higher, since your default risk is greater than the bank's), but ok.
-
-    With default settings, you get a implementably-vol-targeted version of the xr, i.e.
+    With default settings, you get a implementably-targeted version of the xr, i.e.
         you could actually estimate its volatility then submit trades to lever it accordingly.
         On the other hand, if you pass est_window_kind = "full" and impl_lag = 0,
         you'll just get an expost-perfectly-vol-targeted version of `base_xr`,
@@ -499,13 +527,6 @@ def _get_fcast_targeted_vol_xr(
     est_vol = _get_est_vol_of_r(r=xr, est_window_kind=est_window_kind)
     # pad if this was a scalar (e.g. if est_window_kind == "full")
     est_vol = pd.Series(est_vol, index=xr.index)
-    # At the end of each session (t), we review the data,
-    # then trade up or down over the next session (t+1) to hit this much leverage,
-    # finally earning the corresponding return over the next-next session (t+2).
-    # Under this model, you get no execution during t+1, until the close when
-    # you get all the execution at once. This seems pretty unrealistic,
-    # but it's actually conservative: The alternative is to assume you trade fast
-    # and start earning the return intraday during t+1.
     exante_vol = est_vol.shift(impl_lag)
     levered_xr = __get_exante_targeted_vol_xr(xr=xr, vol=exante_vol, kind=r_kind, tgt_vol=tgt_vol)
     return levered_xr
@@ -518,7 +539,7 @@ def __get_exante_hedged_xr(
         kind: str=DEFAULT_R_KIND
     ) -> FloatSeries:
     """Hedge out exposure to the hedge asset, treating `beta[t]` as the
-    ground-truth beta of the base asset on the hedge asset at time t.
+    ground-truth beta of the base asset on the hedge asset at time `t`.
     """
     # FIRST, CALCULATE YOUR ACTIVE HEDGE EXCESS-OF-CASH PNL
     ##  this is required portfolio weight as $ notional / $ NAV,
