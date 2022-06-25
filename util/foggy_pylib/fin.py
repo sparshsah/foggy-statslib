@@ -740,7 +740,7 @@ def _sim_r(
     dtx = fc.get_dtx(periods=sz_in_timesteps)
     r = pd.Series(r, index=dtx)
     # then, convert to user's desired return kind
-
+    r = _rekind_r(r=r, from_kind="log", to_kind=kind)
     return r
 
 
