@@ -117,8 +117,15 @@ def _get_mult(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     return mult
 
 
-def _get_r_from_px(px: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+def _get_r_from_px(
+        px: FloatSeries,
+        seed_value: Optional[float]=1.00,
+        kind: str=DEFAULT_R_KIND
+    ) -> FloatSeries:
     mult = px / px.shift()
+    # if possible, fill in the NaN at the beginning
+    seed_value = fc.maybe(seed_value, np.nan)
+    mult.iloc[0] = px.iloc[0] / seed_value
     r = _get_r_from_mult(mult=mult, kind=kind)
     r = r.rename(px.name)
     return r
