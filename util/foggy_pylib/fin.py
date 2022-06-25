@@ -85,10 +85,6 @@ ROUND_DPS: pd.Series = fc.get_series([
 ## RETURN MANIPULATIONS ################################################################################################
 ########################################################################################################################
 
-def __rekind_r(r: float=0, from_kind: str=DEFAULT_R_KIND, to_kind: str=DEFAULT_R_KIND) -> float:
-    raise NotImplementedError
-
-
 def __get_r_from_mult(mult: float=1, kind: str=DEFAULT_R_KIND) -> float:
     if kind in ["geom", "arith"]:
         r = mult-1
@@ -119,6 +115,30 @@ def _get_mult(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
     mult = r.apply(__get_mult, kind=kind)
     mult = mult.rename(r.name)
     return mult
+
+
+def __rekind_r(r: float=0, from_kind: str=DEFAULT_R_KIND, to_kind: str=DEFAULT_R_KIND) -> float:
+    mult = __get_mult(r=r, kind=from_kind)
+    r = __get_r_from_mult(mult=mult, kind=to_kind)
+    return r
+
+
+def _rekind_r(
+        r: FloatSeries,
+        from_kind: str=DEFAULT_R_KIND,
+        to_kind: str=DEFAULT_R_KIND
+    ) -> FloatSeries:
+    r = r.apply(__rekind_r, from_kind=from_kind, to_kind=to_kind)
+    return r
+
+
+def rekind_r(
+        r: FloatDF,
+        from_kind: str=DEFAULT_R_KIND,
+        to_kind: str=DEFAULT_R_KIND
+    ) -> FloatDF:
+    r = r.apply(_rekind_r, from_kind=from_kind, to_kind=to_kind)
+    return r
 
 
 def _get_r_from_px(
