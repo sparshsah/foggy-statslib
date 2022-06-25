@@ -294,7 +294,7 @@ def get_cum_r(r: FloatDF, kind: str=DEFAULT_R_KIND) -> FloatDF:
     return cum_r
 
 
-def _refreq_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, freq: str=DEFAULT_DATETIME_FREQ) -> FloatSeries:
+def _get_refreqed_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, freq: str=DEFAULT_DATETIME_FREQ) -> FloatSeries:
     if kind == "geom":
         cum_r = _get_cum_r(r=r, kind=kind)
         px = 1 + cum_r
