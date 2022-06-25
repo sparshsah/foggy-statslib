@@ -134,10 +134,12 @@ def _get_r_from_px(
 def _get_r_from_yld(
         yld: FloatSeries,
         dur: Union[float, FloatSeries]=DEFAULT_BOND_DUR,
+        kind: str=DEFAULT_R_KIND,
         annualizer: int=DAYCOUNTS["BY"]
     ) -> FloatSeries:
     """Approximation assuming log yields."""
     # TODO(sparshsah): prove and implement for every r_kind
+    _ = kind
     single_day_carry_exposed_return = yld.shift() / annualizer
     # remember: duration is in years, so we must use annualized yields
     dur = FloatSeries(dur, index=yld.index)
@@ -301,15 +303,22 @@ def get_cum_r(r: FloatDF, kind: str=DEFAULT_R_KIND) -> FloatDF:
     return cum_r
 
 
+def _get_px(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> FloatSeries:
+    cum_r = _get_cum_r(r=r, kind=kind)
+    if kind in ["geom", "arith"]:
+        px = 1 + cum_r
+    elif kind == "log":
+        px = np.exp(cum_r)
+    else:
+        raise ValueError(kind)
+    return px
+
+
 def _get_refreqed_r(r: FloatSeries, kind: str=DEFAULT_R_KIND, freq: str=DEFAULT_DATETIME_FREQ) -> FloatSeries:
     if kind == "geom":
-        cum_r = _get_cum_r(r=r, kind=kind)
-        px = 1 + cum_r
-        del cum_r
+        px = _get_px(r=r, kind=kind)
         refreqed_px = px.asfreq(freq)
-        del px
         refreqed_r = _get_r_from_px(px=refreqed_px, kind=kind)
-        del refreqed_px
     elif kind in ["log", "arith"]:
         refreqed_r = r.resample(freq).sum()
     return refreqed_r
