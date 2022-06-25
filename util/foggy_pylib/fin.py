@@ -747,16 +747,15 @@ def _sim_r(
         annualizer: int=DAYCOUNTS["BY"],
         kind: str=DEFAULT_R_KIND
     ) -> FloatSeries:
-    # first, simulate logarithmic returns
-    single_timestep_sharpe = ann_sharpe / annualizer**0.5
-    single_timestep_vol = ann_vol / annualizer**0.5
-    single_timestep_er = single_timestep_sharpe * single_timestep_vol
     sz_in_timesteps = int(sz_in_years * annualizer)
-    r = sps.norm.rvs(loc=single_timestep_er, scale=single_timestep_vol, size=sz_in_timesteps)
+    r = [__sim_r(
+        ann_sharpe=ann_sharpe,
+        ann_vol=ann_vol,
+        annualizer=annualizer,
+        kind=kind)
+    for _ in range(sz_in_timesteps)]
     dtx = fc.get_dtx(periods=sz_in_timesteps)
     r = pd.Series(r, index=dtx)
-    # then, convert to user's desired return kind
-    r = _rekind_r(r=r, from_kind="log", to_kind=kind)
     return r
 
 
