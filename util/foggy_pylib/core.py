@@ -61,6 +61,9 @@ Floatlike = Union[float, FloatSeriesOrDF]
 Datelike = Union[dt.datetime, str]
 
 REASONABLE_FRACTION_OF_TOTAL: float = 0.95
+# Unix epoch
+DEFAULT_FIRST_DATETIME = pd.to_datetime("1970-01-01")
+DEFAULT_DATETIME_FREQ = "B"  # business day
 TYPEFACE = "Arial"
 FONT_SCALE = 1
 LABEL_FONTSIZE = 12
@@ -75,22 +78,38 @@ def maybe(v: T=None, ow: T_=None) -> Union[T, T_]:
 
 
 def maybe_date(
-        date: Datelike=None, ow_lags: int=0,
+        date: Datelike=None,
+        ow_lags: int=0, freq=DEFAULT_DATETIME_FREQ,
         granular: bool=False, as_str: bool=False
     ) -> Datelike:
     if date is None:
-        ow = dt.datetime.now() + pd.offsets.BDay(ow_lags)
-        del ow_lags
-        ow = strfdate(ow, granular=granular)
-        ow = ow if as_str else pd.to_datetime(ow)
-        return ow
-    else:
-        return date
+        offset = - ow_lags * pd.tseries.frequencies.to_offset(freq=freq)
+        date = dt.datetime.now() + offset
+        date = strfdate(date, granular=granular)
+        date = date if as_str else pd.to_datetime(date)
+    return date
 
 
 ########################################################################################################################
 ## DATA WRANGLING ######################################################################################################
 ########################################################################################################################
+
+def get_dtx(
+        periods: Optional[int]=None,
+        start: Optional[Datelike]=None,
+        end: Optional[Datelike]=None,
+        freq: str=DEFAULT_DATETIME_FREQ
+    ) -> pd.DatetimeIndex:
+    if (periods is None):
+        start = maybe(start, DEFAULT_FIRST_DATETIME)
+        end = maybe_date(end, freq=freq, granular=(freq!=DEFAULT_DATETIME_FREQ))
+    elif periods is not None and (start is None):
+        end = maybe_date(end, freq=freq, granular=(freq!=DEFAULT_DATETIME_FREQ))
+    # else, if necessary, let the constructor complain
+    dtx = pd.date_range(start=start, periods=periods, end=end, freq=freq)
+    dtx = pd.DatetimeIndex(dtx)
+    return dtx
+
 
 def get_series(data: List[Tuple[Any, Any]]) -> pd.Series:
     """Convert a list of (key, value) pairs into a pd.Series."""
