@@ -77,40 +77,6 @@ def maybe(v: T=None, ow: T_=None) -> Union[T, T_]:
     return ow if v is None else v
 
 
-def __maybe_date(date: Optional[Datelike]=None) -> Datelike:
-    date = maybe(date, dt.datetime.now())
-    return date
-
-
-def __get_lagged_date(date: Datelike, lags: int=0, freq: str=DEFAULT_DATETIME_FREQ) -> Datelike:
-    offset = - lags * pd.tseries.frequencies.to_offset(freq)
-    lagged_date = date + offset
-    return lagged_date
-
-
-def _get_lagged_date(date: Optional[Datelike]=None, lags: int=0, freq: str=DEFAULT_DATETIME_FREQ):
-    """Like `__get_lagged_date()`, but makes sure `lagged_date` is not after `date`.
-    E.g. On Saturday, gives you yesterday (Friday) instead of day-after-tomorrow (Monday).
-    """
-    date = __maybe_date(date=date)
-    lagged_date = __get_lagged_date(date=date, lags=lags, freq=freq)
-    if lagged_date > date:
-        lagged_date = __get_lagged_date(date=date, lags=lags+1, freq=freq)
-    assert not lagged_date > date, (date, lags, freq, lagged_date)
-    return lagged_date
-
-
-def maybe_date(
-        date: Datelike=None,
-        ow_lags: int=0, freq=DEFAULT_DATETIME_FREQ,
-        granular: bool=False, as_str: bool=False
-    ) -> Datelike:
-    date = maybe(date, _get_lagged_date(lags=ow_lags, freq=freq))
-    date = strfdate(date, granular=granular)
-    date = date if as_str else pd.to_datetime(date)
-    return date
-
-
 ########################################################################################################################
 ## DATA WRANGLING ######################################################################################################
 ########################################################################################################################
@@ -492,6 +458,44 @@ def to_pickle(
     # just in case you want to validate that this worked
     data = _from_pickle(fpath=fpath, **kwargs)
     return data
+
+
+########################################################################################################################
+## DATES ###############################################################################################################
+########################################################################################################################
+
+def __maybe_date(date: Optional[Datelike]=None) -> Datelike:
+    date = maybe(date, dt.datetime.now())
+    return date
+
+
+def __get_lagged_date(date: Datelike, lags: int=0, freq: str=DEFAULT_DATETIME_FREQ) -> Datelike:
+    offset = - lags * pd.tseries.frequencies.to_offset(freq)
+    lagged_date = date + offset
+    return lagged_date
+
+
+def _get_lagged_date(date: Optional[Datelike]=None, lags: int=0, freq: str=DEFAULT_DATETIME_FREQ):
+    """Like `__get_lagged_date()`, but makes sure `lagged_date` is not after `date`.
+    E.g. On Saturday, gives you yesterday (Friday) instead of day-after-tomorrow (Monday).
+    """
+    date = __maybe_date(date=date)
+    lagged_date = __get_lagged_date(date=date, lags=lags, freq=freq)
+    if lagged_date > date:
+        lagged_date = __get_lagged_date(date=date, lags=lags+1, freq=freq)
+    assert not lagged_date > date, (date, lags, freq, lagged_date)
+    return lagged_date
+
+
+def maybe_date(
+        date: Datelike=None,
+        ow_lags: int=0, freq=DEFAULT_DATETIME_FREQ,
+        granular: bool=False, as_str: bool=False
+    ) -> Datelike:
+    date = maybe(date, _get_lagged_date(lags=ow_lags, freq=freq))
+    date = strfdate(date, granular=granular)
+    date = date if as_str else pd.to_datetime(date)
+    return date
 
 
 ########################################################################################################################
