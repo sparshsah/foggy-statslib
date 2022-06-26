@@ -9,7 +9,7 @@ author: [@sparshsah](https://github.com/sparshsah)
 from typing import Optional
 import pandas as pd
 import numpy as np
-import foggy_statslib.core as fc
+import foggy_statslib.core as fsc
 from foggy_statslib.core import FloatSeries, FloatDF, Floatlike, REASONABLE_FRACTION_OF_TOTAL
 import foggy_statslib.stats.est.core as fsec
 from foggy_statslib.stats.est.core import DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND
@@ -52,7 +52,7 @@ def _get_metadata(ser: FloatSeries) -> pd.Series:
             "Last obs", ser.index[-1]
         )
     ]
-    metadata = fc.get_series(metadata)
+    metadata = fsc.get_series(metadata)
     return metadata
 
 
@@ -181,7 +181,7 @@ def _get_est_cov(
     # that long again for the covariance to be estimated
     adj_est_min_frac = 0.5 * est_min_frac
     del est_min_frac
-    df = fc.get_df([
+    df = fsc.get_df([
         ("a", ser_a),
         ("b", ser_b)
     ], values_are="columns")
@@ -221,7 +221,7 @@ def _get_est_cov(
         kind=est_window_kind,
         horizon=est_horizon
     ).sum()
-    bessel_degree = fc.maybe(bessel_degree, bool(de_avg_kind))
+    bessel_degree = fsc.maybe(bessel_degree, bool(de_avg_kind))
     bessel_factor = sample_sz / ( sample_sz - bessel_degree )
     besseled_est_cov = est_cov * bessel_factor
     return besseled_est_cov
