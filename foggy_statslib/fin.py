@@ -189,7 +189,7 @@ def get_xr(r: FloatDF, cash_r: FloatSeries) -> FloatSeries:
     return xr
 
 
-def __get_levered_xr(lev: float, xr: float, kind: str=DEFAULT_R_KIND) -> float:
+def __get_levered_xr(lev: float=1, xr: float=0, kind: str=DEFAULT_R_KIND) -> float:
     """Levered excess-of-cash return at a _single timestep_ for a _single asset_.
 
     The portfolio return on NAV you'd get if you invested
