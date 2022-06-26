@@ -98,10 +98,10 @@ def get_dtx(
     return dtx
 
 
-def get_series(data: List[Tuple[Any, Any]]) -> pd.Series:
+def get_series(data: List[Tuple[Any, Any]], name: Optional[str]=None) -> pd.Series:
     """Convert a list of (key, value) pairs into a pd.Series."""
     data = OrderedDict(data)
-    data = pd.Series(data)
+    data = pd.Series(data, name=name)
     return data
 
 
