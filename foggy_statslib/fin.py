@@ -245,7 +245,7 @@ def _get_levered_xr(lev: FloatSeries, xr: FloatSeries, kind: str=DEFAULT_R_KIND)
     levered_xr = [(ccy,
         __get_levered_xr(lev=lev.loc[ccy], xr=xr.loc[ccy], kind=kind)
     ) for ccy in lev.index]
-    levered_xr = fsc.get_series(levered_xr)
+    levered_xr = fsc.get_series(levered_xr, name=xr.name)
     return levered_xr
 
 
@@ -256,6 +256,15 @@ def get_levered_xr(lev: FloatDF, xr: FloatDF, kind: str=DEFAULT_R_KIND) -> Float
     ) for t in lev.index]
     levered_xr = fsc.get_df(levered_xr, values_are="rows")
     return levered_xr
+
+
+def __get_agg_r(r_a: float=0, r_b: float=0, kind: str=DEFAULT_R_KIND) -> float:
+    mult_a = __get_mult(r=r_a, kind=kind)
+    mult_b = __get_mult(r=r_b, kind=kind)
+    fluffed_agg_mult = mult_a + mult_b
+    agg_mult = 1 + fluffed_agg_mult - 2
+    agg_r = __get_r_from_mult(mult=agg_mult, kind=kind)
+    return agg_r
 
 
 def _get_agg_r(r: FloatSeries, kind: str=DEFAULT_R_KIND) -> float:
