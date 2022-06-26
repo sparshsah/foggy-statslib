@@ -1,5 +1,5 @@
-# foggyLIB
+# foggySTATSLIB
 
 author: [@sparshsah](https://github.com/sparshsah)
 
-utility packages, templates, and scripts
+Statistics, econometrics, and finance
