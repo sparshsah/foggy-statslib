@@ -9,11 +9,10 @@ author: [@sparshsah](https://github.com/sparshsah)
 from typing import Optional
 import pandas as pd
 import numpy as np
-# https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
-import foggy_pylib.core as fc
-from foggy_pylib.core import FloatSeries, FloatDF, Floatlike, REASONABLE_FRACTION_OF_TOTAL
-import foggy_pylib.stats.est.core as fsec
-from foggy_pylib.stats.est.core import DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND
+import foggy_statslib.core as fc
+from foggy_statslib.core import FloatSeries, FloatDF, Floatlike, REASONABLE_FRACTION_OF_TOTAL
+import foggy_statslib.stats.est.core as fsec
+from foggy_statslib.stats.est.core import DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND
 
 DEFAULT_SMOOTHING_WINDOW_KIND: str = "rolling"
 DEFAULT_SMOOTHING_HORIZON: int = 3  # overlap of yesterday, today, and tomorrow

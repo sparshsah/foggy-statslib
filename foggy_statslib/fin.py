@@ -19,13 +19,11 @@ import numpy as np
 import scipy.stats as sps
 import matplotlib.pyplot as plt
 import seaborn as sns
-# https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/core.py
-import foggy_pylib.core as fc
-# https://github.com/sparshsah/foggy-lib/blob/main/util/foggy_pylib/stats/tsa.py
-import foggy_pylib.stats.est.tsa as fset
+import foggy_statslib.core as fsc
+import foggy_statslib.stats.est.tsa as fsset
 
-from foggy_pylib.core import FloatSeries, FloatDF, FloatSeriesOrDF, Floatlike, DEFAULT_DATETIME_FREQ
-from foggy_pylib.stats.est.tsa import DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND, \
+from foggy_statslib.core import FloatSeries, FloatDF, FloatSeriesOrDF, Floatlike, DEFAULT_DATETIME_FREQ
+from foggy_statslib.stats.est.tsa import DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND, \
     DEFAULT_EST_WINDOW_KIND, DEFAULT_EST_HORIZON, DEFAULT_EVAL_WINDOW_KIND
 
 
@@ -33,7 +31,7 @@ from foggy_pylib.stats.est.tsa import DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND, \
 # approx duration of a 10Y US treasury note in a "normal" rates climate
 DEFAULT_BOND_DUR: float = 7
 # calendar, business
-DAYCOUNTS: pd.Series = fc.get_series([
+DAYCOUNTS: pd.Series = fsc.get_series([
     ("d", 1), ("Bd", 1),
     ("W", 7), ("BW", 5),
     ("Cm", 30), ("Bm", 21),
@@ -58,7 +56,7 @@ DEFAULT_VOL: float = 0.10
 CASH_NAME: str = "cash"
 
 # smoothing, estimation, evaluation, etc
-HORIZONS: pd.Series = fc.get_series([
+HORIZONS: pd.Series = fsc.get_series([
     ("micro", 3),
     ("mini", DAYCOUNTS["BW"]),
     ("short", DAYCOUNTS["Bm"]),
@@ -70,7 +68,7 @@ HORIZONS: pd.Series = fc.get_series([
     ("ultra", 10 * DAYCOUNTS["BY"])
 ])
 
-ROUND_DPS: pd.Series = fc.get_series([
+ROUND_DPS: pd.Series = fsc.get_series([
     ("alpha_t", 2),
     ("corr", 2),
     ("Sharpe", 2),
@@ -148,7 +146,7 @@ def _get_r_from_px(
     ) -> FloatSeries:
     mult = px / px.shift()
     # if possible, fill in the NaN at the beginning
-    seed_value = fc.maybe(seed_value, np.nan)
+    seed_value = fsc.maybe(seed_value, np.nan)
     mult.iloc[0] = px.iloc[0] / seed_value
     r = _get_r_from_mult(mult=mult, kind=kind)
     r = r.rename(px.name)
@@ -247,7 +245,7 @@ def _get_levered_xr(lev: FloatSeries, xr: FloatSeries, kind: str=DEFAULT_R_KIND)
     levered_xr = [(ccy,
         __get_levered_xr(lev=lev.loc[ccy], xr=xr.loc[ccy], kind=kind)
     ) for ccy in lev.index]
-    levered_xr = fc.get_series(levered_xr)
+    levered_xr = fsc.get_series(levered_xr)
     return levered_xr
 
 
@@ -256,7 +254,7 @@ def get_levered_xr(lev: FloatDF, xr: FloatDF, kind: str=DEFAULT_R_KIND) -> Float
     levered_xr = [(t,
         _get_levered_xr(lev=lev.loc[t, :], xr=xr.loc[t, :], kind=kind)
     ) for t in lev.index]
-    levered_xr = fc.get_df(levered_xr, values_are="rows")
+    levered_xr = fsc.get_df(levered_xr, values_are="rows")
     return levered_xr
 
 
@@ -382,8 +380,8 @@ def get_pnl(
             )
         for t in w_.index
     ]
-    pnl = fc.get_series(pnl) if agg else \
-        fc.get_df(pnl, values_are="rows")
+    pnl = fsc.get_series(pnl) if agg else \
+        fsc.get_df(pnl, values_are="rows")
     return pnl
 
 
@@ -400,7 +398,7 @@ def _get_est_er_of_r(
         annualizer: int=DAYCOUNTS["BY"]
     ) -> Floatlike:
     def _get_est_avg(ser: FloatSeries) -> float:
-        return fset._get_est_avg(
+        return fsset._get_est_avg(
             ser=ser,
             avg_kind=avg_kind,
             est_window_kind=est_window_kind,
@@ -444,7 +442,7 @@ def _get_est_vol_of_r(
            But when estimating risk, it's a different story:
            Volatility is, by definition, "just" market noise!
     """
-    est_vol = fset._get_est_std(
+    est_vol = fsset._get_est_std(
         ser=r,
         de_avg_kind=de_avg_kind,
         bessel_degree=bessel_degree,
@@ -504,9 +502,9 @@ def _get_est_beta_of_r(
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
         est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    est_of_std = fset._get_est_std(ser=of_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_on_std = fset._get_est_std(ser=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
-    est_corr = fset._get_est_corr(
+    est_of_std = fsset._get_est_std(ser=of_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_on_std = fsset._get_est_std(ser=on_r, de_avg_kind=de_avg_kind, est_window_kind=est_window_kind)
+    est_corr = fsset._get_est_corr(
         ser_a=of_r, ser_b=on_r,
         de_avg_kind=de_avg_kind,
         est_window_kind=est_window_kind
@@ -602,7 +600,7 @@ def __get_exante_hedged_xr(
     hedge_xpnl = _get_levered_xr(lev=hedge_lev, xr=hedge_xr, kind=kind)
     del hedge_lev, hedge_xr
     # THEN, ADD IT TO THE PASSIVE BASE ASSET'S EXCESS-OF-CASH RETURNS
-    xr = fc.get_df([
+    xr = fsc.get_df([
         (base_xr.name, base_xr),
         (hedge_xpnl.name, hedge_xpnl)
     ], values_are="columns")
@@ -664,7 +662,7 @@ def __get_w_from_vw(vw: FloatSeries, vol_vector: FloatSeries) -> FloatSeries:
 
 
 def _get_w_from_vw(vw: FloatSeries, cov_matrix: FloatDF) -> FloatSeries:
-    var_vector = fc.get_diag_of_df(df=cov_matrix)
+    var_vector = fsc.get_diag_of_df(df=cov_matrix)
     vol_vector = var_vector **0.5
     w = __get_w_from_vw(vw=vw, vol_vector=vol_vector)
     return w
@@ -754,7 +752,7 @@ def _sim_r(
         annualizer=annualizer,
         kind=kind)
     for _ in range(sz_in_timesteps)]
-    dtx = fc.get_dtx(periods=sz_in_timesteps)
+    dtx = fsc.get_dtx(periods=sz_in_timesteps)
     r = pd.Series(r, index=dtx)
     return r
 
@@ -810,7 +808,7 @@ def get_est_perf_stats_of_r(
         _get_est_perf_stats_of_r(r=col, est_window_kind=est_window_kind, est_horizon=est_horizon)
     ) for (colname, col) in r.items()]
     ####
-    est_perf_stats = fc.get_df(est_perf_stats, values_are="columns")
+    est_perf_stats = fsc.get_df(est_perf_stats, values_are="columns")
     # if each value was a DF, we'll get MultiIndex columns and want to flip stat names up to top-level
     if isinstance(est_perf_stats.columns, pd.MultiIndex):
         est_perf_stats = est_perf_stats.swaplevel(axis="columns")
@@ -841,7 +839,7 @@ def _round_perf_stats(perf_stats: pd.Series, round_: bool=True) -> pd.Series:
 
 
 def _table_est_perf_stats_of_r(r: FloatSeries, rounded: bool=True) -> pd.Series:
-    metadata = fset._get_metadata(ser=r)
+    metadata = fsset._get_metadata(ser=r)
     est_perf_stats = _get_est_perf_stats_of_r(r=r)
     ####
     collected_stats = pd.concat([est_perf_stats, metadata])
@@ -860,9 +858,9 @@ def table_est_perf_stats_of_r(
         'standalone': ...,
     }`.
     """
-    r = fc.get_common_subsample(r) if over_common_subsample else r
+    r = fsc.get_common_subsample(r) if over_common_subsample else r
     est_standalone_stats = r.apply(_table_est_perf_stats_of_r, axis="index", rounded=rounded)
-    est_corr = fset.get_est_corr(df=r)
+    est_corr = fsset.get_est_corr(df=r)
     alpha_t_stat = get_alpha_t_stat_of_r(r=r)
     ####
     # flip stat names up into columns
@@ -876,18 +874,18 @@ def table_est_perf_stats_of_r(
     return collected_stats
 
 
-def _plot_cum_r(r: FloatSeries, kind: str=DEFAULT_PLOT_CUM_R_KIND, title: str="") -> fc.PlotAxes:
+def _plot_cum_r(r: FloatSeries, kind: str=DEFAULT_PLOT_CUM_R_KIND, title: str="") -> fsc.PlotAxes:
     cum_r = _get_cum_r(r=r, kind=kind)
-    return fc.plot(
+    return fsc.plot(
         cum_r,
         ypct=True,
         title=f"{title} {kind} CumRets"
     )
 
 
-def plot_cum_r(r: FloatDF, kind: str=DEFAULT_PLOT_CUM_R_KIND, title: str="") -> fc.PlotAxes:
+def plot_cum_r(r: FloatDF, kind: str=DEFAULT_PLOT_CUM_R_KIND, title: str="") -> fsc.PlotAxes:
     cum_r = get_cum_r(r=r, kind=kind)
-    return fc.plot(
+    return fsc.plot(
         cum_r,
         ypct=True,
         title=f"{title} {kind} CumRets"
@@ -909,13 +907,13 @@ def chart_r(r: FloatDF, plot_cum_r_kind: str=DEFAULT_PLOT_CUM_R_KIND, title: str
     # TODO(sparshsah): split by early-mid-late third's then fullsample
     tables = table_est_perf_stats_of_r(r=r)
     # TODO(sparshsah): plot alpha t stat heatmap
-    fc.plot_corr_heatmap(tables["corr"], title="corr")
+    fsc.plot_corr_heatmap(tables["corr"], title="corr")
     #### plot rolling sr, er/vol
     fullsample_est_perf_stats = get_est_perf_stats_of_r(r=r)
     moving_est_perf_stats = get_est_perf_stats_of_r(r=r, est_window_kind="rolling", est_horizon=HORIZONS["super"])
     # setting sharex makes weird minor gridlines appear
     _, ax = plt.subplots(nrows=3)
-    fc.plot(
+    fsc.plot(
         moving_est_perf_stats["Sharpe"],
         axhline_locs=[0,] + list(fullsample_est_perf_stats["Sharpe"]),
         axhline_styles=["-",] + [":",]*len(r.columns),
@@ -923,7 +921,7 @@ def chart_r(r: FloatDF, plot_cum_r_kind: str=DEFAULT_PLOT_CUM_R_KIND, title: str
         title="Sharpe",
         ax=ax[0]
     )
-    fc.plot(
+    fsc.plot(
         moving_est_perf_stats["ER"],
         axhline_locs=[0,] + list(fullsample_est_perf_stats["ER"]),
         axhline_styles=["-",] + [":",]*len(r.columns),
@@ -931,7 +929,7 @@ def chart_r(r: FloatDF, plot_cum_r_kind: str=DEFAULT_PLOT_CUM_R_KIND, title: str
         ypct=True, title="ER",
         ax=ax[1]
     )
-    fc.plot(
+    fsc.plot(
         moving_est_perf_stats["Vol"],
         axhline_locs=[0,] + list(fullsample_est_perf_stats["Vol"]),
         axhline_styles=[":",],
@@ -939,7 +937,7 @@ def chart_r(r: FloatDF, plot_cum_r_kind: str=DEFAULT_PLOT_CUM_R_KIND, title: str
         ylim_bottom=0, ypct=True,
         title="Vol", ax=ax[2],
         # 2.5x the default height
-        figsize=(fc.FIGSIZE[0], 2.5*fc.FIGSIZE[1])
+        figsize=(fsc.FIGSIZE[0], 2.5*fsc.FIGSIZE[1])
     )
     plt.suptitle(moving_est_perf_stats.name, y=0.91)
     plt.show()

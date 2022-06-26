@@ -1,6 +1,6 @@
 # https://en.wikipedia.org/wiki/Generalized_mean
 import pandas as pd
-from foggy_pylib.stats.est.core import get_qmean, get_gmean, get_hmean
+from foggy_statslib.stats.est.core import get_qmean, get_gmean, get_hmean
 # fill them in if necessary
 if not hasattr(pd.Series, "qmean"):
     pd.Series.qmean = get_qmean
