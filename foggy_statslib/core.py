@@ -238,14 +238,33 @@ def get_inv_of_df(df: pd.DataFrame) -> pd.DataFrame:
 ## DB ##################################################################################################################
 ########################################################################################################################
 
-def filter_like(
-        it: Iterable[T],
+def _filter_like(
+        it: Iterable[str],
         like: str, fn: Callable=lambda x: x.upper(),
         not_: bool=False
-    ) -> List[T]:
+    ) -> List[str]:
     fn = (lambda x: x) if fn is None else fn
     cond = operator.not_ if not_ else bool
-    return [x for x in it if cond( fn(like) in fn(x) )]
+    result = [x for x in it if cond( fn(like) in fn(x) )]
+    return result
+
+
+def filter_like(
+        it: Iterable[str],
+        like_ands: Iterable[Any]=("",),
+        like_ors: Iterable[Any]=("",),
+        fn: Callable=lambda x: x.upper(),
+        not_: bool=False
+    ) -> List[str]:
+    for like_and in like_ands:
+        # overwrite
+        it = _filter_like(it=it, like=like_and, fn=fn, not_=not_)
+    # now we've narrowed down
+    like_or_results = [
+        _filter_like(it=it, like=like_or, fn=fn, not_=not_)
+    for like_or in like_ors]
+    result = flatten(it)
+    return result
 
 
 def get_nearest_value(
