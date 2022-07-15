@@ -521,6 +521,25 @@ def maybe_date(
 ## DATA VISUALIZATION ##################################################################################################
 ########################################################################################################################
 
+def _describe_series(ser: pd.Series, bool_is_numeric: bool=True) -> pd.Series:
+    if ser.dtype == bool:
+        if bool_is_numeric:
+            ser = ser.astype(int)
+    d = ser.describe()
+    return d
+
+
+def describe_df(df: pd.DataFrame, bool_is_numeric: bool=True) -> pd.DataFrame:
+    def _convert_bool_to_numeric(ser: pd.Series) -> pd.Series:
+        if ser.dtype == bool:
+            ser = ser.astype(int)
+        return ser
+    if bool_is_numeric:
+        df = df.apply(_convert_bool_to_numeric)
+    d = df.describe()
+    return d
+
+
 def plot(
         df: Data, kind: str="line",
         # THEME
