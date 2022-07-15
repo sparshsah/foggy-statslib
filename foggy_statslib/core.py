@@ -263,7 +263,7 @@ def filter_like(
     like_or_results = [
         _filter_like(it=it, like=like_or, fn=fn, not_=not_)
     for like_or in like_ors]
-    result = flatten(it)
+    result = flatten(like_or_results)
     return result
 
 
