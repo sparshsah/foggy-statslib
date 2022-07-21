@@ -522,20 +522,19 @@ def maybe_date(
 ########################################################################################################################
 
 def _describe_series(ser: pd.Series, bool_is_numeric: bool=True) -> pd.Series:
-    if ser.dtype == bool:
-        if bool_is_numeric:
+    if bool_is_numeric:
+        if ser.dtype == bool:
             ser = ser.astype(int)
     d = ser.describe()
     return d
 
 
 def describe_df(df: pd.DataFrame, bool_is_numeric: bool=True) -> pd.DataFrame:
-    def _convert_bool_to_numeric(ser: pd.Series) -> pd.Series:
-        if ser.dtype == bool:
-            ser = ser.astype(int)
-        return ser
     if bool_is_numeric:
-        df = df.apply(_convert_bool_to_numeric)
+        caster = {colname:
+            int if dtype == bool else dtype
+        for (colname, dtype) in df.items()}
+        df = df.astype(caster)
     d = df.describe()
     return d
 
