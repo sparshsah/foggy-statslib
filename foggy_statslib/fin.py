@@ -173,12 +173,17 @@ def _get_r_from_yld(
     return r
 
 
-def _get_xr(r: FloatSeries, cash_r: FloatSeries) -> FloatSeries:
+def _get_xr(r: FloatSeries, cash_r: FloatSeries, r_kind: str=DEFAULT_R_KIND) -> FloatSeries:
     """Excess-of-cash returns."""
     cash_r = cash_r.reindex(index=r.index)
-    # obviously works for geom and arith r_kind
-    # but, works for log too: ln(e^r / e^cash_r) = r - cash_r
-    xr = r - cash_r
+    if r_kind == "geom":
+        xr = (1+r) / (1+cash_r) - 1
+    elif r_kind in ["log", "arith"]:
+        # obviously works for arith r_kind
+        # but, works for log too: ln(e^r / e^cash_r) = r - cash_r
+        xr = r - cash_r
+    else:
+        raise ValueError(r_kind)
     xr = xr.rename(r.name)
     return xr
 
