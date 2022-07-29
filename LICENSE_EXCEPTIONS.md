@@ -5,8 +5,10 @@ Here, I explicitly reaffirm or add permissions.
 
 ## Theorem LP
 
-Theorem LP may, without restrictions, and regardless of my employment status:
+Theorem LP may, without restrictions, regardless of my employment status:
 * Use this code in internal applications
 * Use this code in applications it distributes to external parties, including:
   * Closed-source applications
   * Applications sold for profit
+
+I waive any right to revoke this permission.
