@@ -531,7 +531,7 @@ def __iprint_val(val: Any, flush: bool=False) -> str:
 
 def _iprint_ser(ser: pd.Series, tab_sz: int=0, flush: bool=False) -> str:
     out = tab_sz*" " + "pd.Series(OrderedDict([" + "\n"
-    for (k, v) in ser.items:
+    for (k, v) in ser.items():
         out += (tab_sz+4)*" " + "(" + "\n"
         out += (tab_sz+8)*" " + f"{__iprint_val(k)}," + "\n"
         out += (tab_sz+8)* " " + f"{__iprint_val(v)}" + "\n"
@@ -543,6 +543,9 @@ def _iprint_ser(ser: pd.Series, tab_sz: int=0, flush: bool=False) -> str:
 
 
 def iprint_df(df: pd.DataFrame, flush: bool=False) -> str:
+    """Print a DataFrame to stdout in a format you can copy-paste into a REPL.
+    Useful when you have access to the console but not the filesystem.
+    """
     out = "pd.DataFrame(OrderedDict([" + "\n"
     for colname, col in df.items():
         out += 4*" " + "(" + "\n"
