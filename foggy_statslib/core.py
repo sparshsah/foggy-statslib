@@ -521,6 +521,40 @@ def maybe_date(
 ## DATA VISUALIZATION ##################################################################################################
 ########################################################################################################################
 
+def __iprint_val(val: Any, flush: bool=False) -> str:
+    bookend = "'" if isinstance(val, str) else ""
+    out = f"{bookend}{val}{bookend}"
+    if flush:
+        print(out)
+    return out
+
+
+def _iprint_ser(ser: pd.Series, tab_sz: int=0, flush: bool=False) -> str:
+    out = tab_sz*" " + "pd.Series(OrderedDict([" + "\n"
+    for (k, v) in ser.items:
+        out += (tab_sz+4)*" " + "(" + "\n"
+        out += (tab_sz+8)*" " + f"{__iprint_val(k)}," + "\n"
+        out += (tab_sz+8)* " " + f"{__iprint_val(v)}" + "\n"
+        out += (tab_sz+4)*" " + ")," + "\n"
+    out += tab_sz*" " + "]))"
+    if flush:
+        print(out)
+    return out
+
+
+def iprint_df(df: pd.DataFrame, flush: bool=False) -> str:
+    out = "pd.DataFrame(OrderedDict([" + "\n"
+    for colname, col in df.items():
+        out += 4*" " + "(" + "\n"
+        out += 8*" " + f"{__iprint_val(colname)}," + "\n"
+        out += _iprint_ser(col, tab_sz=8) + "\n"
+        out += 4* " " + ")," + "\n"
+    out += "]))"
+    if flush:
+        print(out)
+    return out
+
+
 def _describe_series(ser: pd.Series, bool_is_numeric: bool=True) -> pd.Series:
     if bool_is_numeric:
         if ser.dtype == bool:
