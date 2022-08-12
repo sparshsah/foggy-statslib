@@ -530,14 +530,19 @@ def __iprint_val(val: Any, flush: bool=False) -> str:
 
 
 def _iprint_ser(ser: pd.Series, tab_sz: int=0, flush: bool=False) -> str:
-    out = tab_sz*" " + "pd.Series(OrderedDict([" + "\n"
+    out = tab_sz*" " + "pd.Series(" + "\n"
+    out += (tab_sz+4)*" " + "OrderedDict([" + "\n"
     for (k, v) in ser.items():
-        out += (tab_sz+4)*" " + "(" + "\n"
-        out += (tab_sz+8)*" " + f"{__iprint_val(k)}," + "\n"
-        out += (tab_sz+8)* " " + f"{__iprint_val(v)}" + "\n"
-        out += (tab_sz+4)*" " + ")," + "\n"
-    out += tab_sz*" " + "]))"
+        out += (tab_sz+8)*" " + "(" + "\n"
+        out += (tab_sz+12)*" " + f"{__iprint_val(k)}," + "\n"
+        out += (tab_sz+12)* " " + f"{__iprint_val(v)}" + "\n"
+        out += (tab_sz+8)*" " + ")," + "\n"
+    out += (tab_sz+4)*" " + "])," + "\n"
+    out += tab_sz*" " + f"name={__iprint_val(ser.name)}," + "\n"
+    out += tab_sz*" " + f"dtype={__iprint_val(ser.dtype.type)}," + "\n"
+    out += tab_sz*" " + ")"
     if flush:
+        out = "import OrderedDict; import numpy\n" + out
         print(out)
     return out
 
@@ -554,6 +559,7 @@ def iprint_df(df: pd.DataFrame, flush: bool=False) -> str:
         out += 4* " " + ")," + "\n"
     out += "]))"
     if flush:
+        out = "import OrderedDict; import numpy\n" + out
         print(out)
     return out
 
