@@ -539,10 +539,10 @@ def _iprint_ser(ser: pd.Series, tab_sz: int=0, flush: bool=False) -> str:
         out += (tab_sz+8)*" " + ")," + "\n"
     out += (tab_sz+4)*" " + "])," + "\n"
     out += tab_sz*" " + f"name={__iprint_val(ser.name)}," + "\n"
-    out += tab_sz*" " + f"dtype={__iprint_val(ser.dtype.type)}," + "\n"
+    out += tab_sz*" " + f"dtype={__iprint_val(ser.dtype)}," + "\n"
     out += tab_sz*" " + ")"
     if flush:
-        out = "import OrderedDict; import numpy\n" + out
+        out = "import OrderedDict" + "\n" + out
         print(out)
     return out
 
@@ -559,7 +559,7 @@ def iprint_df(df: pd.DataFrame, flush: bool=False) -> str:
         out += 4* " " + ")," + "\n"
     out += "]))"
     if flush:
-        out = "import OrderedDict; import numpy\n" + out
+        out = "import OrderedDict" + "\n" + out
         print(out)
     return out
 
