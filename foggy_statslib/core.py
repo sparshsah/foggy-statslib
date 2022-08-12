@@ -522,7 +522,7 @@ def maybe_date(
 ########################################################################################################################
 
 def __iprint_val(val: Any, flush: bool=False) -> str:
-    bookend = "'" if isinstance(val, str) else ""
+    bookend = '\'' if isinstance(val, str) else ''
     out = f"{bookend}{val}{bookend}"
     if flush:
         print(out)
@@ -539,10 +539,11 @@ def _iprint_ser(ser: pd.Series, tab_sz: int=0, flush: bool=False) -> str:
         out += (tab_sz+8)*" " + ")," + "\n"
     out += (tab_sz+4)*" " + "])," + "\n"
     out += tab_sz*" " + f"name={__iprint_val(ser.name)}," + "\n"
-    out += tab_sz*" " + f"dtype={__iprint_val(ser.dtype)}," + "\n"
+    # quoted so i can use pandas's native dtype parser instead of importing names
+    out += tab_sz*" " + f"dtype='{ser.dtype}'," + "\n"
     out += tab_sz*" " + ")"
     if flush:
-        out = "import OrderedDict" + "\n" + out
+        out = "from collections import OrderedDict" + "\n" + out
         print(out)
     return out
 
@@ -559,7 +560,7 @@ def iprint_df(df: pd.DataFrame, flush: bool=False) -> str:
         out += 4* " " + ")," + "\n"
     out += "]))"
     if flush:
-        out = "import OrderedDict" + "\n" + out
+        out = "from collections import OrderedDict" + "\n" + out
         print(out)
     return out
 
