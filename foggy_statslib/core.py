@@ -6,6 +6,8 @@ v1.1 beta: API probably won't dramatically change, but
 author: [@sparshsah](https://github.com/sparshsah)
 """
 
+from __future__ import annotations
+
 # standard syntax utils:
 from typing import Tuple, List, Iterable, Callable, Union, Optional, Any
 import operator
@@ -939,6 +941,7 @@ def plot_eda(
     height: float = 2.5,
     aspect: int = 1,
     alpha: float = 0.50,
+    savefig_path: str | None = None,
 ) -> None:
     """Exploratory data analysis."""
     df = df.rename(
@@ -954,4 +957,6 @@ def plot_eda(
             "alpha": alpha,
         },
     )
+    if savefig_path is not None:
+        plt.savefig(savefig_path)
     plt.show()
