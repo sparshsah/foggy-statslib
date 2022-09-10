@@ -644,7 +644,7 @@ def plot(
         ax: Optional[PlotAxes]=None,
         figsize: Tuple[float, float]=FIGSIZE,  # width (x), height (y)
         plt_show: Optional[bool]=None,
-        savefig_fname: Optional[str]=None,
+        savefig_path: Optional[str]=None,
         plt_close: Optional[bool]=None,
         **kwargs
     ) -> PlotAxes:
@@ -685,13 +685,13 @@ def plot(
     ## user didn't provide `ax` AND doesn't want to savefig -> show plot.
     plt_show = maybe(
         v=plt_show,
-        ow = (ax is None) and (savefig_fname is None)
+        ow = (ax is None) and (savefig_path is None)
     )
     ## user doesn't want to savefig OR wants to show -> leave open;
     ## user wants to savefig AND doesn't want to show -> close.
     plt_close = maybe(
         v=plt_close,
-        ow = (savefig_fname is not None) and (not plt_show)
+        ow = (savefig_path is not None) and (not plt_show)
     )
 
     sns.set(font=typeface, font_scale=font_scale)
@@ -884,8 +884,8 @@ def plot(
         ax.set_title(title, y=titley)
 
     # SIDE EFFECTS
-    if savefig_fname is not None:
-        plt.savefig(savefig_fname)
+    if savefig_path is not None:
+        plt.savefig(savefig_path)
     if plt_show:
         plt.show()
     if plt_close:
@@ -930,4 +930,28 @@ def plot_corr_heatmap(
         square=True, **kwargs
     )
     plt.title(title, size="x-large")
+    plt.show()
+
+
+def plot_eda(
+    df: pd.DataFrame,
+    all_cols: bool = True,
+    height: float = 2.5,
+    aspect: int = 1,
+    alpha: float = 0.50,
+) -> None:
+    """Exploratory data analysis."""
+    df = df.rename(
+        columns = lambda c: f"{c} ({df[c].isna().mean()*100:.2f}% na)",
+    )
+    cols = df.columns if all_cols else None
+    sns.pairplot(
+        df,
+        vars=cols,
+        height=height,
+        aspect=aspect,
+        plot_kws={
+            "alpha": alpha,
+        },
+    )
     plt.show()
