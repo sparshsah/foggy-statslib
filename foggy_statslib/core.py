@@ -937,7 +937,7 @@ def plot_corr_heatmap(
 
 def plot_eda(
     df: pd.DataFrame,
-    all_cols: bool = True,
+    col_names: Any = ...,
     height: float = 2.5,
     aspect: int = 1,
     alpha: float = 0.50,
@@ -947,10 +947,11 @@ def plot_eda(
     df = df.rename(
         columns = lambda c: f"{c} ({df[c].isna().mean()*100:.2f}% na)",
     )
-    cols = df.columns if all_cols else None
+    if col_names ==  ...:
+        col_names = df.columns
     sns.pairplot(
         df,
-        vars=cols,
+        vars=col_names,
         height=height,
         aspect=aspect,
         plot_kws={
