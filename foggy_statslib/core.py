@@ -941,6 +941,7 @@ def plot_eda(
     height: float = 2.5,
     aspect: int = 1,
     alpha: float = 0.50,
+    title: str | None = None,
     savefig_path: str | None = None,
 ) -> None:
     """Exploratory data analysis."""
@@ -958,6 +959,8 @@ def plot_eda(
             "alpha": alpha,
         },
     )
+    if title is not None:
+        plt.suptitle(title)
     if savefig_path is not None:
         plt.savefig(savefig_path)
     plt.show()
