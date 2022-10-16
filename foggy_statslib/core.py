@@ -246,6 +246,10 @@ def check_diff(
     diff.loc["_ix_missing_in_b"] = len(df_a.index.difference(df_b.index)) / len(df_a.index)
     diff.loc["_ix_excess_in_b"] = len(df_b.index.difference(df_a.index)) / len(df_a.index)
     # must reindex at this point
+    df_a = df_a.reindex(
+        columns=df_a.columns.intersection(df_b.columns),
+        index=df_a.index.intersection(df_b.index),
+    )
     df_b = df_b.reindex(
         columns=df_a.columns.intersection(df_b.columns),
         index=df_a.index.intersection(df_b.index),
