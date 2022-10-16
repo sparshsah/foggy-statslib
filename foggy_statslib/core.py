@@ -236,6 +236,29 @@ def get_inv_of_df(df: pd.DataFrame) -> pd.DataFrame:
     return inv_df
 
 
+def check_diff(
+    df_a: pd.DataFrame,
+    df_b: pd.DataFrame,
+) -> pd.Series:
+    diff = pd.Series(dtype=float)
+    diff.loc["_cols_missing_in_b"] = len(df_a.columns.difference(df_b.columns)) / len(df_a.columns)
+    diff.loc["_cols_excess_in_b"] = len(df_b.columns.difference(df_a.columns)) / len(df_a.columns)
+    diff.loc["_ix_missing_in_b"] = len(df_a.index.difference(df_b.index)) / len(df_a.index)
+    diff.loc["_ix_excess_in_b"] = len(df_b.index.difference(df_a.index)) / len(df_a.index)
+    # must reindex at this point
+    df_b = df_b.reindex(columns=df_a.columns, index=df_a.index)
+    for colname in df_a.columns:
+        try:
+            defined_equal = np.isclose(df_a[colname], df_b[colname])
+        except TypeError:
+            defined_equal = df_a[colname] == df_b[colname]
+        undefined_equal = df_a[colname].isna() & df_b[colname].isna()
+        equal = defined_equal | undefined_equal
+        unequal = ~equal
+        diff.loc[colname] = unequal.mean()
+    return diff
+
+
 ########################################################################################################################
 ## DB ##################################################################################################################
 ########################################################################################################################
@@ -299,29 +322,6 @@ def get_nearest_value(
     loc = distance.idxmin()
     v = df.loc[loc]
     return loc, v
-
-
-def check_diff(
-    df_a: pd.DataFrame,
-    df_b: pd.DataFrame,
-) -> pd.Series:
-    diff = pd.Series(dtype=float)
-    diff.loc["_cols_missing_in_b"] = len(df_a.columns.difference(df_b.columns)) / len(a.columns)
-    diff.loc["_cols_excess_in_b"] = len(df_b.columns.difference(df_a.columns)) / len(a.columns)
-    diff.loc["_ix_missing_in_b"] = len(df_a.index.difference(df_b.index)) / len(a.index)
-    diff.loc["_ix_excess_in_b"] = len(df_b.index.difference(df_a.index)) / len(a.index)
-    # must reindex at this point
-    df_b = df_b.reindex(columns=df_a.columns, index=df_a.index)
-    for colname in df_a.columns:
-        try:
-            defined_equal = np.isclose(df_a[colname], df_b[colname])
-        except TypeError:
-            defined_equal = df_a[colname] == df_b[colname]
-        undefined_equal = df_a[colname].isna() & df_b[colname].isna()
-        equal = defined_equal | undefined_equal
-        unequal = ~equal
-        diff.loc[colname] = unequal.mean()
-    return diff
 
 
 ########################################################################################################################
