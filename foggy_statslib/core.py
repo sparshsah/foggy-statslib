@@ -245,20 +245,17 @@ def check_diff(
     diff.loc["_cols_excess_in_b"] = len(df_b.columns.difference(df_a.columns)) / len(df_a.columns)
     diff.loc["_ix_missing_in_b"] = len(df_a.index.difference(df_b.index)) / len(df_a.index)
     diff.loc["_ix_excess_in_b"] = len(df_b.index.difference(df_a.index)) / len(df_a.index)
-    # must reindex at this point
-    df_a = df_a.reindex(
-        columns=df_a.columns.intersection(df_b.columns),
-        index=df_a.index.intersection(df_b.index),
-    )
-    df_b = df_b.reindex(
-        columns=df_a.columns.intersection(df_b.columns),
-        index=df_a.index.intersection(df_b.index),
-    )
+    # must reindex at this point to make pointwise comparisons work
+    common_cols = df_a.columns.intersection(df_b.columns)
+    common_ix = df_a.index.intersection(df_b.index)
+    df_a = df_a.reindex(columns=common_cols, index=common_ix)
+    df_b = df_b.reindex(columns=common_cols, index=common_ix)
     diff.loc["_dtypes"] = (df_a.dtypes != df_b.dtypes).mean()
     for colname in df_a.columns:
         try:
             defined_equal = np.isclose(df_a[colname], df_b[colname])
         except TypeError:
+            # isclose doesn't handle strings, etc
             defined_equal = df_a[colname] == df_b[colname]
         undefined_equal = df_a[colname].isna() & df_b[colname].isna()
         equal = defined_equal | undefined_equal
