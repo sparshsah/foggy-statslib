@@ -532,11 +532,13 @@ def _get_est_beta_of_r(
 def _get_alpha_t_stat_of_r(
         of_r: FloatSeries,
         on_r: FloatSeries,
+        smoothing_horizon: int | None = DEFAULT_SMOOTHING_HORIZON,
     ) -> Floatlike:
     m = fsset.linreg(
         df=pd.DataFrame({"of_r": of_r, "on_r": on_r}),
         y="of_r",
         x=["on_r"],
+        smoothing_horizon=smoothing_horizon,
     )
     alpha_t = m.tvalues["const"]
     return alpha_t
