@@ -6,9 +6,12 @@ v1.1 beta: API probably won't dramatically change, but
 author: [@sparshsah](https://github.com/sparshsah)
 """
 
+from __future__ import annotations
+
 from typing import Optional
 import pandas as pd
 import numpy as np
+import statsmodels.api as sm
 import foggy_statslib.core as fsc
 from foggy_statslib.core import FloatSeries, FloatDF, Floatlike, REASONABLE_FRACTION_OF_TOTAL
 import foggy_statslib.stats.est.core as fsec
@@ -89,6 +92,8 @@ def ___smooth(
     ) -> FloatSeries:
     """E.g. Smooth passive-asset daily-returns data to account for international trading-session async.
 
+    E.g. ___smooth([1, 0, 1, 0], horizon=3) = [nan, nan, 0.67, 0.33].
+
     scale_up_pow: float,
         * ...
         * -1 -> scale down by 1/horizon (why would you do this? idk);
@@ -102,6 +107,23 @@ def ___smooth(
     est_avg = _get_est_avg(ser=ser, avg_kind=avg_kind, est_window_kind=window_kind, est_horizon=horizon)
     scaled = est_avg * horizon**scale_up_pow
     return scaled
+
+
+def __smooth(
+    df: FloatDF,
+    avg_kind: str=DEFAULT_AVG_KIND,
+    window_kind: str=DEFAULT_SMOOTHING_WINDOW_KIND,
+    horizon: int=DEFAULT_SMOOTHING_HORIZON,
+    scale_up_pow: float=0
+) -> FloatSeries:
+    smoothed = df.apply(
+        ___smooth,
+        avg_kind=avg_kind,
+        window_kind=window_kind,
+        horizon=horizon,
+        scale_up_pow=scale_up_pow,
+    )
+    return smoothed
 
 
 ########################################################################################################################
@@ -281,3 +303,24 @@ def get_est_corr(
     for (a, ser_a) in df.items()}
     est_corr = pd.DataFrame(est_corr, columns=df.columns, index=df.columns).T
     return est_corr
+
+
+def linreg(
+    df: FloatDF,
+    y: str,
+    x: list[str],
+    smoothing_horizon: Optional[int] = DEFAULT_SMOOTHING_HORIZON,
+    de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
+    est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND,
+) -> sm.regression.linear_model.RegressionResults:
+    df = __smooth(df[[y] + x], horizon=smoothing_horizon)
+    if de_avg_kind != "arith_mean":
+        raise NotImplementedError(de_avg_kind)
+    if est_window_kind != "full":
+        raise NotImplementedError(est_window_kind)
+    y = df[y]
+    x = sm.add_constant(df[x])
+    _m = sm.OLS(endog=y, exog=x, hasconst=True, missing="drop")
+    # Newey-West with 0 lags is simply a form of HC SE
+    m = _m.fit(cov_type="HAC", cov_kwds={"maxlags": smoothing_horizon-1})
+    return m

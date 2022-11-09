@@ -12,12 +12,13 @@ author: [@sparshsah](https://github.com/sparshsah)
     specified portfolio stat taking as ground truth the given market params.
 """
 
+from __future__ import annotations
+
 from typing import Tuple, Dict, Union, Optional
 from collections import OrderedDict
 import pandas as pd
 import numpy as np
 import scipy.stats as sps
-import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import seaborn as sns
 import foggy_statslib.core as fsc
@@ -531,22 +532,12 @@ def _get_est_beta_of_r(
 def _get_alpha_t_stat_of_r(
         of_r: FloatSeries,
         on_r: FloatSeries,
-        smoothing_window: Optional[int] = None,
-        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
-        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> Floatlike:
-    # TODO(sparshsah): smooth returns using fsset
-    if smoothing_window is not None:
-        raise NotImplementedError(smoothing_window)
-    if de_avg_kind != "arith_mean":
-        raise NotImplementedError(de_avg_kind)
-    if est_window_kind != "full":
-        raise NotImplementedError(est_window_kind)
-    y = of_r
-    x = sm.add_constant(on_r)
-    _m = sm.OLS(endog=y, exog=x, hasconst=True)
-    # Newey-West with 0 lags is simply a form of HC SE
-    m = _m.fit(cov_type="HAC", cov_kwds={"maxlags": 0})
+    m = fsset.linreg(
+        df=pd.DataFrame({"of_r": of_r, "on_r": on_r}),
+        y="of_r",
+        x=["on_r"],
+    )
     alpha_t = m.tvalues["const"]
     return alpha_t
 
