@@ -544,19 +544,13 @@ def _get_alpha_t_stat_of_r(
 
 def get_alpha_t_stat_of_r(
         r: FloatDF,
-        de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
-        est_window_kind: str=DEFAULT_EVAL_WINDOW_KIND
     ) -> FloatDF:
     alpha_t_stat = {
         of_name: {
-            on_name: _get_alpha_t_stat_of_r(
+            on_name: 0 if on_name == of_name else _get_alpha_t_stat_of_r(
                 of_r=of_r, on_r=on_r,
-                de_avg_kind=de_avg_kind,
-                est_window_kind=est_window_kind
             )
-        for (on_name, on_r) in r.items()
-        # can't have t-stat of y on y...
-        if on_name != of_name}
+        for (on_name, on_r) in r.items()}
     for (of_name, of_r) in r.items()}
     alpha_t_stat = pd.DataFrame(alpha_t_stat, columns=r.columns, index=r.columns)
     alpha_t_stat = alpha_t_stat.rename_axis(columns="of", index="on")
