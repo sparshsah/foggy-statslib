@@ -26,7 +26,7 @@ import foggy_statslib.stats.est.tsa as fsset
 
 from foggy_statslib.core import FloatSeries, FloatDF, FloatSeriesOrDF, Floatlike, DEFAULT_DATETIME_FREQ
 from foggy_statslib.stats.est.tsa import DEFAULT_AVG_KIND, DEFAULT_DE_AVG_KIND, \
-    DEFAULT_EST_WINDOW_KIND, DEFAULT_EST_HORIZON, DEFAULT_EVAL_WINDOW_KIND
+    DEFAULT_SMOOTHING_HORIZON, DEFAULT_EST_WINDOW_KIND, DEFAULT_EST_HORIZON, DEFAULT_EVAL_WINDOW_KIND
 
 
 # market facts that we can't control
@@ -544,11 +544,13 @@ def _get_alpha_t_stat_of_r(
 
 def get_alpha_t_stat_of_r(
         r: FloatDF,
+        smoothing_horizon: int | None = DEFAULT_SMOOTHING_HORIZON,
     ) -> FloatDF:
     alpha_t_stat = {
         of_name: {
             on_name: 0 if on_name == of_name else _get_alpha_t_stat_of_r(
                 of_r=of_r, on_r=on_r,
+                smoothing_horizon=smoothing_horizon,
             )
         for (on_name, on_r) in r.items()}
     for (of_name, of_r) in r.items()}
