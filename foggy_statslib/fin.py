@@ -99,6 +99,7 @@ def _get_pv(fv: FloatSeries, discount_r: float = 0) -> FloatSeries:
 
 
 def _get_dur(fv: FloatSeries, discount_r: float = 0) -> float:
+    """Not exactly right, but good enough for me."""
     pv = _get_pv(fv=fv, discount_r=discount_r)
     dur = np.average(pv.index, weights=pv.values)
     return dur
