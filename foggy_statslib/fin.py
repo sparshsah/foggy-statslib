@@ -99,7 +99,13 @@ def _get_pv(fv: FloatSeries, discount_r: float = 0) -> FloatSeries:
 
 
 def _get_dur(fv: FloatSeries, discount_r: float = 0) -> float:
-    """Not exactly right, but good enough for me."""
+    """Not exactly right, but good enough for me.
+
+    I come from macro-land, where duration is simply calculated as a recent
+    realized beta to shifts in the global yield curve.
+    Obviously, in private credit, you can't do the same thing
+    for a pre-inception security whose price history doesn't even exist yet.
+    """
     pv = _get_pv(fv=fv, discount_r=discount_r)
     dur = np.average(pv.index, weights=pv.values)
     return dur
