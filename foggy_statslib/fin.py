@@ -85,7 +85,7 @@ ROUND_DPS: pd.Series = fsc.get_series([
 ## DAT SELLSIDE SHIT ###################################################################################################
 ########################################################################################################################
 
-def __get_pv(fv: float, t: float = 0, discount_r: float = 0) -> float
+def __get_pv(fv: float, t: float = 0, discount_r: float = 0) -> float:
     return fv / (1 + discount_r)**t
 
 
