@@ -666,7 +666,7 @@ def plot(
         # AXIS TITLES
         xlabel: Optional[str]=None, ylabel: Optional[str]=None,
         # LEGEND
-        legend: bool=False,
+        legend: bool | None = None,
         legend_title: Optional[str]=None,
         legend_title_fontsize: Optional[str]=None,  # e.g. 'xx-large'
         legend_loc: Union[Tuple[float, float], str]="best",
@@ -905,6 +905,9 @@ def plot(
         ax.get_yaxis().get_label().set_visible(False)
 
     # LEGEND
+    # if legend is None, ignore
+    if legend is False:
+        ax.get_legend().set_visible(legend)
     if legend:
         ax.legend(
             title=legend_title, fontsize=legend_title_fontsize,
