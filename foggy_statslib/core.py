@@ -4,6 +4,8 @@ v1.1 beta: API probably won't dramatically change, but
     implementations have not yet been thoroughly tested.
 
 author: [@sparshsah](https://github.com/sparshsah)
+
+made available under MIT license at https://github.com/sparshsah/foggy-statslib/blob/main/foggy_statslib/core.py
 """
 
 from __future__ import annotations
