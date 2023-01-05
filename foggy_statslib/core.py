@@ -794,8 +794,17 @@ def plot(
     # sensible default
     if kind == "line" and xlim_left is None:
         xlim_left = df.index[0]
+        # str causes problems because it is comparable (which is good) but also iterable,
+        # which makes matplotlib think you just called it `xlim_left` but really meant to call it `xlim := (xlim_left, xlim_right)`,
+        # so that e.g. `xlim_left='ab'` will lead to nonsense as it attempts to set `xlim_left='a'` and `xlim_right='b'`, while
+        # `xlim_left='abc'` will simply fail with a `ValueError: too many values to unpack (expected 2) (got 3)`:
+        # https://github.com/matplotlib/matplotlib/blob/0e3a261cf8c0477431e2a4b806427d4bc46b752a/lib/matplotlib/axes/_base.py#L3722-L3723
+        if isinstance(xlim_left, str):
+            xlim_left = None
     if kind == "line" and xlim_right is None:
         xlim_right = df.index[-1]
+        if isinstance(xlim_right, str):
+            xlim_right = None
     # set
     if xlim_left is not None:
         ax.set_xlim(left=xlim_left)
