@@ -232,12 +232,6 @@ def get_diag_of_df(df: pd.DataFrame) -> pd.DataFrame:
     return diag_df
 
 
-def get_inv_of_df(df: pd.DataFrame) -> pd.DataFrame:
-    inv_df = np.linalg.inv(df)
-    inv_df = pd.DataFrame(inv_df, index=df.index, columns=df.columns)
-    return inv_df
-
-
 def check_diff(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
@@ -341,6 +335,12 @@ def ceil(x: float, increment: float=1.) -> float:
     0.20
     """
     return np.ceil(x / increment) * increment
+
+
+def get_inv_of_df(df: pd.DataFrame) -> pd.DataFrame:
+    inv_df = np.linalg.inv(df)
+    inv_df = pd.DataFrame(inv_df, index=df.index, columns=df.columns)
+    return inv_df
 
 
 # weighted averages
