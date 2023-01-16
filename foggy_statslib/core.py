@@ -343,6 +343,92 @@ def ceil(x: float, increment: float=1.) -> float:
     return np.ceil(x / increment) * increment
 
 
+# weighted averages
+
+def __get_wa(
+    df: pd.DataFrame,
+    y: str = "y",
+    y_dropna: bool = False,
+    y_isna: bool = False,
+    w: str = "__unit__",
+    w_fillna_val: float = np.nan,
+) -> float:
+    # values of interest
+    y_col = df[y]
+    if y_dropna:
+        y_col = y_col.dropna()
+    if y_isna:
+        y_col = y_col.isna()
+    # weights
+    if w == "__unit__":
+        w_col = pd.Series(1, index=y_col.index)
+    else:
+        w_col = df[w]
+    w_col = w_col.reindex(index=y_col.index)
+    w_col = w_col.fillna(w_fillna_val)
+    # calc
+    if w_col.sum():
+        wa = np.average(y_col, weights=w_col)
+    else:
+        # either w is all zero's, OR even worse y (and therefore w) is altogether empty
+        wa = np.nan
+    return wa
+
+
+def _get_wa(
+    df: pd.DataFrame,
+    y: str = "y",
+    y_dropna: bool = False,
+    y_isna: bool = False,
+    w: str = "__unit__",
+    w_fillna_val: float = np.nan,
+    x: Iterable[str] = ("__unit__",),
+) -> pd.Series:
+    # splits
+    x = list(x)
+    # calc
+    gb = df.groupby(x)
+    wa = gb.apply(
+        lambda sub_df:
+        __get_wa(
+            df=sub_df,
+            y=y,
+            y_dropna=y_dropna,
+            y_isna=y_isna,
+            w=w,
+            w_fillna_val=w_fillna_val,
+        )
+    )
+    wa.name = y
+    return wa
+
+
+def get_wa(
+    df: pd.DataFrame,
+    ys: Iterable[str] = ("y",),
+    y_dropna: bool = False,
+    y_isna: bool = False,
+    w: str = "__unit__",
+    w_fillna_val: float = np.nan,
+    x: Iterable[str] = ("__unit__",),
+) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            y:
+            _get_wa(
+                df=df,
+                y=y,
+                y_dropna=y_dropna,
+                y_isna=y_isna,
+                w=w,
+                w_fillna_val=w_fillna_val,
+                x=x,
+            )
+            for y in ys
+        }
+    )
+
+
 ########################################################################################################################
 ## DATA REPRESENTATION #################################################################################################
 ########################################################################################################################
