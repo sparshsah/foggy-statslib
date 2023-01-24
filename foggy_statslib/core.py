@@ -606,22 +606,24 @@ def __maybe_date(date: Optional[Datelike]=None) -> Datelike:
     return date
 
 
-def __get_lagged_date(date: Datelike, lags: int=0, freq: str=DEFAULT_DATETIME_FREQ) -> Datelike:
-    offset = - lags * pd.tseries.frequencies.to_offset(freq)
-    lagged_date = date + offset
-    return lagged_date
+def __get_offset_date(date: Datelike, offset: int=0, freq: str=DEFAULT_DATETIME_FREQ) -> Datelike:
+    offset = offset * pd.tseries.frequencies.to_offset(freq)
+    offset_date = date + offset
+    return offset_date
 
 
-def _get_lagged_date(date: Optional[Datelike]=None, lags: int=0, freq: str=DEFAULT_DATETIME_FREQ):
-    """Like `__get_lagged_date()`, but makes sure `lagged_date` is not after `date`.
+def _get_offset_date(date: Optional[Datelike]=None, offset: int=0, freq: str=DEFAULT_DATETIME_FREQ):
+    """Like `__get_offset_date()`, but makes sure `offset_date` is not after `date`.
     E.g. On Saturday, gives you yesterday (Friday) instead of day-after-tomorrow (Monday).
     """
+    if offset > 0:
+        raise ValueError(f"Use `__get_offset_date(offset={offset})`! This one is designed to enforce a lag.")
     date = __maybe_date(date=date)
-    lagged_date = __get_lagged_date(date=date, lags=lags, freq=freq)
-    if lagged_date > date:
-        lagged_date = __get_lagged_date(date=date, lags=lags+1, freq=freq)
-    assert not lagged_date > date, (date, lags, freq, lagged_date)
-    return lagged_date
+    offset_date = __get_offset_date(date=date, offset=offset, freq=freq)
+    if offset_date > date:
+        offset_date = __get_offset_date(date=date, offset=offset-1, freq=freq)
+    assert not offset_date > date, (date, offset, freq, offset_date)
+    return offset_date
 
 
 def maybe_date(
