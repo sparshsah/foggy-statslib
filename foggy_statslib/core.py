@@ -628,10 +628,10 @@ def _get_offset_date(date: Optional[Datelike]=None, offset: int=0, freq: str=DEF
 
 def maybe_date(
         date: Datelike=None,
-        ow_lags: int=0, freq=DEFAULT_DATETIME_FREQ,
+        ow_offset: int=0, freq=DEFAULT_DATETIME_FREQ,
         granular: bool=False, as_str: bool=False
     ) -> Datelike:
-    date = maybe(date, _get_lagged_date(lags=ow_lags, freq=freq))
+    date = maybe(date, _get_offset_date(offset=ow_offset, freq=freq))
     date = strfdate(date, granular=granular)
     date = date if as_str else pd.to_datetime(date)
     return date
