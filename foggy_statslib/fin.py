@@ -990,4 +990,4 @@ def chart_r(r: FloatDF, plot_cum_r_kind: str=DEFAULT_PLOT_CUM_R_KIND, title: str
     plt.suptitle(moving_est_perf_stats.name, y=0.91)
     plt.show()
     #### diagnostic
-    print(tables["standalone"])
+    print(tables["standalone"].T)
