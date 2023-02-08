@@ -1013,6 +1013,8 @@ def plot(
         )
 
     # (SUB)PLOT TITLE
+    if title is None and hasattr(df, "name"):
+        title = df.name
     if title is not None:
         ax.set_title(title, y=titley)
 
