@@ -987,6 +987,7 @@ def plot(
         plt.setp(ax.get_xticklabels(), visible=False)
     # AXIS TITLES
     ## x
+    xlabel = maybe(xlabel, df.index.name)
     xlabel = maybe(xlabel, False)
     if xlabel:
         ax.set_xlabel(xlabel)
