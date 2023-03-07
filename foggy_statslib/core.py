@@ -444,7 +444,7 @@ def strfpct(pct: float, dps: int=1) -> str:
 
 def strfccy(amt: float, ccy: str="$") -> str:
     """Pretty-format a dollar amount."""
-    return f"{ccy}{round(amt, 2):.2f}"
+    return f"{ccy}{amt:,.2f}"
 
 
 def strfdate(date: Datelike="now", granular: bool=False) -> str:
