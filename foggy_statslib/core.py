@@ -10,7 +10,7 @@ made available under MIT license at https://github.com/sparshsah/foggy-statslib/
 
 from __future__ import annotations
 
-from typing import Tuple, List, Iterable, Callable, Union, Optional, Any
+from typing import Iterable, Any
 import operator
 from collections import OrderedDict
 import itertools
