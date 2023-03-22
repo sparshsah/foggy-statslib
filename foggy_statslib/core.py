@@ -10,21 +10,23 @@ made available under MIT license at https://github.com/sparshsah/foggy-statslib/
 
 from __future__ import annotations
 
-from typing import Iterable, Any
-import operator
-from collections import OrderedDict
-import itertools
-import os
-from warnings import warn
 import datetime as dt
-import random
+import itertools
+import operator
+import os
 import pickle
-import pandas as pd
+import random
+from collections import OrderedDict
+from collections.abc import Callable
+from typing import Any, Iterable
+from warnings import warn
+
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.ticker as plt_ticker
-from matplotlib.axes import Axes as PlotAxes
+import pandas as pd
 import seaborn as sns
+from matplotlib import pyplot as plt
+from matplotlib import ticker as plt_ticker
+from matplotlib.axes import Axes as PlotAxes
 
 sns.set()
 
@@ -46,12 +48,12 @@ sns.set()
 #     But, `fun: T -> T` accepts any type, returning the SAME type.
 T = Any
 T_ = Any
-Data = Union[pd.Series, pd.DataFrame]
+Data = pd.Series | pd.DataFrame
 FloatSeries = pd.Series
 FloatDF = pd.DataFrame
-FloatSeriesOrDF = Union[FloatSeries, FloatDF]
-Floatlike = Union[float, FloatSeriesOrDF]
-Datelike = Union[dt.datetime, str]
+FloatSeriesOrDF = FloatSeries | FloatDF
+Floatlike = float | FloatSeriesOrDF
+Datelike = dt.datetime | str
 
 REASONABLE_FRACTION_OF_TOTAL: float = 0.95
 # Unix epoch
@@ -65,7 +67,7 @@ LEGEND_LOC = (1.04, 0.08)  # x, y
 FIGSIZE = (12, 8)  # width (x), height (y)
 
 
-def maybe(v: T = None, ow: T_ = None) -> Union[T, T_]:
+def maybe(v: T = None, ow: T_ = None) -> T | T_:
     """Maybe some value, otherwise some fill-in value."""
     return ow if v is None else v
 
@@ -76,9 +78,9 @@ def maybe(v: T = None, ow: T_ = None) -> Union[T, T_]:
 
 
 def get_dtx(
-    periods: Optional[int] = None,
-    start: Optional[Datelike] = None,
-    end: Optional[Datelike] = None,
+    periods: int | None = None,
+    start: Datelike | None = None,
+    end: Datelike | None = None,
     freq: str = DEFAULT_DATETIME_FREQ,
 ) -> pd.DatetimeIndex:
     if periods is None:
@@ -92,14 +94,14 @@ def get_dtx(
     return dtx
 
 
-def get_series(data: List[Tuple[Any, Any]], name: Optional[str] = None) -> pd.Series:
+def get_series(data: list[tuple[Any, Any]], name: str | None = None) -> pd.Series:
     """Convert a list of (key, value) pairs into a pd.Series."""
     data = OrderedDict(data)
     data = pd.Series(data, name=name)
     return data
 
 
-def get_df(data: List[Tuple[Any, pd.Series]], values_are: str = "rows") -> pd.DataFrame:
+def get_df(data: list[tuple[Any, pd.Series]], values_are: str = "rows") -> pd.DataFrame:
     """Convert orderly data `..., (rowname,row), ...` into a DataFrame.
 
     ```
@@ -126,7 +128,7 @@ def get_df(data: List[Tuple[Any, pd.Series]], values_are: str = "rows") -> pd.Da
     return data
 
 
-def flatten(lst: List[List[T]]) -> List[T]:
+def flatten(lst: list[list[T]]) -> list[T]:
     """
     >>> lst = [
     >>>     ["A0", "A1"],
@@ -150,7 +152,11 @@ def _rep_it_to_len(it: Iterable, len_: int) -> Iterable:
     return (it * num_reps)[:len_]
 
 
-def get_chunks(it: Iterable[T], sz: int, index_by_iloc=False) -> Iterable[Iterable[T]]:
+def get_chunks(
+    it: Iterable[T],
+    sz: int,
+    index_by_iloc: bool = False,
+) -> Iterable[Iterable[T]]:
     """Break up `it` into `sz`-size chunks."""
     # this is a generator expression!
     return (
@@ -258,7 +264,10 @@ def check_diff(
 
 
 def _filter_like(
-    it: Iterable[str], like: str, fn: Callable = lambda x: x.upper(), not_: bool = False
+    it: Iterable[str],
+    like: str,
+    fn: Callable = lambda x: x.upper(),
+    not_: bool = False,
 ) -> List[str]:
     fn = (lambda x: x) if fn is None else fn
     cond = operator.not_ if not_ else bool
@@ -284,7 +293,10 @@ def filter_like(
     return result
 
 
-def get_nearest_value(df: Data, key: float, axis: str = "index") -> Tuple[float, Any]:
+def get_nearest_value(
+    df: Data, key: float,
+    axis: str = "index",
+) -> tuple[float, Any]:
     """
     For all those times you have a float-indexed Series or DataFrame
     like `ser = pd.Series({0.1: "a", 0.2: "b", 0.3: "c"})`,
@@ -530,7 +542,10 @@ def _from_pickle(fpath: str, **kwargs) -> Any:
 
 
 def from_pickle(
-    description: str = "data", dirpath: str = "data/", ext: str = ".pkl", **kwargs
+    description: str = "data",
+    dirpath: str = "data/",
+    ext: str = ".pkl",
+    **kwargs,
 ) -> Any:
     """Convenience function to find and load
     the most recent pickle (or CSV, etc)
@@ -593,13 +608,15 @@ def to_pickle(
 ########################################################################################################################
 
 
-def __maybe_date(date: Optional[Datelike] = None) -> Datelike:
+def __maybe_date(date: Datelike | None = None) -> Datelike:
     date = maybe(date, dt.datetime.now())
     return date
 
 
 def __get_offset_date(
-    date: Datelike, offset: int = 0, freq: str = DEFAULT_DATETIME_FREQ
+    date: Datelike,
+    offset: int = 0,
+    freq: str = DEFAULT_DATETIME_FREQ,
 ) -> Datelike:
     offset = offset * pd.tseries.frequencies.to_offset(freq)
     offset_date = date + offset
@@ -607,7 +624,9 @@ def __get_offset_date(
 
 
 def _get_offset_date(
-    date: Optional[Datelike] = None, offset: int = 0, freq: str = DEFAULT_DATETIME_FREQ
+    date: Datelike | None = None,
+    offset: int = 0,
+    freq: str = DEFAULT_DATETIME_FREQ,
 ):
     """Like `__get_offset_date()`, but makes sure `offset_date` is not after `date`.
     E.g. On Saturday, gives you yesterday (Friday) instead of day-after-tomorrow (Monday).
@@ -625,9 +644,9 @@ def _get_offset_date(
 
 
 def maybe_date(
-    date: Datelike = None,
+    date: Datelike | None = None,
     ow_offset: int = 0,
-    freq=DEFAULT_DATETIME_FREQ,
+    freq: str = DEFAULT_DATETIME_FREQ,
     granular: bool = False,
     as_str: bool = False,
 ) -> Datelike:
@@ -728,26 +747,26 @@ def plot(
     axvline_colors: Iterable[str] = ("gray",),
     # AXIS LIMITS
     ## x
-    xlim: Optional[Tuple[float, float]] = None,
-    xlim_left: Optional[float] = None,
-    xlim_right: Optional[float] = None,
+    xlim: tuple[float, float] | None = None,
+    xlim_left: float | None = None,
+    xlim_right: float | None = None,
     ## y
-    ylim: Optional[Tuple[float, float]] = None,
-    ylim_bottom: Optional[float] = None,
-    ylim_top: Optional[float] = None,
+    ylim: tuple[float, float] | None = None,
+    ylim_bottom: float | None = None,
+    ylim_top: float | None = None,
     # AXIS DIRECTION
     invert_xaxis: bool = False,
     invert_yaxis: bool = False,
     # AXIS TICK INTERVALS
     ## x (major, minor)
-    xtick_intervals: Optional[Tuple[float, float]] = None,
-    xtick_major_interval: Optional[float] = None,
+    xtick_intervals: tuple[float, float] | None = None,
+    xtick_major_interval: float | None = None,
     # can set this to `None` to carry over value from `df.plot()`
-    xtick_minor_interval: Optional[float] = None,
+    xtick_minor_interval: float | None = None,
     ## y (major, minor)
-    ytick_intervals: Optional[Tuple[float, float]] = None,
-    ytick_major_interval: Optional[float] = None,
-    ytick_minor_interval: Optional[float] = None,
+    ytick_intervals: Tuple[float, float] | None = None,
+    ytick_major_interval: float | None = None,
+    ytick_minor_interval: float | None = None,
     # AXIS TICK LABELS
     pct_dps: int = 1,
     granular_dates: bool = False,
@@ -766,18 +785,18 @@ def plot(
     ylabel: Optional[str] = None,
     # LEGEND
     legend: bool | None = None,
-    legend_title: Optional[str] = None,
-    legend_title_fontsize: Optional[str] = None,  # e.g. 'xx-large'
-    legend_loc: Union[Tuple[float, float], str] = "best",
+    legend_title: str | None = None,
+    legend_title_fontsize: str | None = None,  # e.g. 'xx-large'
+    legend_loc: tuple[float, float] | str = "best",
     # (SUB)PLOT TITLE
-    title: Optional[str] = None,
+    title: str | None = None,
     titley: float = 1.0,
     # SIDE EFFECTS
-    ax: Optional[PlotAxes] = None,
-    figsize: Tuple[float, float] = FIGSIZE,  # width (x), height (y)
-    plt_show: Optional[bool] = None,
-    savefig_path: Optional[str] = None,
-    plt_close: Optional[bool] = None,
+    ax: PlotAxes | None = None,
+    figsize: tuple[float, float] = FIGSIZE,  # width (x), height (y)
+    plt_show: bool | None = None,
+    savefig_path: str | None = None,
+    plt_close: bool | None = None,
     **kwargs,
 ) -> PlotAxes:
 
@@ -1045,7 +1064,10 @@ def plot(
 
 
 def get_y_equals_x_plot_base(
-    lim: float = 1, style: str = "--", color: str = "black", **kwargs
+    lim: float = 1,
+    style: str = "--",
+    color: str = "black",
+    **kwargs,
 ) -> PlotAxes:
     """Usage, e.g.
     >>> ax = get_y_equals_x_plot_base()
@@ -1069,8 +1091,8 @@ def plot_t_stat(t_stat: Data, **kwargs) -> PlotAxes:
 def plot_corr_heatmap(
     corr_matrix: pd.DataFrame,
     cmap: str = "RdYlGn",
-    title: Optional[str] = None,
-    figsize: Tuple[float, float] = (8, 8),  # width (x), height (y)
+    title: str | None = None,
+    figsize: tuple[float, float] = (8, 8),  # width (x), height (y)
     **kwargs,
 ) -> None:
     plt.figure(figsize=figsize)
