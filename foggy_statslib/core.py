@@ -10,33 +10,22 @@ made available under MIT license at https://github.com/sparshsah/foggy-statslib/
 
 from __future__ import annotations
 
-# standard syntax utils:
 from typing import Tuple, List, Iterable, Callable, Union, Optional, Any
 import operator
-# standard data structures:
 from collections import OrderedDict
-# standard calculations:
 import itertools
-# standard sys:
 import os
 from warnings import warn
-# standard data i/o:
 import datetime as dt
 import random
 import pickle
-# standard visualization: None
-# extensions for syntax utils: None
-# extensions for data structures:
 import pandas as pd
-# extensions for calculations:
 import numpy as np
-# extensions for sys: None
-# extensions for data i/o: None
-# extensions for visualization:
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plt_ticker
 from matplotlib.axes import Axes as PlotAxes
 import seaborn as sns
+
 sns.set()
 
 # `T` is used to indicate a generic type, but is NOT just a synonym for `Any`.
@@ -76,7 +65,7 @@ LEGEND_LOC = (1.04, 0.08)  # x, y
 FIGSIZE = (12, 8)  # width (x), height (y)
 
 
-def maybe(v: T=None, ow: T_=None) -> Union[T, T_]:
+def maybe(v: T = None, ow: T_ = None) -> Union[T, T_]:
     """Maybe some value, otherwise some fill-in value."""
     return ow if v is None else v
 
@@ -85,31 +74,32 @@ def maybe(v: T=None, ow: T_=None) -> Union[T, T_]:
 ## DATA WRANGLING ######################################################################################################
 ########################################################################################################################
 
+
 def get_dtx(
-        periods: Optional[int]=None,
-        start: Optional[Datelike]=None,
-        end: Optional[Datelike]=None,
-        freq: str=DEFAULT_DATETIME_FREQ
-    ) -> pd.DatetimeIndex:
-    if (periods is None):
+    periods: Optional[int] = None,
+    start: Optional[Datelike] = None,
+    end: Optional[Datelike] = None,
+    freq: str = DEFAULT_DATETIME_FREQ,
+) -> pd.DatetimeIndex:
+    if periods is None:
         start = maybe(start, DEFAULT_FIRST_DATETIME)
-        end = maybe_date(end, freq=freq, granular=(freq!=DEFAULT_DATETIME_FREQ))
+        end = maybe_date(end, freq=freq, granular=(freq != DEFAULT_DATETIME_FREQ))
     elif periods is not None and (start is None):
-        end = maybe_date(end, freq=freq, granular=(freq!=DEFAULT_DATETIME_FREQ))
+        end = maybe_date(end, freq=freq, granular=(freq != DEFAULT_DATETIME_FREQ))
     # else, if necessary, let the constructor complain
     dtx = pd.date_range(start=start, periods=periods, end=end, freq=freq)
     dtx = pd.DatetimeIndex(dtx)
     return dtx
 
 
-def get_series(data: List[Tuple[Any, Any]], name: Optional[str]=None) -> pd.Series:
+def get_series(data: List[Tuple[Any, Any]], name: Optional[str] = None) -> pd.Series:
     """Convert a list of (key, value) pairs into a pd.Series."""
     data = OrderedDict(data)
     data = pd.Series(data, name=name)
     return data
 
 
-def get_df(data: List[Tuple[Any, pd.Series]], values_are: str="rows") -> pd.DataFrame:
+def get_df(data: List[Tuple[Any, pd.Series]], values_are: str = "rows") -> pd.DataFrame:
     """Convert orderly data `..., (rowname,row), ...` into a DataFrame.
 
     ```
@@ -156,22 +146,20 @@ def _rep_it_to_len(it: Iterable, len_: int) -> Iterable:
     """Repeat an iterable until it reaches the given length.
     E.g. [a, b], 5 -> [a, b, a, b, a].
     """
-    num_reps = 1 + int(len_ *1./ len(it))
+    num_reps = 1 + int(len_ * 1.0 / len(it))
     return (it * num_reps)[:len_]
 
 
-def get_chunks(
-        it: Iterable[T], sz: int, index_by_iloc=False
-    ) -> Iterable[Iterable[T]]:
+def get_chunks(it: Iterable[T], sz: int, index_by_iloc=False) -> Iterable[Iterable[T]]:
     """Break up `it` into `sz`-size chunks."""
     # this is a generator expression!
     return (
-        it.iloc[i:i+sz] if index_by_iloc else \
-        it[i:i+sz]
-    for i in range(0, len(it), sz))
+        it.iloc[i : i + sz] if index_by_iloc else it[i : i + sz]
+        for i in range(0, len(it), sz)
+    )
 
 
-def fillna(df: Data, value: Any=0, limit_consec: int=0) -> Data:
+def fillna(df: Data, value: Any = 0, limit_consec: int = 0) -> Data:
     """Within each run of NaN's in the input DataFrame, fill
     up to the first `limit_consec` consecutive slots with `value`.
 
@@ -190,7 +178,7 @@ def fillna(df: Data, value: Any=0, limit_consec: int=0) -> Data:
     warn("This hasn't been thoroughly tested!")
     # NaN if df's original value was NaN, else just `value`...
     # seems like the opposite of what we want, but bear with me
-    filler = df*0 + value
+    filler = df * 0 + value
     filler = filler.ffill(limit=limit_consec)
     # handle potential leading NaN's
     filler.iloc[:limit_consec] = value
@@ -215,12 +203,8 @@ def get_common_subsample(df: pd.DataFrame) -> pd.DataFrame:
     """The output won't start until every column has started,
     and will end as soon as any column ends.
     """
-    first = df.apply(
-        lambda ser: ser.first_valid_index()
-    ).max()
-    last = df.apply(
-        lambda ser: ser.last_valid_index()
-    ).min()
+    first = df.apply(lambda ser: ser.first_valid_index()).max()
+    last = df.apply(lambda ser: ser.last_valid_index()).min()
     if first is None:
         return df.iloc[:0]
     return df.loc[first:last]
@@ -237,10 +221,18 @@ def check_diff(
     df_b: pd.DataFrame,
 ) -> pd.Series:
     diff = pd.Series(dtype=float)
-    diff.loc["_cols_missing_in_b"] = len(df_a.columns.difference(df_b.columns)) / len(df_a.columns)
-    diff.loc["_cols_excess_in_b"] = len(df_b.columns.difference(df_a.columns)) / len(df_a.columns)
-    diff.loc["_ix_missing_in_b"] = len(df_a.index.difference(df_b.index)) / len(df_a.index)
-    diff.loc["_ix_excess_in_b"] = len(df_b.index.difference(df_a.index)) / len(df_a.index)
+    diff.loc["_cols_missing_in_b"] = len(df_a.columns.difference(df_b.columns)) / len(
+        df_a.columns
+    )
+    diff.loc["_cols_excess_in_b"] = len(df_b.columns.difference(df_a.columns)) / len(
+        df_a.columns
+    )
+    diff.loc["_ix_missing_in_b"] = len(df_a.index.difference(df_b.index)) / len(
+        df_a.index
+    )
+    diff.loc["_ix_excess_in_b"] = len(df_b.index.difference(df_a.index)) / len(
+        df_a.index
+    )
     # must reindex at this point to make pointwise comparisons work
     common_cols = df_a.columns.intersection(df_b.columns)
     common_ix = df_a.index.intersection(df_b.index)
@@ -264,38 +256,35 @@ def check_diff(
 ## DB ##################################################################################################################
 ########################################################################################################################
 
+
 def _filter_like(
-        it: Iterable[str],
-        like: str, fn: Callable=lambda x: x.upper(),
-        not_: bool=False
-    ) -> List[str]:
+    it: Iterable[str], like: str, fn: Callable = lambda x: x.upper(), not_: bool = False
+) -> List[str]:
     fn = (lambda x: x) if fn is None else fn
     cond = operator.not_ if not_ else bool
-    result = [x for x in it if cond( fn(like) in fn(x) )]
+    result = [x for x in it if cond(fn(like) in fn(x))]
     return result
 
 
 def filter_like(
-        it: Iterable[str],
-        like_ands: Iterable[Any]=("",),
-        like_ors: Iterable[Any]=("",),
-        fn: Callable=lambda x: x.upper(),
-        not_: bool=False
-    ) -> List[str]:
+    it: Iterable[str],
+    like_ands: Iterable[Any] = ("",),
+    like_ors: Iterable[Any] = ("",),
+    fn: Callable = lambda x: x.upper(),
+    not_: bool = False,
+) -> List[str]:
     for like_and in like_ands:
         # overwrite
         it = _filter_like(it=it, like=like_and, fn=fn, not_=not_)
     # now we've narrowed down
     like_or_results = [
-        _filter_like(it=it, like=like_or, fn=fn, not_=not_)
-    for like_or in like_ors]
+        _filter_like(it=it, like=like_or, fn=fn, not_=not_) for like_or in like_ors
+    ]
     result = flatten(like_or_results)
     return result
 
 
-def get_nearest_value(
-        df: Data, key: float, axis: str="index"
-    ) -> Tuple[float, Any]:
+def get_nearest_value(df: Data, key: float, axis: str = "index") -> Tuple[float, Any]:
     """
     For all those times you have a float-indexed Series or DataFrame
     like `ser = pd.Series({0.1: "a", 0.2: "b", 0.3: "c"})`,
@@ -329,7 +318,8 @@ def get_nearest_value(
 ## CALCULATIONS ########################################################################################################
 ########################################################################################################################
 
-def ceil(x: float, increment: float=1.) -> float:
+
+def ceil(x: float, increment: float = 1.0) -> float:
     """E.g. Get the next 10% mark for a chart axis:
     >>>> ceil(x=0. 1337, increment=0.10)
     0.20
@@ -344,6 +334,7 @@ def get_inv_of_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # weighted averages
+
 
 def __get_wa(
     df: pd.DataFrame,
@@ -389,8 +380,7 @@ def _get_wa(
     # calc
     gb = df.groupby(x)
     wa = gb.apply(
-        lambda sub_df:
-        __get_wa(
+        lambda sub_df: __get_wa(
             df=sub_df,
             y=y,
             y_dropna=y_dropna,
@@ -414,8 +404,7 @@ def get_wa(
 ) -> pd.DataFrame:
     return pd.DataFrame(
         {
-            y:
-            _get_wa(
+            y: _get_wa(
                 df=df,
                 y=y,
                 y_dropna=y_dropna,
@@ -433,7 +422,8 @@ def get_wa(
 ## DATA REPRESENTATION #################################################################################################
 ########################################################################################################################
 
-def strfpct(pct: float, dps: int=1) -> str:
+
+def strfpct(pct: float, dps: int = 1) -> str:
     """E.g. 0.1337 -> 13.4%."""
     pct = pct * 100
     pct = round(pct, dps)
@@ -442,12 +432,12 @@ def strfpct(pct: float, dps: int=1) -> str:
     return out
 
 
-def strfccy(amt: float, ccy: str="$") -> str:
+def strfccy(amt: float, ccy: str = "$") -> str:
     """Pretty-format a dollar amount."""
     return f"{ccy}{amt:,.2f}"
 
 
-def strfdate(date: Datelike="now", granular: bool=False) -> str:
+def strfdate(date: Datelike = "now", granular: bool = False) -> str:
     """Pretty-formate a date."""
     date = dt.datetime.now() if date == "now" else date
     date = pd.to_datetime(date)
@@ -461,7 +451,8 @@ def strfdate(date: Datelike="now", granular: bool=False) -> str:
 ## DATA I/O ############################################################################################################
 ########################################################################################################################
 
-def _validate_dirpath(dirpath: str, raise_: bool=False) -> str:
+
+def _validate_dirpath(dirpath: str, raise_: bool = False) -> str:
     if not dirpath.endswith("/"):
         msg = f"Directory path '{dirpath}' doesn't end with '/'!"
         if raise_:
@@ -471,7 +462,7 @@ def _validate_dirpath(dirpath: str, raise_: bool=False) -> str:
     return dirpath
 
 
-def _validate_ext(ext: str, raise_: bool=False) -> str:
+def _validate_ext(ext: str, raise_: bool = False) -> str:
     if not ext.startswith("."):
         msg = f"Extension '{ext}' doesn't start with '.'!"
         if raise_:
@@ -481,7 +472,7 @@ def _validate_ext(ext: str, raise_: bool=False) -> str:
     return ext
 
 
-def _extract_ext(fpath: str, validate: bool=True) -> str:
+def _extract_ext(fpath: str, validate: bool = True) -> str:
     """E.g. 'path/to/data.csv' -> '.csv'."""
     # everything after the last dot
     ext = fpath.split(".")[-1]
@@ -491,7 +482,7 @@ def _extract_ext(fpath: str, validate: bool=True) -> str:
     return ext
 
 
-def _get_qualified_ext(qualifier: str="", ext: str=".txt") -> str:
+def _get_qualified_ext(qualifier: str = "", ext: str = ".txt") -> str:
     """E.g.
     >>> _get_qualified_ext('some_description', '.csv')
     # this is now ready to be prefixed with e.g. a timestamp 't2019-01-26'
@@ -502,13 +493,13 @@ def _get_qualified_ext(qualifier: str="", ext: str=".txt") -> str:
     return ext
 
 
-def _gen_tmp_filename(ext: str=".txt") -> str:
+def _gen_tmp_filename(ext: str = ".txt") -> str:
     ext = _validate_ext(ext=ext)
     # timestamp
     t = maybe_date(granular=True, as_str=True)
     # random seq of 16 capital letters
     alphabet = [chr(ascii_code) for ascii_code in range(65, 65 + 26)]
-    seq = [random.choice(alphabet) for _ in range (16)]
+    seq = [random.choice(alphabet) for _ in range(16)]
     seq = "".join(seq)
     # hopefully, the timestamp plus the random sequence
     # are entropic enough to avoid collisions
@@ -516,7 +507,7 @@ def _gen_tmp_filename(ext: str=".txt") -> str:
     return fname
 
 
-def gen_tmp_filepath(dirpath: str="data/", ext: str=".txt") -> str:
+def gen_tmp_filepath(dirpath: str = "data/", ext: str = ".txt") -> str:
     dirpath = _validate_dirpath(dirpath)
     ext = _validate_ext(ext=ext)
     fname = _gen_tmp_filename(ext=ext)
@@ -539,10 +530,8 @@ def _from_pickle(fpath: str, **kwargs) -> Any:
 
 
 def from_pickle(
-        description: str="data",
-        dirpath: str="data/", ext: str=".pkl",
-        **kwargs
-    ) -> Any:
+    description: str = "data", dirpath: str = "data/", ext: str = ".pkl", **kwargs
+) -> Any:
     """Convenience function to find and load
     the most recent pickle (or CSV, etc)
     of the specified kind in the given folder.
@@ -584,10 +573,12 @@ def _to_pickle(data: T, fpath: str) -> T:
 
 
 def to_pickle(
-        data: T, description: str="data",
-        dirpath: str="data/", ext: str=".pkl",
-        **kwargs
-    ) -> T:
+    data: T,
+    description: str = "data",
+    dirpath: str = "data/",
+    ext: str = ".pkl",
+    **kwargs,
+) -> T:
     ext = _validate_ext(ext=ext)
     ext = _get_qualified_ext(qualifier=description, ext=ext)
     fpath = gen_tmp_filepath(dirpath=dirpath, ext=ext)
@@ -601,36 +592,45 @@ def to_pickle(
 ## DATES ###############################################################################################################
 ########################################################################################################################
 
-def __maybe_date(date: Optional[Datelike]=None) -> Datelike:
+
+def __maybe_date(date: Optional[Datelike] = None) -> Datelike:
     date = maybe(date, dt.datetime.now())
     return date
 
 
-def __get_offset_date(date: Datelike, offset: int=0, freq: str=DEFAULT_DATETIME_FREQ) -> Datelike:
+def __get_offset_date(
+    date: Datelike, offset: int = 0, freq: str = DEFAULT_DATETIME_FREQ
+) -> Datelike:
     offset = offset * pd.tseries.frequencies.to_offset(freq)
     offset_date = date + offset
     return offset_date
 
 
-def _get_offset_date(date: Optional[Datelike]=None, offset: int=0, freq: str=DEFAULT_DATETIME_FREQ):
+def _get_offset_date(
+    date: Optional[Datelike] = None, offset: int = 0, freq: str = DEFAULT_DATETIME_FREQ
+):
     """Like `__get_offset_date()`, but makes sure `offset_date` is not after `date`.
     E.g. On Saturday, gives you yesterday (Friday) instead of day-after-tomorrow (Monday).
     """
     if offset > 0:
-        raise ValueError(f"Use `__get_offset_date(offset={offset})`! This one is designed to enforce a lag.")
+        raise ValueError(
+            f"Use `__get_offset_date(offset={offset})`! This one is designed to enforce a lag."
+        )
     date = __maybe_date(date=date)
     offset_date = __get_offset_date(date=date, offset=offset, freq=freq)
     if offset_date > date:
-        offset_date = __get_offset_date(date=date, offset=offset-1, freq=freq)
+        offset_date = __get_offset_date(date=date, offset=offset - 1, freq=freq)
     assert not offset_date > date, (date, offset, freq, offset_date)
     return offset_date
 
 
 def maybe_date(
-        date: Datelike=None,
-        ow_offset: int=0, freq=DEFAULT_DATETIME_FREQ,
-        granular: bool=False, as_str: bool=False
-    ) -> Datelike:
+    date: Datelike = None,
+    ow_offset: int = 0,
+    freq=DEFAULT_DATETIME_FREQ,
+    granular: bool = False,
+    as_str: bool = False,
+) -> Datelike:
     date = maybe(date, _get_offset_date(offset=ow_offset, freq=freq))
     date = strfdate(date, granular=granular)
     date = date if as_str else pd.to_datetime(date)
@@ -641,43 +641,44 @@ def maybe_date(
 ## DATA VISUALIZATION ##################################################################################################
 ########################################################################################################################
 
-def __iprint_val(val: Any, flush: bool=False) -> str:
-    bookend = '\'' if isinstance(val, str) else ''
+
+def __iprint_val(val: Any, flush: bool = False) -> str:
+    bookend = "'" if isinstance(val, str) else ""
     out = f"{bookend}{val}{bookend}"
     if flush:
         print(out)
     return out
 
 
-def _iprint_ser(ser: pd.Series, tab_sz: int=0, flush: bool=False) -> str:
-    out = tab_sz*" " + "pd.Series(" + "\n"
-    out += (tab_sz+4)*" " + "OrderedDict([" + "\n"
+def _iprint_ser(ser: pd.Series, tab_sz: int = 0, flush: bool = False) -> str:
+    out = tab_sz * " " + "pd.Series(" + "\n"
+    out += (tab_sz + 4) * " " + "OrderedDict([" + "\n"
     for (k, v) in ser.items():
-        out += (tab_sz+8)*" " + "(" + "\n"
-        out += (tab_sz+12)*" " + f"{__iprint_val(k)}," + "\n"
-        out += (tab_sz+12)* " " + f"{__iprint_val(v)}" + "\n"
-        out += (tab_sz+8)*" " + ")," + "\n"
-    out += (tab_sz+4)*" " + "])," + "\n"
-    out += tab_sz*" " + f"name={__iprint_val(ser.name)}," + "\n"
+        out += (tab_sz + 8) * " " + "(" + "\n"
+        out += (tab_sz + 12) * " " + f"{__iprint_val(k)}," + "\n"
+        out += (tab_sz + 12) * " " + f"{__iprint_val(v)}" + "\n"
+        out += (tab_sz + 8) * " " + ")," + "\n"
+    out += (tab_sz + 4) * " " + "])," + "\n"
+    out += tab_sz * " " + f"name={__iprint_val(ser.name)}," + "\n"
     # quoted so i can use pandas's native dtype parser instead of importing names
-    out += tab_sz*" " + f"dtype='{ser.dtype}'," + "\n"
-    out += tab_sz*" " + ")"
+    out += tab_sz * " " + f"dtype='{ser.dtype}'," + "\n"
+    out += tab_sz * " " + ")"
     if flush:
         out = "from collections import OrderedDict" + "\n" + out
         print(out)
     return out
 
 
-def iprint_df(df: pd.DataFrame, flush: bool=False) -> str:
+def iprint_df(df: pd.DataFrame, flush: bool = False) -> str:
     """Print a DataFrame to stdout in a format you can copy-paste into a REPL.
     Useful when you have access to the console but not the filesystem.
     """
     out = "pd.DataFrame(OrderedDict([" + "\n"
     for colname, col in df.items():
-        out += 4*" " + "(" + "\n"
-        out += 8*" " + f"{__iprint_val(colname)}," + "\n"
+        out += 4 * " " + "(" + "\n"
+        out += 8 * " " + f"{__iprint_val(colname)}," + "\n"
         out += _iprint_ser(col, tab_sz=8) + "\n"
-        out += 4* " " + ")," + "\n"
+        out += 4 * " " + ")," + "\n"
     out += "]))"
     if flush:
         out = "from collections import OrderedDict" + "\n" + out
@@ -685,7 +686,7 @@ def iprint_df(df: pd.DataFrame, flush: bool=False) -> str:
     return out
 
 
-def _describe_series(ser: pd.Series, bool_is_numeric: bool=True) -> pd.Series:
+def _describe_series(ser: pd.Series, bool_is_numeric: bool = True) -> pd.Series:
     if bool_is_numeric:
         if ser.dtype == bool:
             ser = ser.astype(int)
@@ -693,100 +694,114 @@ def _describe_series(ser: pd.Series, bool_is_numeric: bool=True) -> pd.Series:
     return d
 
 
-def describe_df(df: pd.DataFrame, bool_is_numeric: bool=True) -> pd.DataFrame:
+def describe_df(df: pd.DataFrame, bool_is_numeric: bool = True) -> pd.DataFrame:
     if bool_is_numeric:
-        caster = {colname:
-            int if dtype == bool else dtype
-        for (colname, dtype) in df.items()}
+        caster = {
+            colname: int if dtype == bool else dtype for (colname, dtype) in df.items()
+        }
         df = df.astype(caster)
     d = df.describe()
     return d
 
 
 def plot(
-        df: Data, kind: str="line",
-        # THEME
-        typeface: str=TYPEFACE, font_scale: float=FONT_SCALE,
-        mimic_excel: bool=False,
-        # SCATTERPLOT OPTIONS
-        scatter_labels: bool=False,
-        label_fontsize: float=LABEL_FONTSIZE,
-        label_rotation: float=LABEL_ROTATION,
-        # GRIDLINES
-        ## horizontal (y = ...)
-        axhline_locs: Iterable[float]=(0,),
-        axhline_zs: Iterable[float]=(0,),
-        axhline_styles: Iterable[str]=("-",),
-        axhline_colors: Iterable[str]=("gray",),
-        ## vertical (x = ...)
-        axvline_locs: Iterable[float]=tuple(),
-        axvline_zs: Iterable[float]=(0,),
-        axvline_styles: Iterable[str]=("-",),
-        axvline_colors: Iterable[str]=("gray",),
-        # AXIS LIMITS
-        ## x
-        xlim: Optional[Tuple[float, float]]=None,
-        xlim_left: Optional[float]=None, xlim_right: Optional[float]=None,
-        ## y
-        ylim: Optional[Tuple[float, float]]=None,
-        ylim_bottom: Optional[float]=None, ylim_top: Optional[float]=None,
-        # AXIS DIRECTION
-        invert_xaxis: bool=False,
-        invert_yaxis: bool=False,
-        # AXIS TICK INTERVALS
-        ## x (major, minor)
-        xtick_intervals: Optional[Tuple[float, float]]=None,
-        xtick_major_interval: Optional[float]=None,
-        # can set this to `None` to carry over value from `df.plot()`
-        xtick_minor_interval: Optional[float]=None,
-        ## y (major, minor)
-        ytick_intervals: Optional[Tuple[float, float]]=None,
-        ytick_major_interval: Optional[float]=None,
-        ytick_minor_interval: Optional[float]=None,
-        # AXIS TICK LABELS
-        pct_dps: int=1, granular_dates: bool=False,
-        ## x
-        xticklabels: bool=True,
-        xpct: float=False, xdollar: bool=False, xdates: bool=False,
-        ## y
-        yticklabels: bool=True,
-        ypct: float=False, ydollar: bool=False, ydates: bool=False,
-        # AXIS TITLES
-        xlabel: Optional[str]=None, ylabel: Optional[str]=None,
-        # LEGEND
-        legend: bool | None = None,
-        legend_title: Optional[str]=None,
-        legend_title_fontsize: Optional[str]=None,  # e.g. 'xx-large'
-        legend_loc: Union[Tuple[float, float], str]="best",
-        # (SUB)PLOT TITLE
-        title: Optional[str]=None, titley: float=1.0,
-        # SIDE EFFECTS
-        ax: Optional[PlotAxes]=None,
-        figsize: Tuple[float, float]=FIGSIZE,  # width (x), height (y)
-        plt_show: Optional[bool]=None,
-        savefig_path: Optional[str]=None,
-        plt_close: Optional[bool]=None,
-        **kwargs
-    ) -> PlotAxes:
+    df: Data,
+    kind: str = "line",
+    # THEME
+    typeface: str = TYPEFACE,
+    font_scale: float = FONT_SCALE,
+    mimic_excel: bool = False,
+    # SCATTERPLOT OPTIONS
+    scatter_labels: bool = False,
+    label_fontsize: float = LABEL_FONTSIZE,
+    label_rotation: float = LABEL_ROTATION,
+    # GRIDLINES
+    ## horizontal (y = ...)
+    axhline_locs: Iterable[float] = (0,),
+    axhline_zs: Iterable[float] = (0,),
+    axhline_styles: Iterable[str] = ("-",),
+    axhline_colors: Iterable[str] = ("gray",),
+    ## vertical (x = ...)
+    axvline_locs: Iterable[float] = tuple(),
+    axvline_zs: Iterable[float] = (0,),
+    axvline_styles: Iterable[str] = ("-",),
+    axvline_colors: Iterable[str] = ("gray",),
+    # AXIS LIMITS
+    ## x
+    xlim: Optional[Tuple[float, float]] = None,
+    xlim_left: Optional[float] = None,
+    xlim_right: Optional[float] = None,
+    ## y
+    ylim: Optional[Tuple[float, float]] = None,
+    ylim_bottom: Optional[float] = None,
+    ylim_top: Optional[float] = None,
+    # AXIS DIRECTION
+    invert_xaxis: bool = False,
+    invert_yaxis: bool = False,
+    # AXIS TICK INTERVALS
+    ## x (major, minor)
+    xtick_intervals: Optional[Tuple[float, float]] = None,
+    xtick_major_interval: Optional[float] = None,
+    # can set this to `None` to carry over value from `df.plot()`
+    xtick_minor_interval: Optional[float] = None,
+    ## y (major, minor)
+    ytick_intervals: Optional[Tuple[float, float]] = None,
+    ytick_major_interval: Optional[float] = None,
+    ytick_minor_interval: Optional[float] = None,
+    # AXIS TICK LABELS
+    pct_dps: int = 1,
+    granular_dates: bool = False,
+    ## x
+    xticklabels: bool = True,
+    xpct: float = False,
+    xdollar: bool = False,
+    xdates: bool = False,
+    ## y
+    yticklabels: bool = True,
+    ypct: float = False,
+    ydollar: bool = False,
+    ydates: bool = False,
+    # AXIS TITLES
+    xlabel: Optional[str] = None,
+    ylabel: Optional[str] = None,
+    # LEGEND
+    legend: bool | None = None,
+    legend_title: Optional[str] = None,
+    legend_title_fontsize: Optional[str] = None,  # e.g. 'xx-large'
+    legend_loc: Union[Tuple[float, float], str] = "best",
+    # (SUB)PLOT TITLE
+    title: Optional[str] = None,
+    titley: float = 1.0,
+    # SIDE EFFECTS
+    ax: Optional[PlotAxes] = None,
+    figsize: Tuple[float, float] = FIGSIZE,  # width (x), height (y)
+    plt_show: Optional[bool] = None,
+    savefig_path: Optional[str] = None,
+    plt_close: Optional[bool] = None,
+    **kwargs,
+) -> PlotAxes:
 
     # helpers
-    def _raise_before_override(description: str, val: Any=None) -> None:
+    def _raise_before_override(description: str, val: Any = None) -> None:
         if val is not None:
             msg = f"plot: {description} {val} will be overriden!"
             raise ValueError(msg)
         return val
+
     ## axis tick formatters (2nd arg, tick_position, is unused)
     def _strfpct(tick_val, _):
         return strfpct(tick_val, dps=pct_dps)
+
     def _strfdollar(tick_val, _):
         return strfccy(tick_val)
+
     def _strfdate(tick_val, _):
         return strfdate(tick_val, granular=granular_dates)
 
     # convenience handling of plot kind
     if kind == "histpct":
         kind = "hist"
-        kwargs["weights"] = np.ones(len(df.index)) *1./ len(df.index)
+        kwargs["weights"] = np.ones(len(df.index)) * 1.0 / len(df.index)
         ypct = True
     if kind == "scatter":
         if "x" not in kwargs:
@@ -803,16 +818,10 @@ def plot(
     # implicit default side effects
     ## user provided `ax` OR wants to savefig -> don't show plot;
     ## user didn't provide `ax` AND doesn't want to savefig -> show plot.
-    plt_show = maybe(
-        v=plt_show,
-        ow = (ax is None) and (savefig_path is None)
-    )
+    plt_show = maybe(v=plt_show, ow=(ax is None) and (savefig_path is None))
     ## user doesn't want to savefig OR wants to show -> leave open;
     ## user wants to savefig AND doesn't want to show -> close.
-    plt_close = maybe(
-        v=plt_close,
-        ow = (savefig_path is not None) and (not plt_show)
-    )
+    plt_close = maybe(v=plt_close, ow=(savefig_path is not None) and (not plt_show))
 
     sns.set(font=typeface, font_scale=font_scale)
     ax = df.plot(kind=kind, ax=ax, figsize=figsize, **kwargs)
@@ -821,9 +830,12 @@ def plot(
     if scatter_labels:
         for i in df.index:
             ax.text(
-                x=df.loc[i, kwargs["x"]], y=df.loc[i, kwargs["y"]], s=i,
-                family=typeface, fontsize=label_fontsize,
-                rotation=label_rotation
+                x=df.loc[i, kwargs["x"]],
+                y=df.loc[i, kwargs["y"]],
+                s=i,
+                family=typeface,
+                fontsize=label_fontsize,
+                rotation=label_rotation,
             )
             del i
 
@@ -831,8 +843,13 @@ def plot(
     if mimic_excel:
         ax.set_axis_bgcolor("white")
         ax.yaxis.grid(
-            True, which="major", color="black", linestyle="-",
-            linewidth=0.25, alpha=0.50, zorder=0
+            True,
+            which="major",
+            color="black",
+            linestyle="-",
+            linewidth=0.25,
+            alpha=0.50,
+            zorder=0,
         )
     else:
         # `which` could be 'major', 'minor', or 'both'
@@ -848,9 +865,12 @@ def plot(
     axline_colors = _rep_it_to_len(it=axhline_colors, len_=num_axlines)
     for n in range(num_axlines):
         ax.axhline(
-            axline_locs[n], zorder=axline_zs[n],
-            linestyle=axline_styles[n], linewidth=None,
-            color=axline_colors[n], alpha=1
+            axline_locs[n],
+            zorder=axline_zs[n],
+            linestyle=axline_styles[n],
+            linewidth=None,
+            color=axline_colors[n],
+            alpha=1,
         )
     del axline_colors, axline_styles, axline_zs, num_axlines, axline_locs
     ## vertical
@@ -861,9 +881,12 @@ def plot(
     axline_colors = _rep_it_to_len(it=axvline_colors, len_=num_axlines)
     for n in range(num_axlines):
         ax.axvline(
-            axline_locs[n], zorder=axline_zs[n],
-            linestyle=axline_styles[n], linewidth=None,
-            color=axline_colors[n], alpha=1
+            axline_locs[n],
+            zorder=axline_zs[n],
+            linestyle=axline_styles[n],
+            linewidth=None,
+            color=axline_colors[n],
+            alpha=1,
         )
     del axline_colors, axline_styles, axline_zs, num_axlines, axline_locs
 
@@ -871,12 +894,10 @@ def plot(
     ## x
     if xlim is not None:
         _raise_before_override(
-            description="individually-specified `xlim_left`",
-            val=xlim_left
+            description="individually-specified `xlim_left`", val=xlim_left
         )
         _raise_before_override(
-            description="individually-specified `xlim_right`",
-            val=xlim_right
+            description="individually-specified `xlim_right`", val=xlim_right
         )
         xlim_left, xlim_right = xlim
     # sensible default
@@ -901,12 +922,10 @@ def plot(
     ## y
     if ylim is not None:
         _raise_before_override(
-            description="individually-specified `ylim_bottom`",
-            val=ylim_bottom
+            description="individually-specified `ylim_bottom`", val=ylim_bottom
         )
         _raise_before_override(
-            description="individually-specified `ylim_top`",
-            val=ylim_top
+            description="individually-specified `ylim_top`", val=ylim_top
         )
         ylim_bottom, ylim_top = ylim
     # set
@@ -926,11 +945,11 @@ def plot(
     if xtick_intervals is not None:
         _raise_before_override(
             description="individually-specified `xtick_major_interval`",
-            val=xtick_major_interval
+            val=xtick_major_interval,
         )
         _raise_before_override(
             description="individually-specified `xtick_minor_interval`",
-            val=xtick_minor_interval
+            val=xtick_minor_interval,
         )
         xtick_major_interval, xtick_minor_interval = xtick_intervals
     if xtick_major_interval is not None:
@@ -941,11 +960,11 @@ def plot(
     if ytick_intervals is not None:
         _raise_before_override(
             description="individually-specified `ytick_major_interval`",
-            val=ytick_major_interval
+            val=ytick_major_interval,
         )
         _raise_before_override(
             description="individually-specified `ytick_minor_interval`",
-            val=ytick_minor_interval
+            val=ytick_minor_interval,
         )
         ytick_major_interval, ytick_minor_interval = ytick_intervals
     if ytick_major_interval is not None:
@@ -1007,10 +1026,7 @@ def plot(
     if legend is False:
         ax.get_legend().set_visible(legend)
     if legend:
-        ax.legend(
-            title=legend_title, fontsize=legend_title_fontsize,
-            loc=legend_loc
-        )
+        ax.legend(title=legend_title, fontsize=legend_title_fontsize, loc=legend_loc)
 
     # (SUB)PLOT TITLE
     if title is None and hasattr(df, "name"):
@@ -1029,8 +1045,8 @@ def plot(
 
 
 def get_y_equals_x_plot_base(
-        lim: float=1, style: str="--", color: str="black", **kwargs
-    ) -> PlotAxes:
+    lim: float = 1, style: str = "--", color: str = "black", **kwargs
+) -> PlotAxes:
     """Usage, e.g.
     >>> ax = get_y_equals_x_plot_base()
     >>> # the actual data we want to plot over this 45degree line
@@ -1046,23 +1062,29 @@ def plot_t_stat(t_stat: Data, **kwargs) -> PlotAxes:
         t_stat,
         axhline_locs=(-1.96, 0, +1.96),
         axhline_styles=("--", "-", "--"),
-        **kwargs
+        **kwargs,
     )
 
 
 def plot_corr_heatmap(
-        corr_matrix: pd.DataFrame,
-        cmap: str="RdYlGn",
-        title: Optional[str]=None,
-        figsize: Tuple[float, float]=(8, 8),  # width (x), height (y)
-        **kwargs
-    ) -> None:
+    corr_matrix: pd.DataFrame,
+    cmap: str = "RdYlGn",
+    title: Optional[str] = None,
+    figsize: Tuple[float, float] = (8, 8),  # width (x), height (y)
+    **kwargs,
+) -> None:
     plt.figure(figsize=figsize)
     sns.heatmap(
         corr_matrix,
-        annot=True, fmt=".2f",
-        vmin=-1, vmax=1, center=0, cmap=cmap, cbar=False,
-        square=True, **kwargs
+        annot=True,
+        fmt=".2f",
+        vmin=-1,
+        vmax=1,
+        center=0,
+        cmap=cmap,
+        cbar=False,
+        square=True,
+        **kwargs,
     )
     plt.title(title, size="x-large")
     plt.show()
@@ -1079,9 +1101,9 @@ def plot_eda(
 ) -> None:
     """Exploratory data analysis."""
     df = df.rename(
-        columns = lambda c: f"{c} ({df[c].isna().mean()*100:.2f}% na)",
+        columns=lambda c: f"{c} ({df[c].isna().mean()*100:.2f}% na)",
     )
-    if col_names ==  ...:
+    if col_names == ...:
         col_names = df.columns
     sns.pairplot(
         df,
