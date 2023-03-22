@@ -27,8 +27,6 @@ from matplotlib import pyplot as plt
 from matplotlib import ticker as plt_ticker
 from matplotlib.axes import Axes as PlotAxes
 
-sns.set()
-
 # `T` is used to indicate a generic type, but is NOT just a synonym for `Any`.
 # For example, in Caml, we can have a function `foo: 'a -> 'b`,
 #         which accepts any type, returning some unspecified type.
@@ -64,6 +62,8 @@ LABEL_FONTSIZE = 12
 LABEL_ROTATION = 0
 LEGEND_LOC = (1.04, 0.08)  # x, y
 FIGSIZE = (12, 8)  # width (x), height (y)
+
+sns.set()
 
 
 def maybe(v: T = None, ow: T_ = None) -> T | T_:
