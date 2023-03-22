@@ -16,7 +16,6 @@ import operator
 import os
 import pickle
 import random
-from collections import OrderedDict
 from collections.abc import Callable
 from typing import Any, Iterable
 from warnings import warn
@@ -96,7 +95,7 @@ def get_dtx(
 
 def get_series(data: list[tuple[Any, Any]], name: str | None = None) -> pd.Series:
     """Convert a list of (key, value) pairs into a pd.Series."""
-    data = OrderedDict(data)
+    data = dict(data)
     data = pd.Series(data, name=name)
     return data
 
@@ -117,7 +116,7 @@ def get_df(data: list[tuple[Any, pd.Series]], values_are: str = "rows") -> pd.Da
             return a DataFrame with MultiIndex'ed columns
     ```
     """
-    data = OrderedDict(data)
+    data = dict(data)
     data = pd.concat(data.values(), axis="columns", keys=data.keys())
     if values_are == "rows":
         data = data.T
@@ -671,7 +670,7 @@ def __iprint_val(val: Any, flush: bool = False) -> str:
 
 def _iprint_ser(ser: pd.Series, tab_sz: int = 0, flush: bool = False) -> str:
     out = tab_sz * " " + "pd.Series(" + "\n"
-    out += (tab_sz + 4) * " " + "OrderedDict([" + "\n"
+    out += (tab_sz + 4) * " " + "dict([" + "\n"
     for (k, v) in ser.items():
         out += (tab_sz + 8) * " " + "(" + "\n"
         out += (tab_sz + 12) * " " + f"{__iprint_val(k)}," + "\n"
@@ -683,7 +682,6 @@ def _iprint_ser(ser: pd.Series, tab_sz: int = 0, flush: bool = False) -> str:
     out += tab_sz * " " + f"dtype='{ser.dtype}'," + "\n"
     out += tab_sz * " " + ")"
     if flush:
-        out = "from collections import OrderedDict" + "\n" + out
         print(out)
     return out
 
@@ -692,7 +690,7 @@ def iprint_df(df: pd.DataFrame, flush: bool = False) -> str:
     """Print a DataFrame to stdout in a format you can copy-paste into a REPL.
     Useful when you have access to the console but not the filesystem.
     """
-    out = "pd.DataFrame(OrderedDict([" + "\n"
+    out = "pd.DataFrame(dict([" + "\n"
     for colname, col in df.items():
         out += 4 * " " + "(" + "\n"
         out += 8 * " " + f"{__iprint_val(colname)}," + "\n"
@@ -700,7 +698,6 @@ def iprint_df(df: pd.DataFrame, flush: bool = False) -> str:
         out += 4 * " " + ")," + "\n"
     out += "]))"
     if flush:
-        out = "from collections import OrderedDict" + "\n" + out
         print(out)
     return out
 
