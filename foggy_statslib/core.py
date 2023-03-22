@@ -844,7 +844,8 @@ def plot(
     ax = df.plot(kind=kind, ax=ax, figsize=figsize, **kwargs)
 
     # SCATTERPLOT OPTIONS
-    if scatter_labels:
+    ## could be `False`, `True`, or pd.Series
+    if scatter_labels is not False:
         for i in df.index:
             ax.text(
                 x=df.loc[i, kwargs["x"]],
