@@ -728,7 +728,8 @@ def plot(
     font_scale: float = FONT_SCALE,
     mimic_excel: bool = False,
     # SCATTERPLOT OPTIONS
-    scatter_labels: bool = False,
+    ## if `True`, then use `df.index`
+    scatter_labels: pd.Series | bool = False,
     label_fontsize: float = LABEL_FONTSIZE,
     label_rotation: float = LABEL_ROTATION,
     # GRIDLINES
@@ -848,7 +849,10 @@ def plot(
             ax.text(
                 x=df.loc[i, kwargs["x"]],
                 y=df.loc[i, kwargs["y"]],
-                s=i,
+                s=(
+                    i if scatter_labels is True
+                    else scatter_labels[i]                   
+                ),
                 family=typeface,
                 fontsize=label_fontsize,
                 rotation=label_rotation,
