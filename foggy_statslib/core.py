@@ -10,22 +10,22 @@ made available under MIT license at https://github.com/sparshsah/foggy-statslib/
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import datetime as dt
 import itertools
 import operator
 import os
 import pickle
 import random
-from collections.abc import Callable
 from typing import Any, Iterable
 from warnings import warn
 
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib import pyplot as plt
-from matplotlib import ticker as plt_ticker
 from matplotlib.axes import Axes as PlotAxes
+import matplotlib.pyplot as plt
+import matplotlib.ticker as plt_ticker
 
 # `T` is used to indicate a generic type, but is NOT just a synonym for `Any`.
 # For example, in Caml, we can have a function `foo: 'a -> 'b`,
