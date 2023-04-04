@@ -448,6 +448,16 @@ def strfccy(amt: float, ccy: str = "$") -> str:
     return f"{ccy}{amt:,.2f}"
 
 
+def _strftime(dt: pd.Series, fmt="%Y-%q") -> pd.Series:
+    if fmt == "%Y-%q":
+        base = dt.dt.strftime("%Y-Q")
+        q = dt.dt.quarter.astype("string")
+        ret = base + q
+    else:
+        ret = dt.dt.strftime(fmt)
+    return ret
+
+
 def strfdate(date: Datelike = "now", granular: bool = False) -> str:
     """Pretty-formate a date."""
     date = dt.datetime.now() if date == "now" else date
