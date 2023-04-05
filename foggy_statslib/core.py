@@ -270,6 +270,8 @@ def filter_like(
     fn: Callable = lambda x: x.upper(),
     not_: bool = False,
 ) -> list[str]:
+    # TODO(sparshsah): Could probably use a binary indicator for each element...
+    #     Then collect at end. To preserve legitimate mutiplicitous elements.
     for like_and in like_ands:
         # overwrite
         it = _filter_like(it=it, like=like_and, fn=fn, not_=not_)
@@ -278,6 +280,9 @@ def filter_like(
         _filter_like(it=it, like=like_or, fn=fn, not_=not_) for like_or in like_ors
     ]
     result = flatten(like_or_results)
+    # remove dupe's introduced in `or` step, while preserving order...
+    # unfortunately, also removes legitimate multiples found in the original...
+    result = list(dict.fromkeys(result))
     return result
 
 
