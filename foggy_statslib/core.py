@@ -18,7 +18,7 @@ import os
 import pickle
 import random
 from typing import Any, Iterable, TypeVar
-from warnings import warn
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -169,7 +169,7 @@ def fillna(df: Data, value: Any = 0, limit_consec: int = 0) -> Data:
     # NOT pd. Series([0, 0, NaN, 1, 0]), but rather
     pd.Series([0, 0, NaN, 1, NaN])
     """
-    warn("This hasn't been thoroughly tested!")
+    warnings.warn("This hasn't been thoroughly tested!")
     # NaN if df's original value was NaN, else just `value`...
     # seems like the opposite of what we want, but bear with me
     filler = df * 0 + value
@@ -468,7 +468,7 @@ def _validate_dirpath(dirpath: str, raise_: bool = False) -> str:
         if raise_:
             raise ValueError(msg)
         else:
-            warn(msg)
+            warnings.warn(msg)
     return dirpath
 
 
@@ -478,7 +478,7 @@ def _validate_ext(ext: str, raise_: bool = False) -> str:
         if raise_:
             raise ValueError(msg)
         else:
-            warn(msg)
+            warnings.warn(msg)
     return ext
 
 
@@ -825,7 +825,7 @@ def plot(
         if "y" not in kwargs:
             kwargs["y"] = df.columns[-1]
         if "c" not in kwargs:
-            # warn("plot: default scatter-point color is c='black'!")
+            # warnings.warn("plot: default scatter-point color is c='black'!")
             kwargs["c"] = "black"
         if xlabel is None:
             xlabel = kwargs["x"]
