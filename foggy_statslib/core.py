@@ -923,12 +923,23 @@ def plot(
     # sensible default
     if kind == "line" and xlim_left is None:
         xlim_left = df.index[0]
-        # str causes problems because it is comparable (which is good) but also iterable,
-        # which makes matplotlib think you just called it `xlim_left` but really meant to call it `xlim := (xlim_left, xlim_right)`,
-        # so that e.g. `xlim_left='ab'` will lead to nonsense as it attempts to set `xlim_left='a'` and `xlim_right='b'`, while
-        # `xlim_left='abc'` will simply fail with a `ValueError: too many values to unpack (expected 2) (got 3)`:
-        # https://github.com/matplotlib/matplotlib/blob/0e3a261cf8c0477431e2a4b806427d4bc46b752a/lib/matplotlib/axes/_base.py#L3722-L3723
         if isinstance(xlim_left, str):
+            # https://github.com/matplotlib/matplotlib/blob/0e3a261/lib/matplotlib/axes/_base.py#L3722-L3723
+            # For god-knows-what reason, Matplotlib has decided that
+            # if you set `xlim_left, xlim_right == some_iterable, None`,
+            # then you really meant to set `xlim = some_iterable`,
+            # and so it will "helpfully" reassign `xlim_left, xlim_right = some_iterable`.
+            # Obviously, str is iterable, so
+            # if you set `xlim_left="a"` then it will fail with
+            #     `ValueError: not enough values to unpack (expected 2) (got 1)`,
+            # if you set `xlim_left="abc"` then it will fail with
+            #     `ValueError: too many values to unpack (expected 2) (got 3)`,
+            # and if you're unlucky enough to set `xlim_left="ab"` then it will blithely press forward with
+            #     `xlim_left, xlim_right = "a", "b"`.
+            # The insidious problem with the last case is that str is also comparable --
+            # so Matplotlib will lexicographically sort your index,
+            # then display only labels inside the interval ["a", "b"].
+            # The entire thing is not worth the hassle, so we just null it out.
             xlim_left = None
     if kind == "line" and xlim_right is None:
         xlim_right = df.index[-1]
