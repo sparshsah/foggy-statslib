@@ -17,7 +17,7 @@ import operator
 import os
 import pickle
 import random
-from typing import Any, Iterable, TypeVar
+from typing import Any, Final, Iterable, TypeVar
 import warnings
 
 import numpy as np
@@ -36,16 +36,16 @@ FloatSeriesOrDF = FloatSeries | FloatDF
 Floatlike = float | FloatSeriesOrDF
 Datelike = datetime.datetime | str
 
-REASONABLE_FRACTION_OF_TOTAL: float = 0.95
+REASONABLE_FRACTION_OF_TOTAL: Final[float] = 0.95
 # Unix epoch
-DEFAULT_FIRST_DATETIME = pd.to_datetime("1970-01-01")
-DEFAULT_DATETIME_FREQ = "B"  # business day
-TYPEFACE = "Arial"
-FONT_SCALE = 1
-LABEL_FONTSIZE = 12
-LABEL_ROTATION = 0
-LEGEND_LOC = (1.04, 0.08)  # x, y
-FIGSIZE = (12, 8)  # width (x), height (y)
+DEFAULT_FIRST_DATETIME: Final[pd.Timestamp] = pd.to_datetime("1970-01-01")
+DEFAULT_DATETIME_FREQ: Final[str] = "B"  # business day
+TYPEFACE: Final[str] = "Arial"
+FONT_SCALE: Final[int] = 1
+LABEL_FONTSIZE: Final[int] = 12
+LABEL_ROTATION: Final[int] = 0
+LEGEND_LOC: Final[tuple[float, float]] = (1.04, 0.08)  # x, y
+FIGSIZE: Final[tuple[float, float]] = (12, 8)  # width (x), height (y)
 
 sns.set()
 
