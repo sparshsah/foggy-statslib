@@ -256,7 +256,7 @@ def _filter_like(
     like: str,
     fn: Callable = lambda x: x.upper(),
     not_: bool = False,
-) -> List[str]:
+) -> list[str]:
     fn = (lambda x: x) if fn is None else fn
     cond = operator.not_ if not_ else bool
     result = [x for x in it if cond(fn(like) in fn(x))]
@@ -269,7 +269,7 @@ def filter_like(
     like_ors: Iterable[Any] = ("",),
     fn: Callable = lambda x: x.upper(),
     not_: bool = False,
-) -> List[str]:
+) -> list[str]:
     for like_and in like_ands:
         # overwrite
         it = _filter_like(it=it, like=like_and, fn=fn, not_=not_)
@@ -761,7 +761,7 @@ def plot(
     # can set this to `None` to carry over value from `df.plot()`
     xtick_minor_interval: float | None = None,
     ## y (major, minor)
-    ytick_intervals: Tuple[float, float] | None = None,
+    ytick_intervals: tuple[float, float] | None = None,
     ytick_major_interval: float | None = None,
     ytick_minor_interval: float | None = None,
     # AXIS TICK LABELS
@@ -778,8 +778,8 @@ def plot(
     ydollar: bool = False,
     ydates: bool = False,
     # AXIS TITLES
-    xlabel: Optional[str] = None,
-    ylabel: Optional[str] = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
     # LEGEND
     legend: bool | None = None,
     legend_title: str | None = None,
