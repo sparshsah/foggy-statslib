@@ -11,7 +11,7 @@ made available under MIT license at https://github.com/sparshsah/foggy-statslib/
 from __future__ import annotations
 
 from collections.abc import Callable
-import datetime as dt
+import datetime
 import itertools
 import operator
 import os
@@ -34,7 +34,7 @@ FloatSeries = pd.Series
 FloatDF = pd.DataFrame
 FloatSeriesOrDF = FloatSeries | FloatDF
 Floatlike = float | FloatSeriesOrDF
-Datelike = dt.datetime | str
+Datelike = datetime.datetime | str
 
 REASONABLE_FRACTION_OF_TOTAL: float = 0.95
 # Unix epoch
@@ -449,7 +449,7 @@ def _strftime(dt: pd.Series, fmt="%Y-%q") -> pd.Series:
 
 def strfdate(date: Datelike = "now", granular: bool = False) -> str:
     """Pretty-formate a date."""
-    date = dt.datetime.now() if date == "now" else date
+    date = datetime.datetime.now() if date == "now" else date
     date = pd.to_datetime(date)
     fmt = "%Y-%m-%d"
     fmt = fmt + "-%H-%M-%S" if granular else fmt
@@ -607,7 +607,7 @@ def to_pickle(
 
 
 def __maybe_date(date: Datelike | None = None) -> Datelike:
-    date = maybe(date, dt.datetime.now())
+    date = maybe(date, datetime.datetime.now())
     return date
 
 
