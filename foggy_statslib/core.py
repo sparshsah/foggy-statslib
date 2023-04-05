@@ -437,7 +437,35 @@ def strfccy(amt: float, ccy: str = "$") -> str:
     return f"{ccy}{amt:,.2f}"
 
 
-def _strftime(dt: pd.Series, fmt="%Y-%q") -> pd.Series:
+def strftime_scalar(
+    dt: Datelike,
+    fmt: str = "%Y-%q",
+) -> str:
+    """
+    Tries to take the best-of-both-worlds:
+    * C89 / Python: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+    * Pandas: https://pandas.pydata.org/docs/user_guide/timeseries.html#offset-aliases
+    """
+    dt = pd.to_datetime(dt)
+    if fmt == "%Y-%q":
+        base = dt.strftime("%Y-Q")
+        q = dt.quarter.astype("string")
+        ret = base + q
+    else:
+        ret = dt.strftime(fmt)
+    return ret
+
+
+def strftime_vector(
+    dt: pd.Series,
+    fmt: str = "%Y-%q",
+) -> pd.Series:
+    """
+    Tries to take the best-of-both-worlds:
+    * C89 / Python: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+    * Pandas: https://pandas.pydata.org/docs/user_guide/timeseries.html#offset-aliases
+    """
+    dt = pd.to_datetime(dt)
     if fmt == "%Y-%q":
         base = dt.dt.strftime("%Y-Q")
         q = dt.dt.quarter.astype("string")
