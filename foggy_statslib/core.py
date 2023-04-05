@@ -17,7 +17,7 @@ import operator
 import os
 import pickle
 import random
-from typing import Any, Iterable
+from typing import Any, Iterable, TypeVar
 from warnings import warn
 
 import numpy as np
@@ -27,24 +27,8 @@ from matplotlib.axes import Axes as PlotAxes
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plt_ticker
 
-# `T` is used to indicate a generic type, but is NOT just a synonym for `Any`.
-# For example, in Caml, we can have a function `foo: 'a -> 'b`,
-#         which accepts any type, returning some unspecified type.
-#         We might write this in Python as `foo: Any -> Any`.
-#     But, we can also have a function `bar: 'a -> 'a`,
-#         which accepts any type, returning the SAME type.
-#         We might write this in Python as `bar: T -> T`.
-#
-# Example 1: `x:Any in lst:list[Any]` means that the object `x`, of some arbitrary type,
-#         is a member of list `lst`, whose members have no specified type,
-#         and aren't even guaranteed to all share the same type as each other.
-#     But, `x:T in lst:list[T]` means that the object `x`, of some generic type,
-#         is a member of list `lst`, every member of whom has that SAME type.
-#
-# Example 2: `fun: Any -> Any` accepts any type, returning some unspecified type;
-#     But, `fun: T -> T` accepts any type, returning the SAME type.
-T = Any
-T_ = Any
+T = TypeVar("T")
+T_ = TypeVar("T_")
 Data = pd.Series | pd.DataFrame
 FloatSeries = pd.Series
 FloatDF = pd.DataFrame
@@ -94,7 +78,12 @@ def get_dtx(
 
 
 def get_series(data: list[tuple[Any, Any]], name: str | None = None) -> pd.Series:
-    """Convert a list of (key, value) pairs into a pd.Series."""
+    """Convert a list of (key, value) pairs into a pd.Series.
+
+    The point of this was to use OrderedDict, so you'd preserve index sort in the Series.
+    But then CPython started to preserve (insertion) order in default dicts.
+    So I removed that and just retain this for backward compatibility.
+    """
     data = dict(data)
     data = pd.Series(data, name=name)
     return data
@@ -862,7 +851,7 @@ def plot(
                 y=df.loc[i, kwargs["y"]],
                 s=(
                     i if scatter_labels is True
-                    else scatter_labels[i]                   
+                    else scatter_labels[i]
                 ),
                 family=typeface,
                 fontsize=label_fontsize,
