@@ -50,7 +50,10 @@ FIGSIZE: Final[tuple[float, float]] = (12, 8)  # width (x), height (y)
 sns.set()
 
 
-def maybe(v: T = None, ow: T_ = None) -> T | T_:
+def maybe(
+    v: T = None,
+    ow: T_ = None,
+) -> T | T_:
     """Maybe some value, otherwise some fill-in value."""
     return ow if v is None else v
 
@@ -77,7 +80,10 @@ def get_dtx(
     return dtx
 
 
-def get_series(data: list[tuple[Any, Any]], name: str | None = None) -> pd.Series:
+def get_series(
+    data: list[tuple[Any, Any]],
+    name: str | None = None,
+) -> pd.Series:
     """Convert a list of (key, value) pairs into a pd.Series.
 
     The point of this was to use OrderedDict, so you'd preserve index sort in the Series.
@@ -89,7 +95,10 @@ def get_series(data: list[tuple[Any, Any]], name: str | None = None) -> pd.Serie
     return data
 
 
-def get_df(data: list[tuple[Any, pd.Series]], values_are: str = "rows") -> pd.DataFrame:
+def get_df(
+    data: list[tuple[Any, pd.Series]],
+    values_are: str = "rows",
+) -> pd.DataFrame:
     """Convert orderly data `..., (rowname,row), ...` into a DataFrame.
 
     ```
@@ -116,7 +125,9 @@ def get_df(data: list[tuple[Any, pd.Series]], values_are: str = "rows") -> pd.Da
     return data
 
 
-def flatten(lst: list[list[T]]) -> list[T]:
+def flatten(
+    lst: list[list],
+) -> list:
     """
     >>> lst = [
     >>>     ["A0", "A1"],
@@ -153,7 +164,11 @@ def get_chunks(
     )
 
 
-def fillna(df: Data, value: Any = 0, limit_consec: int = 0) -> Data:
+def fillna(
+    df: Data,
+    value: Any = 0,
+    limit_consec: int = 0,
+) -> Data:
     """Within each run of NaN's in the input DataFrame, fill
     up to the first `limit_consec` consecutive slots with `value`.
 
@@ -265,8 +280,8 @@ def _filter_like(
 
 def filter_like(
     it: Iterable[str],
-    like_ands: Iterable[Any] = ("",),
-    like_ors: Iterable[Any] = ("",),
+    like_ands: Iterable[str] = ("",),
+    like_ors: Iterable[str] = ("",),
     fn: Callable = lambda x: x.upper(),
     not_: bool = False,
 ) -> list[str]:
@@ -287,7 +302,8 @@ def filter_like(
 
 
 def get_nearest_value(
-    df: Data, key: float,
+    df: Data,
+    key: float,
     axis: str = "index",
 ) -> tuple[float, Any]:
     """
