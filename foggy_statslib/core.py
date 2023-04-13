@@ -775,8 +775,12 @@ def plot(
     typeface: str = TYPEFACE,
     font_scale: float = FONT_SCALE,
     mimic_excel: bool = False,
+    # BARPLOT OPTIONS
+    ## if `True`, then use height, else use provided labels
+    bar_labels: pd.Series | bool = False,
+    bar_labels_fmt: str = "%g",
     # SCATTERPLOT OPTIONS
-    ## if `True`, then use `df.index`
+    ## if `True`, then use `df.index`, else use provided labels
     scatter_labels: pd.Series | bool = False,
     label_fontsize: float = LABEL_FONTSIZE,
     label_rotation: float = LABEL_ROTATION,
@@ -891,22 +895,31 @@ def plot(
     sns.set(font=typeface, font_scale=font_scale)
     ax = df.plot(kind=kind, ax=ax, figsize=figsize, **kwargs)
 
-    # SCATTERPLOT OPTIONS
-    ## could be `False`, `True`, or pd.Series
-    if scatter_labels is not False:
-        for i in df.index:
-            ax.text(
-                x=df.loc[i, kwargs["x"]],
-                y=df.loc[i, kwargs["y"]],
-                s=(
-                    i if scatter_labels is True
-                    else scatter_labels[i]
-                ),
-                family=typeface,
-                fontsize=label_fontsize,
-                rotation=label_rotation,
+    # BARPLOT OPTIONS
+    if kind == "bar":
+        if bar_labels is not False:
+            ax.bar_label(
+                container=ax.containers[0],
+                labels=None if bar_labels is True else bar_labels,
+                fmt=bar_labels_fmt,
             )
-            del i
+    # SCATTERPLOT OPTIONS
+    if kind == "scatter":
+        ## could be `False`, `True`, or pd.Series
+        if scatter_labels is not False:
+            for i in df.index:
+                ax.text(
+                    x=df.loc[i, kwargs["x"]],
+                    y=df.loc[i, kwargs["y"]],
+                    s=(
+                        i if scatter_labels is True
+                        else scatter_labels[i]
+                    ),
+                    family=typeface,
+                    fontsize=label_fontsize,
+                    rotation=label_rotation,
+                )
+                del i
 
     # GRIDLINES
     if mimic_excel:
