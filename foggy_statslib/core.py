@@ -164,6 +164,57 @@ def get_df(
     return data
 
 
+def _describe_flag_ser(flag_ser: pd.Series[bool]) -> str:
+    flag_avg = flag_ser.mean()
+    flag_count = flag_ser.sum()
+    tot_count = flag_ser.count()
+    des = f"{flag_avg :.2%}% ({flag_count} / {tot_count})"
+    return des
+
+
+def _construct_drop_warning_msg(
+    is_drop: pd.Series[bool],
+    reason: str = "unspecified reason",
+) -> str:
+    des = _describe_flag_ser(is_drop)
+    msg = f"Dropping {des} of rows on account of {reason}!"
+    return msg
+
+
+def drop_rows(
+    df: pd.DataFrame,
+    is_drop: pd.Series[bool],
+    reason: str = "unspecified reason",
+) -> pd.DataFrame:
+    if not df.index.equals(is_drop.index):
+        raise ValueError("We don't know how to implicitly coerce conformation!")
+    msg = _construct_drop_warning_msg(is_drop=is_drop, reason=reason)
+    warnings.warn(msg)
+    df = df.loc[~is_drop, :]
+    return df
+
+
+def set_index(
+    df: pd.DataFrame,
+    col_name: list[str] | str = "primary_key",
+    force_integrity: bool = False,
+    keep: str = "last",
+    verify_integrity: bool = True,
+) -> pd.DataFrame:
+    if force_integrity:
+        is_drop = df.duplicated(col_name, keep=keep)
+        df = drop_rows(
+            df=df,
+            is_drop=is_drop,
+            reason=f"duplicated {col_name}",
+        )
+    df = df.set_index(
+        col_name,
+        verify_integrity=verify_integrity,
+    )
+    return df
+
+
 def fillna(
     df: Data,
     value: Any = 0,
