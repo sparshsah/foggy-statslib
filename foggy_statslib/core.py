@@ -63,6 +63,45 @@ def maybe(
 ########################################################################################################################
 
 
+def flatten(
+    lst: list[list],
+) -> list:
+    """
+    >>> lst = [
+    >>>     ["A0", "A1"],
+    >>>     "B",
+    >>>     ["C0"]
+    >>> ]
+    >>> flatten(lst)
+    ["A0", "A1", "B", "C0"]
+    """
+    # sum(lst, start=[]) is so pretty but
+    # works only if every element is a list...
+    # so fails on the docstring example :(
+    return list(itertools.chain(*lst))
+
+
+def _rep_it_to_len(it: Iterable, len_: int) -> Iterable:
+    """Repeat an iterable until it reaches the given length.
+    E.g. [a, b], 5 -> [a, b, a, b, a].
+    """
+    num_reps = 1 + int(len_ * 1.0 / len(it))
+    return (it * num_reps)[:len_]
+
+
+def get_chunks(
+    it: Iterable[T],
+    sz: int,
+    index_by_iloc: bool = False,
+) -> Iterable[Iterable[T]]:
+    """Break up `it` into `sz`-size chunks."""
+    # this is a generator expression!
+    return (
+        it.iloc[i : i + sz] if index_by_iloc else it[i : i + sz]
+        for i in range(0, len(it), sz)
+    )
+
+
 def get_dtx(
     periods: int | None = None,
     start: Datelike | None = None,
@@ -123,45 +162,6 @@ def get_df(
     else:
         raise ValueError(values_are)
     return data
-
-
-def flatten(
-    lst: list[list],
-) -> list:
-    """
-    >>> lst = [
-    >>>     ["A0", "A1"],
-    >>>     "B",
-    >>>     ["C0"]
-    >>> ]
-    >>> flatten(lst)
-    ["A0", "A1", "B", "C0"]
-    """
-    # sum(lst, start=[]) is so pretty but
-    # works only if every element is a list...
-    # so fails on the docstring example :(
-    return list(itertools.chain(*lst))
-
-
-def _rep_it_to_len(it: Iterable, len_: int) -> Iterable:
-    """Repeat an iterable until it reaches the given length.
-    E.g. [a, b], 5 -> [a, b, a, b, a].
-    """
-    num_reps = 1 + int(len_ * 1.0 / len(it))
-    return (it * num_reps)[:len_]
-
-
-def get_chunks(
-    it: Iterable[T],
-    sz: int,
-    index_by_iloc: bool = False,
-) -> Iterable[Iterable[T]]:
-    """Break up `it` into `sz`-size chunks."""
-    # this is a generator expression!
-    return (
-        it.iloc[i : i + sz] if index_by_iloc else it[i : i + sz]
-        for i in range(0, len(it), sz)
-    )
 
 
 def fillna(
