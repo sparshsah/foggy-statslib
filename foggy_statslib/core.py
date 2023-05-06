@@ -294,6 +294,34 @@ def get_diag_of_df(df: pd.DataFrame) -> pd.DataFrame:
     return diag_df
 
 
+def _check_diff(
+    ser_a: pd.Series,
+    ser_b: pd.Series,
+) -> str:
+    names_match = (
+        (ser_a.name == ser_b.name)
+        or (
+            pd.isna(ser_a.name) and pd.isna(ser_b.name)
+        )
+    )
+    names_diff = not names_match
+    ix_diff_ab = ~decide_is_in(ser_a.index, ser_b.index)
+    ix_diff_ab_des = _describe_flag_ser(ix_diff_ab)
+    ix_diff_ba = ~decide_is_in(ser_b.index, ser_a.index)
+    ix_diff_ba_des = _describe_flag_ser(ix_diff_ba)
+    # arbitrarily, choose the first as the base
+    ser_b = ser_b.rename(ser_a.name).reindex(index=ser_a.index)
+    val_diff = ser_a != ser_b
+    val_diff_des = _describe_flag_ser(val_diff)
+    msg = (
+        f"A's and B's names {'DO' if names_diff else 'don\'t'} differ."
+        + f" A contains {ix_diff_ab_des} labels over B."
+        + f" B contains {ix_diff_ba_des} labels over A."
+        + f" Coerced to A's schema, their values differ at {val_diff_des} of places."
+    )
+    return msg
+
+
 def check_diff(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
