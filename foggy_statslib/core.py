@@ -215,6 +215,24 @@ def set_index(
     return df
 
 
+def decide_is_in(
+    a: pd.Series | dict | Iterable | pd.Index,
+    b: Any,
+) -> pd.Series[bool]:
+    """Decide whether each of a's values is present in b.
+
+    Similar to `pd.isin()`, but more conveninent because
+    you'll always get a pd.Series index'ed according to `a`:
+    If `a` is a Series, the output will be indexed by `a.index`;
+    If `a` is a dict, the output will be indexed by `a.keys()`;
+    If `a` is a generic iterable, the output will be indexed by `[0, ..., len(a))`;
+    If `a` is an Index, the output will be indexed by `a` itself.
+    """
+    a = pd.Series(a, index=a) if isinstance(a, pd.Index) else pd.Series(a)
+    is_in = a.isin(b)
+    return is_in
+
+
 def fillna(
     df: Data,
     value: Any = 0,
