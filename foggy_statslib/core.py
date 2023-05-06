@@ -168,7 +168,7 @@ def _describe_flag_ser(flag_ser: pd.Series[bool]) -> str:
     flag_avg = flag_ser.mean()
     flag_count = flag_ser.sum()
     tot_count = flag_ser.count()
-    des = f"{flag_avg :.2%}% ({flag_count} / {tot_count})"
+    des = f"{flag_avg :.2%} ({flag_count} / {tot_count})"
     return des
 
 
