@@ -567,7 +567,7 @@ def strftime_scalar(
     dt = pd.to_datetime(dt)
     if fmt == "%Y-%q":
         base = dt.strftime("%Y-Q")
-        q = dt.quarter.astype("string")
+        q = str(dt.quarter)
         ret = base + q
     else:
         ret = dt.strftime(fmt)
