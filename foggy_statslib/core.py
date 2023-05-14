@@ -790,10 +790,16 @@ def _get_offset_date(
 def maybe_date(
     date: Datelike | None = None,
     ow_offset: int = 0,
-    freq: str = DEFAULT_DATETIME_FREQ,
+    freq: str | None = None,
     granular: bool = False,
     as_str: bool = False,
 ) -> Datelike:
+    freq = maybe(
+        # if the user has specified, then respect that
+        freq,
+        # otherwise, go with Daily if granular, else go with Business
+        "D" if granular else DEFAULT_DATETIME_FREQ,
+    )
     date = maybe(date, _get_offset_date(offset=ow_offset, freq=freq))
     date = strfdate(date, granular=granular)
     date = date if as_str else pd.to_datetime(date)
