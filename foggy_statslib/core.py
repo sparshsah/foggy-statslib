@@ -314,7 +314,7 @@ def _check_diff(
     val_diff = ser_a != ser_b
     val_diff_des = _describe_flag_ser(val_diff)
     msg = (
-        f"A's and B's names {'DO' if names_diff else 'don\'t'} differ."
+        f"""A's and B's names {"DO" if names_diff else "don't"} differ."""
         + f" A contains {ix_diff_ab_des} labels over B."
         + f" B contains {ix_diff_ba_des} labels over A."
         + f" Coerced to A's schema, their values differ at {val_diff_des} of places."
