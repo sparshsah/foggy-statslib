@@ -17,6 +17,7 @@ import operator
 import os
 import pickle
 import random
+import string
 from typing import Any, Final, Iterable, TypeVar
 import warnings
 
@@ -541,7 +542,7 @@ def get_wa(
 ########################################################################################################################
 
 
-def _abbrfstr(s: str) -> str:
+def _abbrfstr(s: str, mangle: bool = False) -> str:
     """Abbreviate a string.
 
     >>> _abbrfstr("a")
@@ -559,7 +560,8 @@ def _abbrfstr(s: str) -> str:
     head = s[0]
     tail = s[1:]
     tail = tail[-1] if tail else ""
-    abbr = head + tail
+    mangler = random.choice(string.ascii_lowercase) if mangle else ""
+    abbr = head + tail + mangler
     return abbr
 
 
