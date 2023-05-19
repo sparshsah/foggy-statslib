@@ -541,6 +541,28 @@ def get_wa(
 ########################################################################################################################
 
 
+def _abbrfstr(s: str:) -> str:
+    """Abbreviate a string.
+
+    >>> _abbrfstr("a")
+    "a"
+
+    >>> _abbrfstr("ab")
+    "ab"
+
+    >>> _abbrfstr("abc")
+    "ac"
+
+    >>> _abbrfstr("abcd")
+    "ad"
+    """
+    head = s[0]
+    tail = s[1:]
+    tail = tail[-1] if tail else ""
+    abbr = head + tail
+    return abbr
+
+
 def strfpct(pct: float, dps: int = 1) -> str:
     """E.g. 0.1337 -> 13.4%."""
     pct = pct * 100
