@@ -952,11 +952,13 @@ def plot(
     xpct: float = False,
     xdollar: bool = False,
     xdates: bool = False,
+    xticklabels_rotation: int | str = "auto",
     ## y
     yticklabels: bool = True,
     ypct: float = False,
     ydollar: bool = False,
     ydates: bool = False,
+    yticklabels_rotation: int | str = "auto",
     # AXIS TITLES
     xlabel: str | None = None,
     ylabel: str | None = None,
@@ -1207,8 +1209,10 @@ def plot(
     if fmt is not None:
         ax.xaxis.set_major_formatter(plt_ticker.FuncFormatter(fmt))
     del fmt
+    ax.xaxis.set_tick_params(rotation=xticklabels_rotation)
     if not xticklabels:
-        plt.setp(ax.get_xticklabels(), visible=False)
+        # plt.setp(ax.get_xticklabels(), visible=False)
+        ax.xaxis.set_visible(False)
     ## y
     if sum([ypct, ydollar, ydates]) > 1:
         msg = f"plot: conflict in {ypct}, {ydollar}, {ydates}!"
@@ -1222,29 +1226,36 @@ def plot(
     if fmt is not None:
         ax.yaxis.set_major_formatter(plt_ticker.FuncFormatter(fmt))
     del fmt
+    ax.yaxis.set_tick_params(rotation=yticklabels_rotation)
     if not yticklabels:
-        plt.setp(ax.get_xticklabels(), visible=False)
+        # plt.setp(ax.get_yticklabels(), visible=False)
+        ax.yaxis.set_visible(False)
     # AXIS TITLES
     ## x
     xlabel = maybe(xlabel, df.index.name)
     xlabel = maybe(xlabel, False)
     if xlabel:
         ax.set_xlabel(xlabel)
-        ax.get_xaxis().get_label().set_visible(True)
+        # ax.get_xaxis().get_label().set_visible(True)
+        ax.xaxis.label.set_visible(True)
     else:
-        ax.get_xaxis().get_label().set_visible(False)
+        # ax.get_xaxis().get_label().set_visible(False)
+        ax.xaxis.label.set_visible(False)
     ## y
     ylabel = maybe(ylabel, False)
     if ylabel:
         ax.set_ylabel(ylabel)
-        ax.get_yaxis().get_label().set_visible(True)
+        # ax.get_yaxis().get_label().set_visible(True)
+        ax.yaxis.label.set_visible(True)
     else:
-        ax.get_yaxis().get_label().set_visible(False)
+        # ax.get_yaxis().get_label().set_visible(False)
+        ax.yaxis.label.set_visible(False)
 
     # LEGEND
     # if legend is None, ignore
     if legend is False:
-        ax.get_legend().set_visible(legend)
+        # ax.get_legend().set_visible(legend)
+        ax.legend_.set_visible(legend)
     if legend:
         ax.legend(title=legend_title, fontsize=legend_title_fontsize, loc=legend_loc)
 
