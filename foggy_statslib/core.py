@@ -949,13 +949,15 @@ def plot(
     granular_dates: bool = False,
     ## x
     xticklabels: bool = True,
-    xpct: float = False,
+    xint: bool = False,
+    xpct: bool = False,
     xdollar: bool = False,
     xdates: bool = False,
     xticklabels_rotation: int | str = "auto",
     ## y
     yticklabels: bool = True,
-    ypct: float = False,
+    yint: bool = False,
+    ypct: bool = False,
     ydollar: bool = False,
     ydates: bool = False,
     yticklabels_rotation: int | str = "auto",
@@ -987,12 +989,12 @@ def plot(
         return val
 
     ## axis tick formatters (2nd arg, tick_position, is unused)
+    def _strfint(tick_val, _):
+        return f"{tick_val :,}"
     def _strfpct(tick_val, _):
         return strfpct(tick_val, dps=pct_dps)
-
     def _strfdollar(tick_val, _):
         return strfccy(tick_val)
-
     def _strfdate(tick_val, _):
         return strfdate(tick_val, granular=granular_dates)
 
@@ -1200,7 +1202,9 @@ def plot(
         msg = f"plot: conflict in {xpct}, {xdollar}, {xdates}!"
         raise ValueError(msg)
     fmt = None
-    if xpct:
+    if xint:
+        fmt = _strfint
+    elif xpct:
         fmt = _strfpct
     elif xdollar:
         fmt = _strfdollar
@@ -1217,7 +1221,9 @@ def plot(
     if sum([ypct, ydollar, ydates]) > 1:
         msg = f"plot: conflict in {ypct}, {ydollar}, {ydates}!"
     fmt = None
-    if ypct:
+    if yint:
+        fmt = _strfint
+    elif ypct:
         fmt = _strfpct
     elif ydollar:
         fmt = _strfdollar
