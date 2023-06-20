@@ -990,7 +990,7 @@ def plot(
 
     ## axis tick formatters (2nd arg, tick_position, is unused)
     def _strfint(tick_val, _):
-        return f"{tick_val :,}"
+        return f"{tick_val :,.0f}"
     def _strfpct(tick_val, _):
         return strfpct(tick_val, dps=pct_dps)
     def _strfdollar(tick_val, _):
