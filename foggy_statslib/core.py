@@ -327,6 +327,7 @@ def check_diff(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
 ) -> pd.Series:
+    # TODO(sparshsah): Use datacompy
     diff = pd.Series(dtype=float)
     diff.loc["_cols_missing_in_b"] = len(df_a.columns.difference(df_b.columns)) / len(
         df_a.columns
