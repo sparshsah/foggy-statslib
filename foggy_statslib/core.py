@@ -1228,7 +1228,7 @@ def plot(
     fmt = None
     if yticklabels_fmt is not None:
         fmt = yticklabels_fmt
-    elif xint:
+    elif yint:
         fmt = _strfint
     elif ypct:
         fmt = _strfpct
