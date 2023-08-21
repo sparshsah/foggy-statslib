@@ -950,6 +950,7 @@ def plot(
     granular_dates: bool = False,
     ## x
     xticklabels: bool = True,
+    xticklabels_fmt: Callable[[Any, Any], str] | None = None,
     xint: bool = False,
     xpct: bool = False,
     xdollar: bool = False,
@@ -957,6 +958,7 @@ def plot(
     xticklabels_rotation: int | str = "auto",
     ## y
     yticklabels: bool = True,
+    yticklabels_fmt: Callable[[Any, Any], str] | None = None,
     yint: bool = False,
     ypct: bool = False,
     ydollar: bool = False,
@@ -1199,11 +1201,13 @@ def plot(
 
     # AXIS TICK LABELS
     ## x
-    if sum([xpct, xdollar, xdates]) > 1:
-        msg = f"plot: conflict in {xpct}, {xdollar}, {xdates}!"
+    if sum([xticklabels_fmt is not None, xpct, xdollar, xdates]) > 1:
+        msg = f"plot: conflict in {xticklabels_fmt}, {xpct}, {xdollar}, {xdates}!"
         raise ValueError(msg)
     fmt = None
-    if xint:
+    if xticklabels_fmt is not None:
+        fmt = xticklabels_fmt
+    elif xint:
         fmt = _strfint
     elif xpct:
         fmt = _strfpct
@@ -1219,10 +1223,12 @@ def plot(
         # plt.setp(ax.get_xticklabels(), visible=False)
         ax.xaxis.set_visible(False)
     ## y
-    if sum([ypct, ydollar, ydates]) > 1:
-        msg = f"plot: conflict in {ypct}, {ydollar}, {ydates}!"
+    if sum([yticklabels_fmt is not None, ypct, ydollar, ydates]) > 1:
+        msg = f"plot: conflict in {yticklabels_fmt}, {ypct}, {ydollar}, {ydates}!"
     fmt = None
-    if yint:
+    if yticklabels_fmt is not None:
+        fmt = yticklabels_fmt
+    elif xint:
         fmt = _strfint
     elif ypct:
         fmt = _strfpct
