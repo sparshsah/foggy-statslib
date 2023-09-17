@@ -747,6 +747,24 @@ def _get_exante_beta_of_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: Floa
     return exante_beta
 
 
+def _get_simple_mvo_w(
+        er_vector: FloatSeries,
+        vol_vector: FloatSeries,
+        corr_matrix: FloatDF
+    ) -> FloatSeries:
+    vol_matrix = pd.DataFrame(
+        np.diag(vol_vector),
+        index=vol_vector.index,
+        columns=vol_vector.index,
+    )
+    cov_matrix = vol_matrix @ corr_matrix @ vol_matrix
+    inv_of_cov_matrix = fsc.get_inv_of_df(df=cov_matrix)
+    w = inv_of_cov_matrix @ er_vector
+    # unit-lever
+    w = w / w.sum()
+    return w
+
+
 def _get_uncon_mvo_w(
         er_vector: FloatSeries,
         cov_matrix: FloatDF,
