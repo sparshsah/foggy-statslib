@@ -724,12 +724,37 @@ def _get_w_from_vw(vw: FloatSeries, cov_matrix: FloatDF) -> FloatSeries:
     return w
 
 
-def _get_exante_pm_stats_of_w(w: FloatSeries, er_vector: FloatSeries, cov_matrix: FloatDF) -> PmStats:
+def _get_exante_pm_stats_of_w_as_obj(w: FloatSeries, er_vector: FloatSeries, cov_matrix: FloatDF) -> PmStats:
     return PmStats(
         sharpe=_get_exante_sharpe_of_w(w=w, er_vector=er_vector, cov_matrix=cov_matrix),
         er=_get_exante_er_of_w(w=w, er_vector=er_vector),
         vol=_get_exante_vol_of_w(w=w, cov_matrix=cov_matrix),
     )
+
+
+def _get_exante_pm_stats_of_w_as_ser(
+    w: FloatSeries,
+    er_vector: FloatSeries,
+    cov_matrix: FloatDF,
+    fmt: bool = False,
+) -> pd.Series:
+    pm_stats = _get_exante_pm_stats_of_w_as_obj(w=w, er_vector=er_vector, cov_matrix=cov_matrix)
+    pm_stats = dataclasses.asdict(pm_stats)
+    pm_stats = pd.Series(pm_stats)
+    if fmt:
+        fmts = {
+            "sharpe": "{v:.2f}",
+            "er": "{v:.1%}",
+            "vol": "{v:.1%}",
+        }
+        pm_stats = pd.Series(
+            {
+                k: fmts[k].format(v=v)
+                for (k, v) in pm_stats.items()
+            },
+            index=fmts.index,
+        )
+    return pm_stats
 
 
 def _get_exante_sharpe_of_w(w: FloatSeries, er_vector: FloatSeries, cov_matrix: FloatDF) -> float:
@@ -779,7 +804,7 @@ def _simple_mvo(
     sharpe_vector: FloatSeries,
     vol_vector: FloatSeries,
     corr_matrix: FloatDF,
-) -> tuple[pd.Series, PmStats]:
+) -> tuple[pd.Series, pd.Series]:
     er_vector = sharpe_vector * vol_vector
     vol_matrix = fsc.get_diag_of_ser(ser=vol_vector)
     cov_matrix = vol_matrix @ corr_matrix @ vol_matrix
@@ -787,10 +812,11 @@ def _simple_mvo(
     w = inv_of_cov_matrix @ er_vector
     # unit-lever
     w = w / w.sum()
-    pm_stats = _get_exante_pm_stats_of_w(
+    pm_stats = _get_exante_pm_stats_of_w_as_ser(
         w=w,
         er_vector=er_vector,
         cov_matrix=cov_matrix,
+        fmt=True,
     )
     return w, pm_stats
 
