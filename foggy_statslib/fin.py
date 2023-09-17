@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from typing import Tuple, Dict, Union, Optional
 from collections import OrderedDict
+import dataclasses
 import pandas as pd
 import numpy as np
 import scipy.stats as sps
@@ -79,6 +80,14 @@ ROUND_DPS: pd.Series = fsc.get_series([
     ("Vol", 4),
     ("Frac valid timesteps", 3)
 ])
+
+
+@dataclasses.dataclass(kw_only=True, frozen=True)
+class SimpleMvoResult:
+    w: pd.Series = dataclasses.field(default_factory=pd.Series)
+    sr: float = np.nan
+    er: float = np.nan
+    vol: float = np.nan
 
 
 ########################################################################################################################
