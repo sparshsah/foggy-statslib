@@ -752,7 +752,7 @@ def _get_exante_pm_stats_of_w_as_ser(
                 k: fmts[k].format(v=v)
                 for (k, v) in pm_stats.items()
             },
-            index=fmts.index,
+            index=fmts.keys(),
         )
     return pm_stats
 
