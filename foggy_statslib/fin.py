@@ -752,11 +752,7 @@ def _get_simple_mvo_w(
         vol_vector: FloatSeries,
         corr_matrix: FloatDF
     ) -> FloatSeries:
-    vol_matrix = pd.DataFrame(
-        np.diag(vol_vector),
-        index=vol_vector.index,
-        columns=vol_vector.index,
-    )
+    vol_matrix = fsc.get_diag_of_ser(ser=vol_vector)
     cov_matrix = vol_matrix @ corr_matrix @ vol_matrix
     inv_of_cov_matrix = fsc.get_inv_of_df(df=cov_matrix)
     w = inv_of_cov_matrix @ er_vector

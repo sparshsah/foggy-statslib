@@ -447,6 +447,12 @@ def ceil(x: float, increment: float = 1.0) -> float:
     return np.ceil(x / increment) * increment
 
 
+def get_diag_of_ser(ser: pd.Series) -> pd.DataFrame:
+    diag_df = np.diag(ser)
+    diag_df = pd.DataFrame(diag_df, index=ser.index, columns=ser.index)
+    return diag_df
+
+
 def get_inv_of_df(df: pd.DataFrame) -> pd.DataFrame:
     inv_df = np.linalg.inv(df)
     inv_df = pd.DataFrame(inv_df, index=df.index, columns=df.columns)
