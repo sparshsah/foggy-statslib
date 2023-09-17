@@ -83,9 +83,8 @@ ROUND_DPS: pd.Series = fsc.get_series([
 
 
 @dataclasses.dataclass(kw_only=True, frozen=True)
-class SimpleMvoResult:
-    w: pd.Series = dataclasses.field(default_factory=pd.Series)
-    sr: float = np.nan
+class PmStats:
+    sharpe: float = np.nan
     er: float = np.nan
     vol: float = np.nan
 
@@ -725,6 +724,26 @@ def _get_w_from_vw(vw: FloatSeries, cov_matrix: FloatDF) -> FloatSeries:
     return w
 
 
+def _get_exante_pm_stats_of_w(w: FloatSeries, er_vector: FloatSeries, cov_matrix: FloatDF) -> PmStats:
+    return PmStats(
+        sharpe=_get_exante_sharpe_of_w(w=w, er_vector=er_vector, cov_matrix=cov_matrix),
+        er=_get_exante_er_of_w(w=w, er_vector=er_vector),
+        vol=_get_exante_vol_of_w(w=w, cov_matrix=cov_matrix),
+    )
+
+
+def _get_exante_sharpe_of_w(w: FloatSeries, er_vector: FloatSeries, cov_matrix: FloatDF) -> float:
+    exante_er = _get_exante_er_of_w(w=w, er_vector=er_vector)
+    exante_vol = _get_exante_vol_of_w(w=w, cov_matrix=cov_matrix)
+    exante_sharpe = exante_er / exante_vol
+    return exante_sharpe
+
+
+def _get_exante_er_of_w(w: FloatSeries, er_vector: FloatSeries) -> float:
+    exante_er = w @ er_vector
+    return exante_er
+
+
 def __get_exante_cov_of_w(w_a: FloatSeries, w_b: FloatSeries, cov_matrix: FloatDF) -> float:
     exante_cov = w_a @ cov_matrix @ w_b
     return exante_cov
@@ -756,18 +775,23 @@ def _get_exante_beta_of_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: Floa
     return exante_beta
 
 
-def _get_simple_mvo_w(
-        er_vector: FloatSeries,
-        vol_vector: FloatSeries,
-        corr_matrix: FloatDF
-    ) -> FloatSeries:
+def _simple_mvo(
+    er_vector: FloatSeries,
+    vol_vector: FloatSeries,
+    corr_matrix: FloatDF,
+) -> tuple[pd.Series, PmStats]:
     vol_matrix = fsc.get_diag_of_ser(ser=vol_vector)
     cov_matrix = vol_matrix @ corr_matrix @ vol_matrix
     inv_of_cov_matrix = fsc.get_inv_of_df(df=cov_matrix)
     w = inv_of_cov_matrix @ er_vector
     # unit-lever
     w = w / w.sum()
-    return w
+    pm_stats = _get_exante_pm_stats_of_w(
+        w=w,
+        er_vector=er_vector,
+        cov_matrix=cov_matrix,
+    )
+    return w, pm_stats
 
 
 def _get_uncon_mvo_w(
