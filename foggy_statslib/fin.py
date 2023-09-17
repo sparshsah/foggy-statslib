@@ -776,10 +776,11 @@ def _get_exante_beta_of_w(of_w: FloatSeries, on_w: FloatSeries, cov_matrix: Floa
 
 
 def _simple_mvo(
-    er_vector: FloatSeries,
+    sharpe_vector: FloatSeries,
     vol_vector: FloatSeries,
     corr_matrix: FloatDF,
 ) -> tuple[pd.Series, PmStats]:
+    er_vector = sharpe_vector * vol_vector
     vol_matrix = fsc.get_diag_of_ser(ser=vol_vector)
     cov_matrix = vol_matrix @ corr_matrix @ vol_matrix
     inv_of_cov_matrix = fsc.get_inv_of_df(df=cov_matrix)
