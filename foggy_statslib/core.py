@@ -459,6 +459,12 @@ def get_inv_of_df(df: pd.DataFrame) -> pd.DataFrame:
     return inv_df
 
 
+def compose_cov_matrix(vol_vector: FloatSeries, corr_matrix: FloatDF) -> FloatDF:
+    vol_matrix = get_diag_of_ser(ser=vol_vector)
+    cov_matrix = vol_matrix @ corr_matrix @ vol_matrix
+    return cov_matrix
+
+
 # weighted averages
 
 
