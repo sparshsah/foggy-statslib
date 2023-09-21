@@ -744,8 +744,8 @@ def _get_exante_pm_stats_of_w_as_ser(
     if fmt:
         fmts = {
             "sharpe": "{v:.2f}",
-            "er": "{v:.1%}",
-            "vol": "{v:.1%}",
+            "er": "{v:.2%}",
+            "vol": "{v:.2%}",
         }
         pm_stats = pd.Series(
             {
