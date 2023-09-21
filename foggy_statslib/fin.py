@@ -805,9 +805,9 @@ def _simple_mvo(
     vol_vector: FloatSeries,
     corr_matrix: FloatDF,
 ) -> tuple[FloatSeries, FloatSeries]:
+    # (\lambda \Sigma)^{-1} \mu
     er_vector = sharpe_vector * vol_vector
-    vol_matrix = fsc.get_diag_of_ser(ser=vol_vector)
-    cov_matrix = vol_matrix @ corr_matrix @ vol_matrix
+    cov_matrix = fsc.compose_cov_matrix(vol_vector=vol_vector, corr_matrix=corr_matrix)
     inv_of_cov_matrix = fsc.get_inv_of_df(df=cov_matrix)
     w = inv_of_cov_matrix @ er_vector
     # unit-lever
