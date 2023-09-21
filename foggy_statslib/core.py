@@ -453,7 +453,7 @@ def get_diag_of_df(df: pd.DataFrame) -> pd.DataFrame:
     return diag_df
 
 
-def get_inv_of_df(df: pd.DataFrame) -> pd.DataFrame:
+def get_inv_of_df(df: FloatDF) -> FloatDF:
     inv_df = np.linalg.inv(df)
     inv_df = pd.DataFrame(inv_df, index=df.index, columns=df.columns)
     return inv_df

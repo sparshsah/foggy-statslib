@@ -804,7 +804,7 @@ def _simple_mvo(
     sharpe_vector: FloatSeries,
     vol_vector: FloatSeries,
     corr_matrix: FloatDF,
-) -> tuple[pd.Series, pd.Series]:
+) -> tuple[FloatSeries, FloatSeries]:
     er_vector = sharpe_vector * vol_vector
     vol_matrix = fsc.get_diag_of_ser(ser=vol_vector)
     cov_matrix = vol_matrix @ corr_matrix @ vol_matrix
