@@ -289,12 +289,6 @@ def get_common_subsample(df: pd.DataFrame) -> pd.DataFrame:
     return df.loc[first:last]
 
 
-def get_diag_of_df(df: pd.DataFrame) -> pd.DataFrame:
-    diag_df = np.diag(df)
-    diag_df = pd.DataFrame(diag_df, index=df.index, columns=df.columns)
-    return diag_df
-
-
 def _check_diff(
     ser_a: pd.Series,
     ser_b: pd.Series,
@@ -450,6 +444,12 @@ def ceil(x: float, increment: float = 1.0) -> float:
 def get_diag_of_ser(ser: pd.Series) -> pd.DataFrame:
     diag_df = np.diag(ser)
     diag_df = pd.DataFrame(diag_df, index=ser.index, columns=ser.index)
+    return diag_df
+
+
+def get_diag_of_df(df: pd.DataFrame) -> pd.DataFrame:
+    diag_df = np.diag(df)
+    diag_df = pd.DataFrame(diag_df, index=df.index, columns=df.columns)
     return diag_df
 
 
