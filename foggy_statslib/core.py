@@ -41,7 +41,7 @@ REASONABLE_FRACTION_OF_TOTAL: Final[float] = 0.95
 # Unix epoch
 DEFAULT_FIRST_DATETIME: Final[pd.Timestamp] = pd.to_datetime("1970-01-01")
 DEFAULT_DATETIME_FREQ: Final[str] = "B"  # business day
-TYPEFACE: Final[str | None] = None
+TYPEFACE: Final[str] = "Arial"
 FONT_SCALE: Final[int] = 1
 LABEL_FONTSIZE: Final[int] = 12
 LABEL_ROTATION: Final[int] = 0
@@ -1038,7 +1038,8 @@ def plot(
     ## user wants to savefig AND doesn't want to show -> close.
     plt_close = maybe(v=plt_close, ow=(savefig_path is not None) and (not plt_show))
 
-    sns.set(font=typeface, font_scale=font_scale)
+    _ = typeface  # ignore
+    sns.set(font_scale=font_scale)
     ax = df.plot(kind=kind, ax=ax, figsize=figsize, **kwargs)
 
     # BARPLOT OPTIONS
