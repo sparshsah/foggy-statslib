@@ -41,7 +41,7 @@ REASONABLE_FRACTION_OF_TOTAL: Final[float] = 0.95
 # Unix epoch
 DEFAULT_FIRST_DATETIME: Final[pd.Timestamp] = pd.to_datetime("1970-01-01")
 DEFAULT_DATETIME_FREQ: Final[str] = "B"  # business day
-TYPEFACE: Final[str] = "Arial"
+TYPEFACE: Final[str | None] = None
 FONT_SCALE: Final[int] = 1
 LABEL_FONTSIZE: Final[int] = 12
 LABEL_ROTATION: Final[int] = 0
