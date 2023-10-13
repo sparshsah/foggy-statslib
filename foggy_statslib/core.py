@@ -1062,7 +1062,6 @@ def plot(
                         i if scatter_labels is True
                         else scatter_labels[i]
                     ),
-                    family=typeface,
                     fontsize=label_fontsize,
                     rotation=label_rotation,
                 )
