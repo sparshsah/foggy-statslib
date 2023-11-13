@@ -696,6 +696,49 @@ def _get_fcast_hedged_xr(
     return hedged_xr
 
 
+def calc_bsf_option_value(
+    tau: float = 1,
+    K: float = 100,
+    S_t: float = 100,
+    sigma: float = 0.20,
+    r: float = 0,
+    put: bool = True,
+) -> float:
+    """
+    Calculate Black-Scholes formula for option value.
+
+    Args:
+        tau: float, Years to expiration.
+        K: float, Strike price.
+        S_t: float, Price of underlying stock today.
+        sigma: float, Assumed volatility. Logarithmic, to be geeky about it.
+            Note: Be careful! Black-Scholes is a very good baseline model for how people value options in real life.
+                But in real life, `sigma` is usually a bit higher than
+                a true best guess for go-forward volatility (based on e.g. recent realized volatility).
+                    This is the well-documented "volatility risk premium".
+                    The usual explanation is the overwhelming pressure of demand for insurance against economic crashes.
+                And in fact, it's usually a bit higher when the option is
+                (a) deeply out-of-the-money, and/or (b) far in the future.
+                    These are the well-documented volatility "smirks".
+                    This doesn't mean people pay more for an OTM put than an ITM put,
+                    it just means they don't pay as much less as you'd expect.
+                In practice, we don't know what different market participants are assuming here.
+                But we can observe the price at which various options are trading.
+                Based on those observations, we can back out the "option-implied volatility".
+                That is, the value of `sigma` that makes this function spit out the observed prices.
+        r: float, Risk-free interest rate. Also logarithmic for the geeks out there.
+        put: bool, Whether this is a put or a call.
+    """
+    d0 = np.log(S_t/K) + (r + sigma**2/2)*tau
+    d1 = d0 / (sigma * tau**0.5)
+    d2 = d1 - sigma * tau**0.5
+    if put:
+        v = -sps.norm.cdf(-d1)*S_t + sps.norm.cdf(-d2)*K*np.exp(-r*tau)
+    else:
+        v =  sps.norm.cdf( d1)*S_t - sps.norm.cdf( d2)*K*np.exp(-r*tau)
+    return v
+
+
 ########################################################################################################################
 ## PORTFOLIO MATH ######################################################################################################
 ########################################################################################################################
