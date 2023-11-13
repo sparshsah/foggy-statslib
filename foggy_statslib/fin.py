@@ -706,6 +706,7 @@ def calc_bsf_option_value(
 ) -> float:
     """
     Calculate Black-Scholes formula for option value.
+    Note: Applies to European-style options only!
 
     Args:
         tau: float, Years to expiration.
