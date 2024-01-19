@@ -703,6 +703,7 @@ def calc_bsf_option_value(
     sigma: float = 0.20,
     r: float = 0,
     put: bool = True,
+    check: bool = True,
 ) -> float:
     """
     Calculate Black-Scholes formula for option value.
@@ -729,14 +730,19 @@ def calc_bsf_option_value(
                 That is, the value of `sigma` that makes this function spit out the observed prices.
         r: float, Risk-free interest rate. Also logarithmic for the geeks out there.
         put: bool, Whether this is a put or a call.
+        check: bool, Whether to sanity-check result.
     """
     d0 = np.log(S_t/K) + (r + sigma**2/2)*tau
-    d1 = d0 / (sigma * tau**0.5)
+    d1 = (d0 / (sigma * tau**0.5)) if tau != 0 else float("inf")
     d2 = d1 - sigma * tau**0.5
     if put:
-        v = -sps.norm.cdf(-d1)*S_t + sps.norm.cdf(-d2)*K*np.exp(-r*tau)
+        v           =     -sps.norm.cdf(-d1)*S_t + sps.norm.cdf(-d2)*K*np.exp(-r*tau)
+        v_intrinsic = max(-                  S_t +                   K               , 0)
     else:
-        v =  sps.norm.cdf( d1)*S_t - sps.norm.cdf( d2)*K*np.exp(-r*tau)
+        v =                sps.norm.cdf( d1)*S_t - sps.norm.cdf( d2)*K*np.exp(-r*tau)
+        v_intrinsic = max(                   S_t -                   K               , 0)
+    if check and tau == 0:
+        assert np.isclose(v, v_intrinsic), (v, v_intrinsic)
     return v
 
 
