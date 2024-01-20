@@ -741,8 +741,10 @@ def calc_bsf_option_value(
     else:
         v =                sps.norm.cdf( d1)*S_t - sps.norm.cdf( d2)*K*np.exp(-r*tau)
         v_intrinsic = max(                   S_t -                   K               , 0)
-    if check and tau == 0:
-        assert np.isclose(v, v_intrinsic), (v, v_intrinsic)
+    if check:
+        assert v >= 0, v
+        if tau == 0:
+            assert np.isclose(v, v_intrinsic), (v, v_intrinsic)
     return v
 
 
