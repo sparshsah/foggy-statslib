@@ -507,6 +507,28 @@ def _get_est_vol_of_r(
     return ann_est_vol
 
 
+def _brutishly_est_vol_of_r(xr: pd.Series[float]) -> pd.Series[float]:
+    """Brutishly calculate realized vol from returns."""
+    if xr.index.freq != "B":
+        raise ValueError(freq)
+    return (
+        (
+            xr
+            # assert that ER_daily is close to zero
+            .abs()
+            # hackily remove influence of stock splits
+            .clip(upper=0.20)
+            **2
+        )
+        # a business quarter
+        .rolling(window=65, min_periods=1)
+        .mean()
+        **0.5
+        # annualize
+        * 261**0.5
+    ).rename("vol")
+
+
 def _get_est_sharpe_of_r(
         r: FloatSeries,
         de_avg_kind: Optional[str]=DEFAULT_DE_AVG_KIND,
