@@ -733,7 +733,8 @@ def calc_bsf_option_value(
         check: bool, Whether to sanity-check result.
     """
     d0 = np.log(S_t/K) + (r + sigma**2/2)*tau
-    d1 = (d0 / (sigma * tau**0.5)) if tau != 0 else float("inf")
+    with np.errstate(divide="ignore"):  # allowing tau to be zero
+        d1 = np.divide(d0, sigma * tau**0.5)
     d2 = d1 - sigma * tau**0.5
     if put:
         v           =     -sps.norm.cdf(-d1)*S_t + sps.norm.cdf(-d2)*K*np.exp(-r*tau)
