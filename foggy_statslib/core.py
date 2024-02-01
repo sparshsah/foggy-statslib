@@ -10,7 +10,7 @@ made available under MIT license at https://github.com/sparshsah/foggy-statslib/
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 import datetime
 import itertools
 import operator
@@ -119,6 +119,16 @@ def get_dtx(
     # else, if necessary, let the constructor complain
     dtx = pd.date_range(start=start, periods=periods, end=end, freq=freq, name=name)
     return dtx
+
+
+def get_union_of_many_pandas_indexes(
+    ixs: Collection[pd.Index | pd.DatetimeIndex],
+    dt: bool = False,
+) -> pd.Index | pd.DatetimeIndex:
+    ix = pd.DatetimeIndex([], freq="D") if dt else pd.Index([])
+    for x in ixs:
+        ix = ix.union(x)
+    return ix
 
 
 def get_series(
