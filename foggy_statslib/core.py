@@ -108,15 +108,16 @@ def get_dtx(
     start: Datelike | None = None,
     end: Datelike | None = None,
     freq: str = DEFAULT_DATETIME_FREQ,
+    name: str | None = None,
 ) -> pd.DatetimeIndex:
+    """Helper for constructing toy index for simulated data."""
     if periods is None:
         start = maybe(start, DEFAULT_FIRST_DATETIME)
         end = maybe_date(end, freq=freq, granular=(freq != DEFAULT_DATETIME_FREQ))
-    elif periods is not None and (start is None):
+    elif periods is not None and start is None:
         end = maybe_date(end, freq=freq, granular=(freq != DEFAULT_DATETIME_FREQ))
     # else, if necessary, let the constructor complain
-    dtx = pd.date_range(start=start, periods=periods, end=end, freq=freq)
-    dtx = pd.DatetimeIndex(dtx)
+    dtx = pd.date_range(start=start, periods=periods, end=end, freq=freq, name=name)
     return dtx
 
 
